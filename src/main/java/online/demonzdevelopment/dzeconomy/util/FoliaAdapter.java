@@ -340,6 +340,14 @@ public final class FoliaAdapter {
                 regionScheduler.getClass()
                         .getMethod("cancelTasks", Plugin.class)
                         .invoke(regionScheduler, plugin);
+
+                try {
+                    Object asyncScheduler = Bukkit.class.getMethod("getAsyncScheduler").invoke(null);
+                    asyncScheduler.getClass()
+                            .getMethod("cancelTasks", Plugin.class)
+                            .invoke(asyncScheduler, plugin);
+                } catch (Exception ignored) {
+                }
             } catch (Exception e) {
                 plugin.getLogger().log(Level.SEVERE, "Failed to cancel Folia tasks", e);
             }

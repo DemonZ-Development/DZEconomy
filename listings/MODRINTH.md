@@ -57,7 +57,7 @@
 
 ## ⚡ Quick Start
 
-1. Download and place `DZEconomy-2.0.0.jar` in your `plugins/` folder
+1. Download and place `DZEconomy-2.1.0.jar` in your `plugins/` folder
 2. Restart your server
 3. Players can immediately use `/money`, `/mobcoin`, `/gem`
 4. Customize `config.yml`, `ranks.yml`, and `mob-rewards.yml`
@@ -184,10 +184,9 @@ combat-tag:
 
 | Resource | URL |
 |----------|-----|
-| Wiki | [GitHub Wiki](https://github.com/DemonZDevelopment/DZEconomy/wiki) |
-| Discord | [discord.com/invite/GYsTt96ypf](https://discord.com/invite/GYsTt96ypf) |
-| Source Code | [GitHub](https://github.com/DemonZDevelopment/DZEconomy) |
-| Issue Tracker | [GitHub Issues](https://github.com/DemonZDevelopment/DZEconomy/issues) |
+| Wiki | [GitHub Wiki](https://github.com/DemonZ-Development/DZEconomy/wiki) |
+| Source Code | [GitHub](https://github.com/DemonZ-Development/DZEconomy) |
+| Issue Tracker | [GitHub Issues](https://github.com/DemonZ-Development/DZEconomy/issues) |
 | Website | [demonzdevelopment.online](https://demonzdevelopment.online) |
 
 ---

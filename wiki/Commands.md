@@ -1,6 +1,6 @@
 # 📋 Commands Reference
 
-Complete command reference for DZEconomy v2.0.0. All commands support tab completion.
+Complete command reference for DZEconomy v2.1.0. All commands support tab completion.
 
 ---
 
@@ -226,8 +226,8 @@ View plugin information.
 **Example Output:**
 ```
 ─────────────────────────────────
-  DZEconomy v2.0.0
-
+  DZEconomy v2.1.0
+  
   Currencies:
     ▸ money - Enabled ($)
     ▸ mobcoin - Enabled (⛃)
@@ -255,7 +255,7 @@ View detailed version information.
 ─────────────────────────────────
   DZEconomy Version Info
 
-  ▸ Installed: v2.0.0
+  ▸ Installed: v2.1.0
   ▸ Server: Paper 1.21.4-...
   ▸ Bukkit API: 1.20.4-R0.1-SNAPSHOT
   ▸ Java: 21.0.2
@@ -301,7 +301,7 @@ View real-time plugin status and statistics.
   DZEconomy Status
 
   ▸ Plugin: Running
-  ▸ Version: v2.0.0
+  ▸ Version: v2.1.0
   ▸ Storage: sqlite
   ▸ Cached Players: 24
   ▸ Online Players: 18
@@ -423,7 +423,7 @@ View plugin credits and links.
   DZEconomy Credits
 
   ▸ Author: DemonzDevelopment
-  ▸ Version: 2.0.0
+  ▸ Version: 2.1.0
   ▸ Website: online.demonzdevelopment
   ▸ Contributors: The community
 

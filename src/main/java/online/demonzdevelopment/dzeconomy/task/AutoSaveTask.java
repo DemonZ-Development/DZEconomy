@@ -4,14 +4,12 @@ import online.demonzdevelopment.dzeconomy.DZEconomy;
 import online.demonzdevelopment.dzeconomy.currency.CurrencyManager;
 import online.demonzdevelopment.dzeconomy.data.PlayerData;
 
-import org.bukkit.scheduler.BukkitRunnable;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-public class AutoSaveTask extends BukkitRunnable {
+public class AutoSaveTask implements Runnable {
 
     private final DZEconomy plugin;
 
@@ -35,13 +33,13 @@ public class AutoSaveTask extends BukkitRunnable {
 
         for (UUID uuid : cachedPlayers) {
             try {
-                PlayerData data = cm.loadPlayerData(uuid);
+                PlayerData data = cm.getPlayerData(uuid); // Use getPlayerData to avoid loading if not already loaded
                 if (data != null) {
                     if (data.isDirty()) {
                         cm.savePlayerData(uuid);
                         savedCount++;
                     }
-                    if (org.bukkit.Bukkit.getPlayer(uuid) == null) {
+                    if (!cm.isPlayerOnline(uuid)) {
                         cm.unloadPlayerData(uuid);
                     }
                 }

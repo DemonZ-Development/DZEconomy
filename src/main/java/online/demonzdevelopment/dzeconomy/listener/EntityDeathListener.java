@@ -7,6 +7,8 @@ import online.demonzdevelopment.dzeconomy.config.ConfigManager;
 import online.demonzdevelopment.dzeconomy.util.MessagesUtil;
 import online.demonzdevelopment.dzeconomy.util.ColorUtil;
 
+import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.LivingEntity;
@@ -37,8 +39,14 @@ public class EntityDeathListener implements Listener {
     private double bossBonus = 1.0;
     private double notifyThreshold = 1.0;
 
+    private final NamespacedKey spawnerKey;
+    private final NamespacedKey spawnEggKey;
+    private final Map<UUID, SplitInfo> activeSplits = new ConcurrentHashMap<>();
+
     public EntityDeathListener(DZEconomy plugin) {
         this.plugin = plugin;
+        this.spawnerKey = new NamespacedKey(plugin, "spawner");
+        this.spawnEggKey = new NamespacedKey(plugin, "spawn-egg");
         loadRewards();
     }
 
@@ -75,7 +83,7 @@ public class EntityDeathListener implements Listener {
         
         allowSpawnerMobs = mainConfig.getBoolean("mob-rewards.allow-spawner-mobs", false);
         allowSpawnEggMobs = mainConfig.getBoolean("mob-rewards.allow-spawn-egg-mobs", false);
-        requirePlayerKill = mainConfig.getBoolean("mobcoin.require-player-kill", true);
+        requirePlayerKill = mainConfig.getBoolean("mob-rewards.require-player-kill", true);
         defaultMultiplier = mainConfig.getDouble("mob-rewards.default-multiplier", 1.0);
         bossBonus = mainConfig.getDouble("mob-rewards.boss-bonus", 1.0);
         notifyThreshold = mainConfig.getDouble("mob-rewards.notify-threshold", 1.0);
@@ -162,9 +170,40 @@ public class EntityDeathListener implements Listener {
     public void onCreatureSpawn(CreatureSpawnEvent event) {
         CreatureSpawnEvent.SpawnReason reason = event.getSpawnReason();
         if (reason == CreatureSpawnEvent.SpawnReason.SPAWNER) {
+            event.getEntity().getPersistentDataContainer().set(spawnerKey, PersistentDataType.BYTE, (byte) 1);
             event.getEntity().setMetadata("dzeconomy-spawner", new FixedMetadataValue(plugin, true));
         } else if (reason == CreatureSpawnEvent.SpawnReason.SPAWNER_EGG) {
+            event.getEntity().getPersistentDataContainer().set(spawnEggKey, PersistentDataType.BYTE, (byte) 1);
             event.getEntity().setMetadata("dzeconomy-spawn-egg", new FixedMetadataValue(plugin, true));
+        } else if (reason == CreatureSpawnEvent.SpawnReason.SLIME_SPLIT) {
+            org.bukkit.Location loc = event.getLocation();
+            for (SplitInfo info : activeSplits.values()) {
+                if (info.location.getWorld().equals(loc.getWorld()) && info.location.distanceSquared(loc) < 4.0) {
+                    if (info.isSpawner) {
+                        event.getEntity().getPersistentDataContainer().set(spawnerKey, PersistentDataType.BYTE, (byte) 1);
+                        event.getEntity().setMetadata("dzeconomy-spawner", new FixedMetadataValue(plugin, true));
+                    }
+                    if (info.isSpawnEgg) {
+                        event.getEntity().getPersistentDataContainer().set(spawnEggKey, PersistentDataType.BYTE, (byte) 1);
+                        event.getEntity().setMetadata("dzeconomy-spawn-egg", new FixedMetadataValue(plugin, true));
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onSlimeSplit(org.bukkit.event.entity.SlimeSplitEvent event) {
+        LivingEntity parent = event.getEntity();
+        boolean isSpawner = parent.getPersistentDataContainer().has(spawnerKey, PersistentDataType.BYTE)
+                || parent.hasMetadata("dzeconomy-spawner");
+        boolean isSpawnEgg = parent.getPersistentDataContainer().has(spawnEggKey, PersistentDataType.BYTE)
+                || parent.hasMetadata("dzeconomy-spawn-egg");
+        if (isSpawner || isSpawnEgg) {
+            UUID parentUuid = parent.getUniqueId();
+            activeSplits.put(parentUuid, new SplitInfo(parent.getLocation(), isSpawner, isSpawnEgg));
+            online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTask(plugin, () -> activeSplits.remove(parentUuid));
         }
     }
 
@@ -189,21 +228,21 @@ public class EntityDeathListener implements Listener {
         }
 
         // Spawner mob check
-        if (!allowSpawnerMobs && entity.hasMetadata("dzeconomy-spawner")) {
+        boolean isSpawner = entity.getPersistentDataContainer().has(spawnerKey, PersistentDataType.BYTE)
+                || entity.hasMetadata("dzeconomy-spawner");
+        if (!allowSpawnerMobs && isSpawner) {
             return;
         }
 
         // Spawn egg mob check
-        if (!allowSpawnEggMobs && entity.hasMetadata("dzeconomy-spawn-egg")) {
+        boolean isSpawnEgg = entity.getPersistentDataContainer().has(spawnEggKey, PersistentDataType.BYTE)
+                || entity.hasMetadata("dzeconomy-spawn-egg");
+        if (!allowSpawnEggMobs && isSpawnEgg) {
             return;
         }
 
         Player killer = entity.getKiller();
-        if (requirePlayerKill && killer == null) {
-            return;
-        }
-
-        if (!requirePlayerKill && killer == null) {
+        if (killer == null) {
             return;
         }
 
@@ -394,5 +433,17 @@ public class EntityDeathListener implements Listener {
         public RewardValue getGem() { return gem; }
         public double getChance() { return chance; }
         public String getMessage() { return message; }
+    }
+
+    private static class SplitInfo {
+        private final org.bukkit.Location location;
+        private final boolean isSpawner;
+        private final boolean isSpawnEgg;
+
+        public SplitInfo(org.bukkit.Location location, boolean isSpawner, boolean isSpawnEgg) {
+            this.location = location;
+            this.isSpawner = isSpawner;
+            this.isSpawnEgg = isSpawnEgg;
+        }
     }
 }

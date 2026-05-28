@@ -29,14 +29,14 @@ public class PlayerQuitListener implements Listener {
         UUID uuid = player.getUniqueId();
         CurrencyManager cm = plugin.getCurrencyManager();
 
+        // Mark player as offline in track
+        cm.setPlayerOnline(uuid, false);
+
         // Update lastSeen
         PlayerData data = cm.loadPlayerData(uuid);
         if (data != null) {
             data.setLastSeen(System.currentTimeMillis());
         }
-
-        // Save player data (sync to ensure data is persisted before unload)
-        cm.savePlayerData(uuid);
 
         // Clean up combat tags, rank, and LuckPerms integration cache
         cm.removeCombatTag(uuid);
@@ -79,7 +79,7 @@ public class PlayerQuitListener implements Listener {
             }
         }
 
-        // Unload player data from cache
-        cm.unloadPlayerData(uuid);
+        // Unload player data from cache asynchronously to prevent blocking the server/region thread
+        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTaskAsynchronously(plugin, () -> cm.unloadPlayerData(uuid));
     }
 }

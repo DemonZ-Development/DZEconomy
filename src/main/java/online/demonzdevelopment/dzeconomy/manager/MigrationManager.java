@@ -3,6 +3,9 @@ package online.demonzdevelopment.dzeconomy.manager;
 import online.demonzdevelopment.dzeconomy.DZEconomy;
 import online.demonzdevelopment.dzeconomy.storage.StorageProvider;
 import online.demonzdevelopment.dzeconomy.storage.StorageType;
+import online.demonzdevelopment.dzeconomy.storage.impl.*;
+import online.demonzdevelopment.dzeconomy.util.ColorUtil;
+import online.demonzdevelopment.dzeconomy.util.FoliaAdapter;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
@@ -233,7 +236,7 @@ public class MigrationManager {
         if (Bukkit.isPrimaryThread()) {
             sender.sendMessage(translated);
         } else {
-            Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage(translated));
+            FoliaAdapter.runTask(plugin, () -> sender.sendMessage(translated));
         }
     }
 }

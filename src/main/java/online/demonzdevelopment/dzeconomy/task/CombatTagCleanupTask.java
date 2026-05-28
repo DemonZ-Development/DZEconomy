@@ -2,9 +2,7 @@ package online.demonzdevelopment.dzeconomy.task;
 
 import online.demonzdevelopment.dzeconomy.manager.CombatTagManager;
 
-import org.bukkit.scheduler.BukkitRunnable;
-
-public class CombatTagCleanupTask extends BukkitRunnable {
+public class CombatTagCleanupTask implements Runnable {
 
     private final CombatTagManager combatTagManager;
 

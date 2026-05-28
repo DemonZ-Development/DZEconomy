@@ -113,7 +113,7 @@ public class DZEconomy extends JavaPlugin {
         this.updateManager = new UpdateManager(this);
         updateManager.checkForUpdates();
         
-        getLogger().info("DZEconomy v2.0.0 has been successfully enabled!");
+        getLogger().info("DZEconomy v2.1.0 has been successfully enabled!");
         getLogger().info("Running on " + (FoliaAdapter.isFolia() ? "Folia" : Bukkit.getName()) + " " + Bukkit.getVersion());
         getLogger().info("Support & Wiki: https://wiki.demonzdevelopment.online/dzeconomy");
         getLogger().info("Thank you for choosing DZEconomy!");
@@ -169,7 +169,7 @@ public class DZEconomy extends JavaPlugin {
         }
 
         instance = null;
-        getLogger().info("DZEconomy v2.0.0 has been disabled. Thank you for using DZEconomy!");
+        getLogger().info("DZEconomy v2.1.0 has been disabled. Thank you for using DZEconomy!");
     }
     
     private void printStartupBanner() {
@@ -181,7 +181,7 @@ public class DZEconomy extends JavaPlugin {
             ColorUtil.translate("&a | |_| | | | (_) | &2| |_| | |  | |"),
             ColorUtil.translate("&a |____/|_|  \\___/  &2\\___/|_|  |_|"),
             "",
-            ColorUtil.translate("&7  Version &a2.0.0 &7| &7By &aDemonZ Development"),
+            ColorUtil.translate("&7  Version &a2.1.0 &7| &7By &aDemonZ Development"),
             ColorUtil.translate("&7  Wiki: &ahttps://wiki.demonzdevelopment.online/dzeconomy"),
             ColorUtil.translate("&7  Modrinth: &ahttps://modrinth.com/plugin/dzeconomy"),
             ColorUtil.translate("&7  Thank you for choosing DZEconomy! &a<3"),
@@ -273,18 +273,22 @@ public class DZEconomy extends JavaPlugin {
         
         // Auto-save (default 5 minutes)
         long autoSaveInterval = configManager.getConfig().getLong("auto-save.interval", 300) * 20L;
-        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTaskTimerAsynchronously(this, () -> new AutoSaveTask(this).run(), autoSaveInterval, autoSaveInterval);
+        AutoSaveTask autoSaveTask = new AutoSaveTask(this);
+        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTaskTimerAsynchronously(this, autoSaveTask, autoSaveInterval, autoSaveInterval);
         
         // Daily reset (check every minute)
-        FoliaAdapter.runTaskTimer(this, () -> new DailyResetTask(this).run(), 1200L, 1200L);
+        DailyResetTask dailyResetTask = new DailyResetTask(this);
+        FoliaAdapter.runTaskTimer(this, dailyResetTask, 1200L, 1200L);
         
         // Request timeout
         long requestTimeout = configManager.getConfig().getLong("request.timeout", 60) * 20L;
-        FoliaAdapter.runTaskTimer(this, () -> new RequestTimeoutTask(this).run(), requestTimeout, requestTimeout);
+        RequestTimeoutTask requestTimeoutTask = new RequestTimeoutTask(this);
+        FoliaAdapter.runTaskTimer(this, requestTimeoutTask, requestTimeout, requestTimeout);
         
         // Combat tag cleanup
         if (configManager.getConfig().getBoolean("combat-tag.enabled", true)) {
-            FoliaAdapter.runTaskTimer(this, () -> new CombatTagCleanupTask(combatTagManager).run(), 100L, 100L);
+            CombatTagCleanupTask combatTagCleanupTask = new CombatTagCleanupTask(combatTagManager);
+            FoliaAdapter.runTaskTimer(this, combatTagCleanupTask, 100L, 100L);
         }
         
         // Modrinth update check (every 6 hours = 4320000 ticks)
@@ -338,10 +342,15 @@ public class DZEconomy extends JavaPlugin {
      * Used by MigrationManager.
      */
     public StorageProvider createStorageProvider(StorageType type) {
-        return switch (type) {
-            case SQLITE -> new SQLiteStorageProvider(this);
-            case MYSQL -> new MySQLStorageProvider(this);
-            case FLATFILE -> new FlatFileStorageProvider(this);
-        };
+        switch (type) {
+            case SQLITE:
+                return new SQLiteStorageProvider(this);
+            case MYSQL:
+                return new MySQLStorageProvider(this);
+            case FLATFILE:
+                return new FlatFileStorageProvider(this);
+            default:
+                throw new IllegalArgumentException("Unknown storage type: " + type);
+        }
     }
 }

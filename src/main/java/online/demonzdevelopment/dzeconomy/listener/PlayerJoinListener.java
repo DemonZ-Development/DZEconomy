@@ -39,6 +39,9 @@ public class PlayerJoinListener implements Listener {
         CurrencyManager cm = plugin.getCurrencyManager();
         ConfigManager config = plugin.getConfigManager();
 
+        // Mark player as online in track
+        cm.setPlayerOnline(uuid, true);
+
         // Load player data
         PlayerData data = cm.loadPlayerData(uuid);
 

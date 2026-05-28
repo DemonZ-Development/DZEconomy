@@ -1,6 +1,6 @@
 # ⚙️ Configuration Reference
 
-Complete configuration reference for DZEconomy v2.0.0. All configuration files are located in `plugins/DZEconomy/`.
+Complete configuration reference for DZEconomy v2.1.0. All configuration files are located in `plugins/DZEconomy/`.
 
 ---
 
@@ -31,7 +31,7 @@ Complete configuration reference for DZEconomy v2.0.0. All configuration files a
 
 | Path | Type | Default | Description |
 |------|------|---------|-------------|
-| `storage.type` | String | `SQLITE` | Storage backend. Options: `SQLITE`, `MYSQL` |
+| `storage.type` | String | `SQLITE` | Storage backend. Options: `SQLITE`, `MYSQL`, `FLATFILE` |
 
 #### MySQL Settings
 
@@ -299,7 +299,7 @@ Each currency has identical configuration options.
 
 ## 📄 mob-rewards.yml
 
-See the [mob-rewards.yml](#) file for per-mob configuration. Key sections:
+See the `mob-rewards.yml` file for per-mob configuration. Key sections:
 
 | Section | Description |
 |---------|-------------|

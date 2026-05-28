@@ -52,7 +52,7 @@ public class FlatFileStorageProvider implements StorageProvider {
                     try {
                         UUID uuid = UUID.fromString(uuidStr);
                         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-                        Map<String, Double> balances = new HashMap<>();
+                        Map<String, Double> balances = new java.util.concurrent.ConcurrentHashMap<>();
                         balances.put("money", yaml.getDouble("balances.money", 0.0));
                         balances.put("mobcoin", yaml.getDouble("balances.mobcoin", 0.0));
                         balances.put("gem", yaml.getDouble("balances.gem", 0.0));
@@ -114,7 +114,7 @@ public class FlatFileStorageProvider implements StorageProvider {
         data.setDirty(false);
         
         // Cache balances in memory
-        Map<String, Double> balances = allBalancesCache.computeIfAbsent(uuid, k -> new HashMap<>());
+        Map<String, Double> balances = allBalancesCache.computeIfAbsent(uuid, k -> new java.util.concurrent.ConcurrentHashMap<>());
         balances.put("money", data.getBalance(CurrencyType.MONEY));
         balances.put("mobcoin", data.getBalance(CurrencyType.MOBCOIN));
         balances.put("gem", data.getBalance(CurrencyType.GEM));
@@ -187,7 +187,7 @@ public class FlatFileStorageProvider implements StorageProvider {
         }
         
         // Cache balances in memory
-        Map<String, Double> balances = allBalancesCache.computeIfAbsent(uuid, k -> new HashMap<>());
+        Map<String, Double> balances = allBalancesCache.computeIfAbsent(uuid, k -> new java.util.concurrent.ConcurrentHashMap<>());
         balances.put("money", data.getBalance(CurrencyType.MONEY));
         balances.put("mobcoin", data.getBalance(CurrencyType.MOBCOIN));
         balances.put("gem", data.getBalance(CurrencyType.GEM));
@@ -233,14 +233,14 @@ public class FlatFileStorageProvider implements StorageProvider {
         ensureInitialLoad();
         Map<String, Double> balances = allBalancesCache.get(uuid);
         if (balances != null) {
-            return new HashMap<>(balances);
+            return new java.util.concurrent.ConcurrentHashMap<>(balances);
         }
         
         File file = getPlayerFile(uuid);
         if (!file.exists()) return Map.of();
         
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-        Map<String, Double> result = new HashMap<>();
+        Map<String, Double> result = new java.util.concurrent.ConcurrentHashMap<>();
         result.put("money", yaml.getDouble("balances.money", 0.0));
         result.put("mobcoin", yaml.getDouble("balances.mobcoin", 0.0));
         result.put("gem", yaml.getDouble("balances.gem", 0.0));
@@ -279,7 +279,7 @@ public class FlatFileStorageProvider implements StorageProvider {
         }
         
         // Update cache
-        Map<String, Double> balances = allBalancesCache.computeIfAbsent(uuid, k -> new HashMap<>());
+        Map<String, Double> balances = allBalancesCache.computeIfAbsent(uuid, k -> new java.util.concurrent.ConcurrentHashMap<>());
         balances.put(key, amount);
     }
 

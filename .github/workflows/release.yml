@@ -35,7 +35,11 @@ jobs:
           # Extract version from tag (e.g., v2.0.0 -> 2.0.0)
           VERSION=${TAG_VERSION#v}
           echo "Building DZEconomy version $VERSION matching tag $TAG_VERSION"
-          mv build/libs/DZEconomy-2.0.0.jar build/libs/DZEconomy-${VERSION}.jar
+          # Find the built JAR and rename it dynamically to prevent version mismatch errors
+          ORIG_JAR=$(ls build/libs/DZEconomy-*.jar)
+          if [ "$ORIG_JAR" != "build/libs/DZEconomy-${VERSION}.jar" ]; then
+            mv "$ORIG_JAR" build/libs/DZEconomy-${VERSION}.jar
+          fi
 
       - name: Create GitHub Release and Upload JAR
         uses: softprops/action-gh-release@v2

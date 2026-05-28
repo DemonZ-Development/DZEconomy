@@ -1,6 +1,9 @@
 package online.demonzdevelopment.dzeconomy.storage.impl;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import online.demonzdevelopment.dzeconomy.DZEconomy;
+import online.demonzdevelopment.dzeconomy.adapter.ServerAdapterProvider;
 import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
 import online.demonzdevelopment.dzeconomy.data.PlayerData;
 import online.demonzdevelopment.dzeconomy.storage.StorageProvider;
@@ -14,6 +17,7 @@ public class SQLiteStorageProvider implements StorageProvider {
     
     private final DZEconomy plugin;
     private String url;
+    private HikariDataSource dataSource;
     
     public SQLiteStorageProvider(DZEconomy plugin) {
         this.plugin = plugin;
@@ -22,20 +26,26 @@ public class SQLiteStorageProvider implements StorageProvider {
     @Override
     public boolean initialize() {
         try {
+            if (!ServerAdapterProvider.getAdapter().loadSQLiteDriver()) {
+                return false;
+            }
+
             File dataFolder = plugin.getDataFolder();
             if (!dataFolder.exists()) {
                 dataFolder.mkdirs();
             }
             File dbFile = new File(dataFolder, "dzeconomy.db");
-            this.url = "jdbc:sqlite:" + dbFile.getAbsolutePath() + "?busy_timeout=5000";
+            this.url = "jdbc:sqlite:" + dbFile.getAbsolutePath() + "?journal_mode=WAL&foreign_keys=on&synchronous=NORMAL&busy_timeout=5000";
             
-            try (Connection connection = DriverManager.getConnection(url)) {
-                // Enable WAL mode for better concurrent read performance
-                try (Statement pragmaStmt = connection.createStatement()) {
-                    pragmaStmt.executeUpdate("PRAGMA journal_mode=WAL");
-                    pragmaStmt.executeUpdate("PRAGMA foreign_keys=ON");
-                    pragmaStmt.executeUpdate("PRAGMA synchronous=NORMAL");
-                }
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl(url);
+            config.setDriverClassName("org.sqlite.JDBC");
+            config.setMaximumPoolSize(1);
+            config.setPoolName("DZEconomy-SQLite");
+            
+            this.dataSource = new HikariDataSource(config);
+            
+            try (Connection connection = dataSource.getConnection()) {
                 createTables(connection);
             }
             
@@ -48,17 +58,10 @@ public class SQLiteStorageProvider implements StorageProvider {
     }
     
     private Connection getConnection() throws SQLException {
-        Connection connection = DriverManager.getConnection(url);
-        try (Statement stmt = connection.createStatement()) {
-            stmt.execute("PRAGMA foreign_keys=ON");
-            stmt.execute("PRAGMA synchronous=NORMAL");
-            stmt.execute("PRAGMA journal_mode=WAL");
-            stmt.execute("PRAGMA busy_timeout=5000");
-        } catch (SQLException e) {
-            try { connection.close(); } catch (SQLException ignored) {}
-            throw e;
+        if (dataSource == null) {
+            throw new SQLException("DataSource is not initialized");
         }
-        return connection;
+        return dataSource.getConnection();
     }
     
     private void createTables(Connection connection) {
@@ -361,6 +364,8 @@ public class SQLiteStorageProvider implements StorageProvider {
 
     @Override
     public void close() {
-        // No persistent connection to close anymore.
+        if (dataSource != null && !dataSource.isClosed()) {
+            dataSource.close();
+        }
     }
 }

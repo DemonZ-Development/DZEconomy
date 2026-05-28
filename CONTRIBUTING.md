@@ -26,7 +26,7 @@ This project and everyone participating in it is governed by our [Code of Conduc
 
 ### 🐛 Reporting Bugs
 
-Found a bug? Please [open an issue](https://github.com/DemonZDevelopment/DZEconomy/issues/new?template=bug_report.yml) with:
+Found a bug? Please [open an issue](https://github.com/DemonZ-Development/DZEconomy/issues/new?template=bug_report.yml) with:
 
 - Server software and version (e.g., Paper 1.21.4)
 - DZEconomy version
@@ -36,7 +36,7 @@ Found a bug? Please [open an issue](https://github.com/DemonZDevelopment/DZEcono
 
 ### ✨ Suggesting Features
 
-Have an idea? [Open a feature request](https://github.com/DemonZDevelopment/DZEconomy/issues/new?template=feature_request.yml) with:
+Have an idea? [Open a feature request](https://github.com/DemonZ-Development/DZEconomy/issues/new?template=feature_request.yml) with:
 
 - A clear description of the feature
 - Why it would be useful
@@ -77,7 +77,7 @@ cd DZEconomy
 ./gradlew shadowJar -x test
 ```
 
-The JAR will be in `build/libs/DZEconomy-2.0.0.jar`.
+The JAR will be in `build/libs/DZEconomy-2.1.0.jar`.
 
 ### Project Structure
 

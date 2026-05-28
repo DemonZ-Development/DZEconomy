@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [2.1.0] — 2026-05-28
+
+### Added
+
+- **Server Adapter System** — Version detection and platform-specific behavior via `ServerAdapter` interface
+- **LegacyServerAdapter** — Explicit `Class.forName()` SQLite driver loading for Java 8-16 (fixes "No suitable driver found" on older servers)
+- **ModernServerAdapter** — SPI-based driver discovery with `Class.forName()` fallback for Java 17+
+- **ServerAdapterProvider** — Automatic Java version detection and adapter selection
+- **SLF4J Shading** — Relocated to prevent runtime linkage conflicts with other plugins
+- **FoliaAdapter migration** — `MigrationManager` now uses `FoliaAdapter` instead of direct `Bukkit.getScheduler()`
+
+### Fixed
+
+- **SQLite JDBC driver not loading** on legacy Paper/Spigot servers (classloader SPI issue)
+- **EntityDeathListener dead code** — `requirePlayerKill=false` setting had no effect due to redundant null check
+- **Java 14 switch expression** replaced with traditional switch for broader compatibility
+- **Shading gaps** — SLF4J, CheckerFramework, and ErrorProne now properly relocated
+- **Stale module-info.class** excluded from JAR
+- **Stale native-image.properties** excluded from JAR
+- **Empty META-INF/versions/9/org/ directories** cleaned from JAR
+- **ServerAdapterProvider null safety** — robust handling of edge cases in version detection
+
 ## [2.0.0] — 2026-05-28
 
 ### 🚀 Complete Rewrite
@@ -39,7 +61,7 @@ DZEconomy v2.0.0 is a ground-up rewrite of the plugin with a modern architecture
 ### Changed
 
 - Rewritten from scratch with modular architecture
-- Minimum Java version: 17 (21 recommended)
+- Minimum Java version: 21
 - Minimum Minecraft version: 1.16
 - API version set to `1.20`
 
@@ -53,5 +75,6 @@ DZEconomy v2.0.0 is a ground-up rewrite of the plugin with a modern architecture
 
 ---
 
-[2.0.0]: https://github.com/DemonZDevelopment/DZEconomy/releases/tag/v2.0.0
-[1.0.0]: https://github.com/DemonZDevelopment/DZEconomy/releases/tag/v1.0.0
+[2.1.0]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v2.1.0
+[2.0.0]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v2.0.0
+[1.0.0]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v1.0.0

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Public API for DZEconomy v2.0.0.
+ * Public API for DZEconomy v2.1.0.
  * All methods that modify balances are thread-safe and use per-player locks.
  */
 public interface DZEconomyAPI {

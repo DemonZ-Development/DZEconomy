@@ -39,7 +39,7 @@ No configuration changes needed — DZEconomy adapts automatically.
 
 ## Quick Setup
 
-1. Place `DZEconomy-2.0.0.jar` in `plugins/`
+1. Place `DZEconomy-2.1.0.jar` in `plugins/`
 2. Restart the server
 3. Players can immediately use `/money`, `/mobcoin`, `/gem`
 4. Customize `config.yml`, `ranks.yml`, `mob-rewards.yml`
@@ -96,10 +96,10 @@ All database operations run asynchronously and never block the main thread (or r
 
 | Software | Versions | Java |
 |----------|----------|------|
-| Paper | 1.16.5 – 1.21.5 | 17+ (21 rec.) |
-| Folia | 1.19.4 – 1.21.5 | 17+ (21 rec.) |
-| Spigot | 1.16 – 1.21.5 | 17+ (21 rec.) |
-| Purpur | 1.16.5 – 1.21.5 | 17+ (21 rec.) |
+| Paper | 1.16.5 – 1.21.5 | 21+ |
+| Folia | 1.19.4 – 1.21.5 | 21+ |
+| Spigot | 1.16 – 1.21.5 | 21+ |
+| Purpur | 1.16.5 – 1.21.5 | 21+ |
 
 ---
 
@@ -111,11 +111,11 @@ All database operations run asynchronously and never block the main thread (or r
 
 ## Links
 
-- **Wiki:** [GitHub Wiki](https://github.com/DemonZDevelopment/DZEconomy/wiki)
+- **Wiki:** [GitHub Wiki](https://github.com/DemonZ-Development/DZEconomy/wiki)
 - **Discord:** [discord.com/invite/GYsTt96ypf](https://discord.com/invite/GYsTt96ypf)
-- **GitHub:** [github.com/DemonZDevelopment/DZEconomy](https://github.com/DemonZDevelopment/DZEconomy)
+- **GitHub:** [github.com/DemonZ-Development/DZEconomy](https://github.com/DemonZ-Development/DZEconomy)
 - **Website:** [demonzdevelopment.online](https://demonzdevelopment.online)
 
 ---
 
-*DZEconomy v2.0.0 — Made with ❤️ by DemonZ Development*
+*DZEconomy v2.1.0 — Made with ❤️ by DemonZ Development*

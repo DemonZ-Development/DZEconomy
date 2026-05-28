@@ -3,8 +3,8 @@ plugins {
     id 'io.github.goooler.shadow' version '8.1.7'
 }
 
-group = 'com.github.DemonZDevelopment'
-version = '2.0.0'
+group = 'com.github.DemonZ-Development'
+version = '2.1.0'
 
 java {
     toolchain {
@@ -16,7 +16,7 @@ repositories {
     mavenCentral()
     maven { url 'https://repo.papermc.io/repository/maven-public/' }
     maven { url 'https://repo.extendedclip.com/content/repositories/placeholderapi/' }
-    maven { url 'https://repo.lucko.me/' }
+    maven { url 'https://repo.luckperms.net/' }
     maven { url 'https://jitpack.io/' }
 }
 
@@ -50,15 +50,22 @@ shadowJar {
     relocate 'com.google.gson', 'online.demonzdevelopment.dzeconomy.libs.gson'
     relocate 'com.zaxxer.hikari', 'online.demonzdevelopment.dzeconomy.libs.hikari'
     relocate 'org.sqlite', 'online.demonzdevelopment.dzeconomy.libs.sqlite'
+    relocate 'org.slf4j', 'online.demonzdevelopment.dzeconomy.libs.slf4j'
     relocate 'org.bstats', 'online.demonzdevelopment.dzeconomy.libs.bstats'
     relocate 'com.github.benmanes.caffeine', 'online.demonzdevelopment.dzeconomy.libs.caffeine'
+    relocate 'org.checkerframework', 'online.demonzdevelopment.dzeconomy.libs.checkerframework'
+    relocate 'com.google.errorprone', 'online.demonzdevelopment.dzeconomy.libs.errorprone'
 
     exclude 'META-INF/*.SF'
     exclude 'META-INF/*.DSA'
     exclude 'META-INF/*.RSA'
+    exclude 'META-INF/native-image/**'
+    exclude 'META-INF/module-info.class'
+    exclude 'META-INF/versions/9/module-info.class'
+    exclude 'META-INF/versions/9/org/**'
+    exclude 'META-INF/versions/11/**'
+    exclude 'META-INF/versions/17/**'
 }
-
-build.dependsOn shadowJar
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'

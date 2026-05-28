@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.DemonZDevelopment</groupId>
+    <groupId>com.github.DemonZ-Development</groupId>
     <artifactId>DZEconomy</artifactId>
-    <version>2.0.0</version>
+    <version>2.1.0</version>
     <packaging>jar</packaging>
 
     <name>DZEconomy</name>
@@ -22,8 +22,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
     </properties>
 
     <repositories>
@@ -42,7 +41,7 @@
         <!-- LuckPerms Repository -->
         <repository>
             <id>luckperms</id>
-            <url>https://repo.lucko.me/</url>
+            <url>https://repo.luckperms.net/</url>
         </repository>
 
         <!-- JitPack Repository (for MockBukkit) -->
@@ -171,8 +170,6 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
                     <release>21</release>
                 </configuration>
             </plugin>
@@ -204,12 +201,24 @@
                                     <shadedPattern>online.demonzdevelopment.dzeconomy.libs.sqlite</shadedPattern>
                                 </relocation>
                                 <relocation>
+                                    <pattern>org.slf4j</pattern>
+                                    <shadedPattern>online.demonzdevelopment.dzeconomy.libs.slf4j</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>org.bstats</pattern>
                                     <shadedPattern>online.demonzdevelopment.dzeconomy.libs.bstats</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>com.github.benmanes.caffeine</pattern>
                                     <shadedPattern>online.demonzdevelopment.dzeconomy.libs.caffeine</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.checkerframework</pattern>
+                                    <shadedPattern>online.demonzdevelopment.dzeconomy.libs.checkerframework</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.google.errorprone</pattern>
+                                    <shadedPattern>online.demonzdevelopment.dzeconomy.libs.errorprone</shadedPattern>
                                 </relocation>
                             </relocations>
                             <transformers>
@@ -222,6 +231,12 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/native-image/**</exclude>
+                                        <exclude>META-INF/module-info.class</exclude>
+                                        <exclude>META-INF/versions/9/module-info.class</exclude>
+                                        <exclude>META-INF/versions/9/org/**</exclude>
+                                        <exclude>META-INF/versions/11/**</exclude>
+                                        <exclude>META-INF/versions/17/**</exclude>
                                     </excludes>
                                 </filter>
                             </filters>

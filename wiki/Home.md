@@ -41,14 +41,14 @@ DZEconomy is a feature-rich, high-performance economy plugin that introduces **t
 
 ### 1. Install the Plugin
 
-1. Download the latest **DZEconomy v2.0.0** jar from [Modrinth](https://modrinth.com/plugin/dzeconomy)
+1. Download the latest **DZEconomy v2.1.0** jar from [Modrinth](https://modrinth.com/plugin/dzeconomy)
 2. Place it in your server's `plugins/` folder
 3. Restart your server (or use a plugin manager)
 
 ### 2. Verify Installation
 
 ```
-[INFO] DZEconomy v2.0.0 has been successfully enabled!
+[INFO] DZEconomy v2.1.0 has been successfully enabled!
 [INFO] Running on Paper 1.21.4-...
 ```
 
@@ -100,10 +100,10 @@ Players can immediately use:
 | Resource | Link |
 |----------|------|
 | 📦 Download | [Modrinth](https://modrinth.com/plugin/dzeconomy) |
-| 📖 Wiki | [GitHub Wiki](https://github.com/DemonZDevelopment/DZEconomy/wiki) |
+| 📖 Wiki | [GitHub Wiki](https://github.com/DemonZ-Development/DZEconomy/wiki) |
 | 💬 Discord | [discord.com/invite/GYsTt96ypf](https://discord.com/invite/GYsTt96ypf) |
-| 🐛 Issue Tracker | [GitHub Issues](https://github.com/DemonZDevelopment/DZEconomy/issues) |
-| 📝 Source Code | [GitHub](https://github.com/DemonZDevelopment/DZEconomy) |
+| 🐛 Issue Tracker | [GitHub Issues](https://github.com/DemonZ-Development/DZEconomy/issues) |
+| 📝 Source Code | [GitHub](https://github.com/DemonZ-Development/DZEconomy) |
 | 🌐 Website | [demonzdevelopment.online](https://demonzdevelopment.online) |
 
 ---
@@ -115,7 +115,7 @@ DZEconomy is licensed under the **GNU General Public License v3.0**. See [LICENS
 ---
 
 <p align="center">
-  <strong>DZEconomy v2.0.0</strong> — Made with ❤️ by <a href="https://demonzdevelopment.online">DemonZ Development</a>
+  <strong>DZEconomy v2.1.0</strong> — Made with ❤️ by <a href="https://demonzdevelopment.online">DemonZ Development</a>
 </p>
 
 ---

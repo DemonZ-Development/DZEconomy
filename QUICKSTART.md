@@ -268,7 +268,7 @@ storage:
 - Check **API_EXAMPLE.java** if you're a developer
 - Contact: DemonZ Development
 - Website: [demonzdevelopment.online](https://demonzdevelopment.online)
-- GitHub: [github.com/DemonZDevelopment/DZEconomy](https://github.com/DemonZDevelopment/DZEconomy)
+- GitHub: [github.com/DemonZ-Development/DZEconomy](https://github.com/DemonZ-Development/DZEconomy)
 
 ---
 

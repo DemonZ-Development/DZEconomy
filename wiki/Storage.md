@@ -1,6 +1,6 @@
 # 🗄️ Storage Backends
 
-Complete guide to storage backends, migration, backup, and performance optimization for DZEconomy v2.0.0.
+Complete guide to storage backends, migration, backup, and performance optimization for DZEconomy v2.1.0.
 
 ---
 
@@ -209,7 +209,7 @@ DZEconomy supports live migration between storage backends using the `/economy m
 /economy migrate <from> <to>
 ```
 
-**Valid backends:** `sqlite`, `mysql`, `yaml`
+**Valid backends:** `sqlite`, `mysql`, `flatfile`
 
 ### Migration Examples
 
@@ -221,10 +221,10 @@ DZEconomy supports live migration between storage backends using the `/economy m
 /economy migrate mysql sqlite
 
 # Flat File → MySQL
-/economy migrate yaml mysql
+/economy migrate flatfile mysql
 
 # SQLite → Flat File (for debugging)
-/economy migrate sqlite yaml
+/economy migrate sqlite flatfile
 ```
 
 ### Migration Process

@@ -1,6 +1,6 @@
 # 🛠️ Developer API
 
-Complete guide to integrating with the DZEconomy API v2.0.0.
+Complete guide to integrating with the DZEconomy API v2.1.0.
 
 ---
 
@@ -32,9 +32,9 @@ All methods that modify balances are **thread-safe** and use per-player locks.
 
 <dependencies>
     <dependency>
-        <groupId>com.github.DemonZDevelopment</groupId>
+        <groupId>com.github.DemonZ-Development</groupId>
         <artifactId>DZEconomy</artifactId>
-        <version>2.0.0</version>
+        <version>2.1.0</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>
@@ -48,7 +48,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'com.github.DemonZDevelopment:DZEconomy:2.0.0'
+    compileOnly 'com.github.DemonZ-Development:DZEconomy:2.1.0'
 }
 ```
 
@@ -215,7 +215,7 @@ double getConversionRate(@NotNull CurrencyType from, @NotNull CurrencyType to);
 
 /**
  * Get the API version.
- * @return The API version number (currently 2)
+ * @return The API version number (currently 3)
  */
 int getAPIVersion();
 ```
@@ -399,7 +399,7 @@ DZEconomy uses Bukkit's event system. You can listen for economy events to trigg
 
 ### Available Events
 
-> **Note**: The event system is planned for a future update. Currently, use the API methods directly to observe balance changes.
+> **Note**: Custom event classes are planned for a future update. Currently, use the API methods directly to observe balance changes.
 
 ---
 
@@ -460,6 +460,7 @@ All API methods that modify balances are **thread-safe** and use per-player lock
 | API Version | Plugin Version | Changes |
 |-------------|----------------|---------|
 | 2 | 2.0.0 | Initial public API |
+| 3 | 2.1.0 | Server Adapter system, legacy Java support, FoliaAdapter migration |
 
 Check the API version at runtime:
 
@@ -473,7 +474,7 @@ if (version < 2) {
 ---
 
 <p align="center">
-  See the <a href="https://github.com/DemonZDevelopment/DZEconomy">GitHub repository</a> for the latest API source code.
+  See the <a href="https://github.com/DemonZ-Development/DZEconomy">GitHub repository</a> for the latest API source code.
 </p>
 
 ---

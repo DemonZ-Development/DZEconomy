@@ -102,21 +102,31 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             }
 
             String targetName = args[0];
-            @SuppressWarnings("deprecation")
-            org.bukkit.OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-            if (target == null || (!target.hasPlayedBefore() && !target.isOnline() && !cm.playerDataExists(target.getUniqueId()))) {
-                MessagesUtil.sendMessage(sender, "player-not-found", "%player%", targetName);
-                return;
-            }
+            resolveOfflinePlayer(targetName, target -> {
+                if (target == null || (!target.hasPlayedBefore() && !target.isOnline() && !cm.playerDataExists(target.getUniqueId()))) {
+                    MessagesUtil.sendMessage(sender, "player-not-found", "%player%", targetName);
+                    return;
+                }
 
-            double balance = cm.getBalance(target.getUniqueId(), currencyType);
-            if (!target.isOnline()) {
-                cm.unloadPlayerData(target.getUniqueId());
-            }
-            MessagesUtil.sendMessage(sender, commandName + "-balance-other",
-                    "%player%", target.getName() != null ? target.getName() : targetName,
-                    "%balance%", String.format("%,.2f", balance),
-                    "%currency%", commandName);
+                online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTaskAsynchronously(plugin, () -> {
+                    double balance = cm.getBalance(target.getUniqueId(), currencyType);
+                    boolean isOnline = target.isOnline();
+                    if (!isOnline) {
+                        cm.unloadPlayerData(target.getUniqueId());
+                    }
+                    Runnable notifyTask = () -> {
+                        MessagesUtil.sendMessage(sender, commandName + "-balance-other",
+                                "%player%", target.getName() != null ? target.getName() : targetName,
+                                "%balance%", String.format("%,.2f", balance),
+                                "%currency%", commandName);
+                    };
+                    if (sender instanceof Player) {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, (Player) sender, notifyTask);
+                    } else {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTask(plugin, notifyTask);
+                    }
+                });
+            });
         } else {
             if (!(sender instanceof Player)) {
                 MessagesUtil.sendMessage(sender, "player-only");
@@ -479,14 +489,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         }
 
         String targetName = args[0];
-        @SuppressWarnings("deprecation")
-        org.bukkit.OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-        CurrencyManager cm = plugin.getCurrencyManager();
-        if (target == null || (!target.hasPlayedBefore() && !target.isOnline() && !cm.playerDataExists(target.getUniqueId()))) {
-            MessagesUtil.sendMessage(sender, "player-not-found", "%player%", targetName);
-            return;
-        }
-
         double amount;
         try {
             amount = Double.parseDouble(args[1]);
@@ -500,32 +502,60 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             return;
         }
 
-        boolean success = cm.addBalance(target.getUniqueId(), currencyType, amount);
-
-        if (success) {
-            double newBalance = cm.getBalance(target.getUniqueId(), currencyType);
-            if (!target.isOnline()) {
-                cm.unloadPlayerData(target.getUniqueId());
+        CurrencyManager cm = plugin.getCurrencyManager();
+        resolveOfflinePlayer(targetName, target -> {
+            if (target == null || (!target.hasPlayedBefore() && !target.isOnline() && !cm.playerDataExists(target.getUniqueId()))) {
+                MessagesUtil.sendMessage(sender, "player-not-found", "%player%", targetName);
+                return;
             }
-            MessagesUtil.sendMessage(sender, commandName + "-add-success",
-                    "%player%", target.getName() != null ? target.getName() : targetName,
-                    "%amount%", String.format("%,.2f", amount),
-                    "%balance%", String.format("%,.2f", newBalance),
-                    "%currency%", commandName);
 
-            if (target.isOnline() && target instanceof Player) {
-                MessagesUtil.sendMessage((Player) target, commandName + "-added",
-                        "%player%", sender.getName(),
-                        "%amount%", String.format("%,.2f", amount),
-                        "%balance%", String.format("%,.2f", newBalance),
-                        "%currency%", commandName);
-            }
-        } else {
-            MessagesUtil.sendMessage(sender, commandName + "-add-failed",
-                    "%player%", target.getName() != null ? target.getName() : targetName,
-                    "%amount%", String.format("%,.2f", amount),
-                    "%currency%", commandName);
-        }
+            online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTaskAsynchronously(plugin, () -> {
+                boolean success = cm.addBalance(target.getUniqueId(), currencyType, amount);
+
+                if (success) {
+                    double newBalance = cm.getBalance(target.getUniqueId(), currencyType);
+                    boolean isOnline = target.isOnline();
+                    if (!isOnline) {
+                        cm.unloadPlayerData(target.getUniqueId());
+                    }
+                    Runnable notifyTask = () -> {
+                        MessagesUtil.sendMessage(sender, commandName + "-add-success",
+                                "%player%", target.getName() != null ? target.getName() : targetName,
+                                "%amount%", String.format("%,.2f", amount),
+                                "%balance%", String.format("%,.2f", newBalance),
+                                "%currency%", commandName);
+
+                        if (isOnline && target instanceof Player) {
+                            Player targetPlayer = (Player) target;
+                            online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, targetPlayer, () -> {
+                                MessagesUtil.sendMessage(targetPlayer, commandName + "-added",
+                                        "%player%", sender.getName(),
+                                        "%amount%", String.format("%,.2f", amount),
+                                        "%balance%", String.format("%,.2f", newBalance),
+                                        "%currency%", commandName);
+                            });
+                        }
+                    };
+                    if (sender instanceof Player) {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, (Player) sender, notifyTask);
+                    } else {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTask(plugin, notifyTask);
+                    }
+                } else {
+                    Runnable failTask = () -> {
+                        MessagesUtil.sendMessage(sender, commandName + "-add-failed",
+                                "%player%", target.getName() != null ? target.getName() : targetName,
+                                "%amount%", String.format("%,.2f", amount),
+                                "%currency%", commandName);
+                    };
+                    if (sender instanceof Player) {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, (Player) sender, failTask);
+                    } else {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTask(plugin, failTask);
+                    }
+                }
+            });
+        });
     }
 
     // ─── Admin: Remove ────────────────────────────────────────────────────────
@@ -543,14 +573,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         }
 
         String targetName = args[0];
-        @SuppressWarnings("deprecation")
-        org.bukkit.OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-        CurrencyManager cm = plugin.getCurrencyManager();
-        if (target == null || (!target.hasPlayedBefore() && !target.isOnline() && !cm.playerDataExists(target.getUniqueId()))) {
-            MessagesUtil.sendMessage(sender, "player-not-found", "%player%", targetName);
-            return;
-        }
-
         double amount;
         try {
             amount = Double.parseDouble(args[1]);
@@ -564,32 +586,60 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             return;
         }
 
-        boolean success = cm.removeBalance(target.getUniqueId(), currencyType, amount);
-
-        if (success) {
-            double newBalance = cm.getBalance(target.getUniqueId(), currencyType);
-            if (!target.isOnline()) {
-                cm.unloadPlayerData(target.getUniqueId());
+        CurrencyManager cm = plugin.getCurrencyManager();
+        resolveOfflinePlayer(targetName, target -> {
+            if (target == null || (!target.hasPlayedBefore() && !target.isOnline() && !cm.playerDataExists(target.getUniqueId()))) {
+                MessagesUtil.sendMessage(sender, "player-not-found", "%player%", targetName);
+                return;
             }
-            MessagesUtil.sendMessage(sender, commandName + "-remove-success",
-                    "%player%", target.getName() != null ? target.getName() : targetName,
-                    "%amount%", String.format("%,.2f", amount),
-                    "%balance%", String.format("%,.2f", newBalance),
-                    "%currency%", commandName);
 
-            if (target.isOnline() && target instanceof Player) {
-                MessagesUtil.sendMessage((Player) target, commandName + "-removed",
-                        "%player%", sender.getName(),
-                        "%amount%", String.format("%,.2f", amount),
-                        "%balance%", String.format("%,.2f", newBalance),
-                        "%currency%", commandName);
-            }
-        } else {
-            MessagesUtil.sendMessage(sender, commandName + "-remove-failed",
-                    "%player%", target.getName() != null ? target.getName() : targetName,
-                    "%amount%", String.format("%,.2f", amount),
-                    "%currency%", commandName);
-        }
+            online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTaskAsynchronously(plugin, () -> {
+                boolean success = cm.removeBalance(target.getUniqueId(), currencyType, amount);
+
+                if (success) {
+                    double newBalance = cm.getBalance(target.getUniqueId(), currencyType);
+                    boolean isOnline = target.isOnline();
+                    if (!isOnline) {
+                        cm.unloadPlayerData(target.getUniqueId());
+                    }
+                    Runnable notifyTask = () -> {
+                        MessagesUtil.sendMessage(sender, commandName + "-remove-success",
+                                "%player%", target.getName() != null ? target.getName() : targetName,
+                                "%amount%", String.format("%,.2f", amount),
+                                "%balance%", String.format("%,.2f", newBalance),
+                                "%currency%", commandName);
+
+                        if (isOnline && target instanceof Player) {
+                            Player targetPlayer = (Player) target;
+                            online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, targetPlayer, () -> {
+                                MessagesUtil.sendMessage(targetPlayer, commandName + "-removed",
+                                        "%player%", sender.getName(),
+                                        "%amount%", String.format("%,.2f", amount),
+                                        "%balance%", String.format("%,.2f", newBalance),
+                                        "%currency%", commandName);
+                            });
+                        }
+                    };
+                    if (sender instanceof Player) {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, (Player) sender, notifyTask);
+                    } else {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTask(plugin, notifyTask);
+                    }
+                } else {
+                    Runnable failTask = () -> {
+                        MessagesUtil.sendMessage(sender, commandName + "-remove-failed",
+                                "%player%", target.getName() != null ? target.getName() : targetName,
+                                "%amount%", String.format("%,.2f", amount),
+                                "%currency%", commandName);
+                    };
+                    if (sender instanceof Player) {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, (Player) sender, failTask);
+                    } else {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTask(plugin, failTask);
+                    }
+                }
+            });
+        });
     }
 
     // ─── Admin: Set ───────────────────────────────────────────────────────────
@@ -607,14 +657,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         }
 
         String targetName = args[0];
-        @SuppressWarnings("deprecation")
-        org.bukkit.OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-        CurrencyManager cm = plugin.getCurrencyManager();
-        if (target == null || (!target.hasPlayedBefore() && !target.isOnline() && !cm.playerDataExists(target.getUniqueId()))) {
-            MessagesUtil.sendMessage(sender, "player-not-found", "%player%", targetName);
-            return;
-        }
-
         double amount;
         try {
             amount = Double.parseDouble(args[1]);
@@ -628,32 +670,96 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             return;
         }
 
-        boolean success = cm.setBalance(target.getUniqueId(), currencyType, amount);
-
-        if (success) {
-            double newBalance = cm.getBalance(target.getUniqueId(), currencyType);
-            if (!target.isOnline()) {
-                cm.unloadPlayerData(target.getUniqueId());
+        CurrencyManager cm = plugin.getCurrencyManager();
+        resolveOfflinePlayer(targetName, target -> {
+            if (target == null || (!target.hasPlayedBefore() && !target.isOnline() && !cm.playerDataExists(target.getUniqueId()))) {
+                MessagesUtil.sendMessage(sender, "player-not-found", "%player%", targetName);
+                return;
             }
-            MessagesUtil.sendMessage(sender, commandName + "-set-success",
-                    "%player%", target.getName() != null ? target.getName() : targetName,
-                    "%amount%", String.format("%,.2f", amount),
-                    "%balance%", String.format("%,.2f", newBalance),
-                    "%currency%", commandName);
 
-            if (target.isOnline() && target instanceof Player) {
-                MessagesUtil.sendMessage((Player) target, commandName + "-set",
-                        "%player%", sender.getName(),
-                        "%amount%", String.format("%,.2f", amount),
-                        "%balance%", String.format("%,.2f", newBalance),
-                        "%currency%", commandName);
-            }
-        } else {
-            MessagesUtil.sendMessage(sender, commandName + "-set-failed",
-                    "%player%", target.getName() != null ? target.getName() : targetName,
-                    "%amount%", String.format("%,.2f", amount),
-                    "%currency%", commandName);
+            online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTaskAsynchronously(plugin, () -> {
+                boolean success = cm.setBalance(target.getUniqueId(), currencyType, amount);
+
+                if (success) {
+                    double newBalance = cm.getBalance(target.getUniqueId(), currencyType);
+                    boolean isOnline = target.isOnline();
+                    if (!isOnline) {
+                        cm.unloadPlayerData(target.getUniqueId());
+                    }
+                    Runnable notifyTask = () -> {
+                        MessagesUtil.sendMessage(sender, commandName + "-set-success",
+                                "%player%", target.getName() != null ? target.getName() : targetName,
+                                "%amount%", String.format("%,.2f", amount),
+                                "%balance%", String.format("%,.2f", newBalance),
+                                "%currency%", commandName);
+
+                        if (isOnline && target instanceof Player) {
+                            Player targetPlayer = (Player) target;
+                            online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, targetPlayer, () -> {
+                                MessagesUtil.sendMessage(targetPlayer, commandName + "-set",
+                                        "%player%", sender.getName(),
+                                        "%amount%", String.format("%,.2f", amount),
+                                        "%balance%", String.format("%,.2f", newBalance),
+                                        "%currency%", commandName);
+                            });
+                        }
+                    };
+                    if (sender instanceof Player) {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, (Player) sender, notifyTask);
+                    } else {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTask(plugin, notifyTask);
+                    }
+                } else {
+                    Runnable failTask = () -> {
+                        MessagesUtil.sendMessage(sender, commandName + "-set-failed",
+                                "%player%", target.getName() != null ? target.getName() : targetName,
+                                "%amount%", String.format("%,.2f", amount),
+                                "%currency%", commandName);
+                    };
+                    if (sender instanceof Player) {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, (Player) sender, failTask);
+                    } else {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTask(plugin, failTask);
+                    }
+                }
+            });
+        });
+    }
+
+    /**
+     * Non-blocking resolution of OfflinePlayer objects for online or offline players.
+     */
+    protected void resolveOfflinePlayer(String name, java.util.function.Consumer<org.bukkit.OfflinePlayer> callback) {
+        org.bukkit.entity.Player onlinePlayer = Bukkit.getPlayerExact(name);
+        if (onlinePlayer != null) {
+            callback.accept(onlinePlayer);
+            return;
         }
+
+        boolean onlineMode = Bukkit.getOnlineMode();
+        boolean bungeecord = false;
+        try {
+            Class<?> spigotConfigClass = Class.forName("org.spigotmc.SpigotConfig");
+            java.lang.reflect.Field bungeeField = spigotConfigClass.getField("bungee");
+            bungeecord = bungeeField.getBoolean(null);
+        } catch (Exception ignored) {
+            try {
+                bungeecord = Bukkit.spigot().getSpigotConfig().getBoolean("settings.bungeecord", false);
+            } catch (Exception ignored2) {}
+        }
+
+        if (!onlineMode && !bungeecord) {
+            java.util.UUID offlineUuid = java.util.UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            org.bukkit.OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(offlineUuid);
+            callback.accept(offlinePlayer);
+            return;
+        }
+
+        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTaskAsynchronously(plugin, () -> {
+            @SuppressWarnings("deprecation")
+            org.bukkit.OfflinePlayer resolved = Bukkit.getOfflinePlayer(name);
+            online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTask(plugin, () -> callback.accept(resolved));
+        });
     }
 
     // ─── Top ──────────────────────────────────────────────────────────────────

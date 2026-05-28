@@ -6,7 +6,6 @@ import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
 import online.demonzdevelopment.dzeconomy.data.PlayerData;
 
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -14,7 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-public class DailyResetTask extends BukkitRunnable {
+public class DailyResetTask implements Runnable {
 
     private final DZEconomy plugin;
 

@@ -21,7 +21,7 @@ Complete guide to DZEconomy's compatibility with Folia — Paper's region-based 
 
 ## ✅ How DZEconomy Adapts
 
-DZEconomy v2.0.0 was built from the ground up with Folia support. The plugin uses a custom **`FoliaAdapter`** utility class that automatically detects the server type and delegates to the appropriate scheduler API.
+DZEconomy v2.1.0 was built from the ground up with Folia support. The plugin uses a custom **`FoliaAdapter`** utility class that automatically detects the server type and delegates to the appropriate scheduler API.
 
 ### Automatic Detection
 
@@ -186,7 +186,7 @@ Folia's multithreaded model provides significant performance benefits for server
 ### "Not on the main thread" Errors
 
 If you see errors about operations not being on the main thread:
-1. Ensure you're running DZEconomy v2.0.0+ (earlier versions don't support Folia)
+1. Ensure you're running DZEconomy v2.1.0+ (earlier versions don't support Folia)
 2. Check that no other plugin is calling DZEconomy methods from an unexpected thread
 3. The `FoliaAdapter` should handle all scheduling automatically — report issues on GitHub
 

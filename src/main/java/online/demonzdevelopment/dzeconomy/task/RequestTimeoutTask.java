@@ -3,17 +3,15 @@ package online.demonzdevelopment.dzeconomy.task;
 import online.demonzdevelopment.dzeconomy.DZEconomy;
 import online.demonzdevelopment.dzeconomy.currency.CurrencyManager;
 import online.demonzdevelopment.dzeconomy.data.CurrencyRequest;
+import online.demonzdevelopment.dzeconomy.data.PlayerData;
 import online.demonzdevelopment.dzeconomy.util.MessagesUtil;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-public class RequestTimeoutTask extends BukkitRunnable {
+public class RequestTimeoutTask implements Runnable {
 
     private final DZEconomy plugin;
 
@@ -109,6 +107,12 @@ public class RequestTimeoutTask extends BukkitRunnable {
         if (player != null) {
             return player.getName();
         }
+        // Check cache first to avoid blocking Mojang/Disk queries
+        PlayerData cached = plugin.getCurrencyManager().getPlayerData(uuid);
+        if (cached != null && cached.getUsername() != null) {
+            return cached.getUsername();
+        }
+        // Fallback to getOfflinePlayer (cached or offline name)
         String offlineName = Bukkit.getOfflinePlayer(uuid).getName();
         return offlineName != null ? offlineName : uuid.toString().substring(0, 8) + "...";
     }

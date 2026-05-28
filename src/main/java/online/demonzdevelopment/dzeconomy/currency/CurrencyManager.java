@@ -22,12 +22,25 @@ public class CurrencyManager {
     private final ConcurrentHashMap<UUID, PlayerData> playerDataCache;
     private final ConcurrentHashMap<UUID, List<CurrencyRequest>> pendingRequests;
     private final ConcurrentHashMap<UUID, ReentrantLock> playerLocks;
+    private final Set<UUID> onlinePlayers = ConcurrentHashMap.newKeySet();
     
     public CurrencyManager(DZEconomy plugin) {
         this.plugin = plugin;
         this.playerDataCache = new ConcurrentHashMap<>();
         this.pendingRequests = new ConcurrentHashMap<>();
         this.playerLocks = new ConcurrentHashMap<>();
+    }
+
+    public void setPlayerOnline(UUID uuid, boolean online) {
+        if (online) {
+            onlinePlayers.add(uuid);
+        } else {
+            onlinePlayers.remove(uuid);
+        }
+    }
+
+    public boolean isPlayerOnline(UUID uuid) {
+        return onlinePlayers.contains(uuid);
     }
     
     // ━━ Per-Player Lock System ━━
@@ -53,32 +66,38 @@ public class CurrencyManager {
     
     // ━━ Player Data Management ━━
     public PlayerData loadPlayerData(UUID uuid) {
-        PlayerData cached = playerDataCache.get(uuid);
-        if (cached != null) {
-            return cached;
-        }
-        
-        StorageProvider storage = plugin.getStorageProvider();
-        PlayerData data = storage.loadPlayerData(uuid);
-        if (data == null) {
-            data = new PlayerData(uuid);
-        } else {
-            long lastSeen = data.getLastSeen();
-            if (lastSeen > 0) {
-                java.time.LocalDate lastSeenDate = java.time.Instant.ofEpochMilli(lastSeen)
-                        .atZone(java.time.ZoneId.systemDefault())
-                        .toLocalDate();
-                java.time.LocalDate today = java.time.LocalDate.now();
-                if (today.isAfter(lastSeenDate)) {
-                    for (CurrencyType type : CurrencyType.values()) {
-                        data.resetDailyTransactions(type);
+        ReentrantLock lock = getLock(uuid);
+        lock.lock();
+        try {
+            PlayerData cached = playerDataCache.get(uuid);
+            if (cached != null) {
+                return cached;
+            }
+            
+            StorageProvider storage = plugin.getStorageProvider();
+            PlayerData data = storage.loadPlayerData(uuid);
+            if (data == null) {
+                data = new PlayerData(uuid);
+            } else {
+                long lastSeen = data.getLastSeen();
+                if (lastSeen > 0) {
+                    java.time.LocalDate lastSeenDate = java.time.Instant.ofEpochMilli(lastSeen)
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .toLocalDate();
+                    java.time.LocalDate today = java.time.LocalDate.now();
+                    if (today.isAfter(lastSeenDate)) {
+                        for (CurrencyType type : CurrencyType.values()) {
+                            data.resetDailyTransactions(type);
+                        }
                     }
                 }
             }
+            
+            playerDataCache.put(uuid, data);
+            return data;
+        } finally {
+            lock.unlock();
         }
-        
-        PlayerData existing = playerDataCache.putIfAbsent(uuid, data);
-        return existing != null ? existing : data;
     }
     
     public void unloadPlayerData(UUID uuid) {
