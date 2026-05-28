@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/bannerv2.png" alt="DZEconomy Banner" width="100%">
+<img src="assets/bannerv2-release.png" alt="DZEconomy Banner" width="100%">
 
 <br>
 
