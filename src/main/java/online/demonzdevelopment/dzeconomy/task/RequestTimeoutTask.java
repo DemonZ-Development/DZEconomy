@@ -1,75 +1,115 @@
 package online.demonzdevelopment.dzeconomy.task;
 
 import online.demonzdevelopment.dzeconomy.DZEconomy;
+import online.demonzdevelopment.dzeconomy.currency.CurrencyManager;
 import online.demonzdevelopment.dzeconomy.data.CurrencyRequest;
-import online.demonzdevelopment.dzeconomy.util.ColorUtil;
 import online.demonzdevelopment.dzeconomy.util.MessagesUtil;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
-/**
- * Task to check for and handle expired currency requests
- */
 public class RequestTimeoutTask extends BukkitRunnable {
-    
+
     private final DZEconomy plugin;
-    
+
     public RequestTimeoutTask(DZEconomy plugin) {
         this.plugin = plugin;
     }
-    
+
     @Override
     public void run() {
-        int timeoutSeconds = plugin.getConfigManager().getConfig().getInt("limits.request-timeout", 120);
-        Map<UUID, List<CurrencyRequest>> allRequests = plugin.getCurrencyManager().getAllPendingRequests();
-        
-        List<UUID> toRemove = new ArrayList<>();
-        
-        for (Map.Entry<UUID, List<CurrencyRequest>> entry : allRequests.entrySet()) {
-            UUID requestedPlayerUUID = entry.getKey();
-            List<CurrencyRequest> requests = entry.getValue();
-            
-            if (requests == null || requests.isEmpty()) {
-                continue;
-            }
-            
-            // Check first request (FIFO)
-            CurrencyRequest request = requests.get(0);
-            
-            if (request.isExpired(timeoutSeconds)) {
-                // Remove expired request
-                toRemove.add(requestedPlayerUUID);
-                
-                // Notify players
-                Player requestedPlayer = Bukkit.getPlayer(requestedPlayerUUID);
-                if (requestedPlayer != null && requestedPlayer.isOnline()) {
-                    MessagesUtil messageUtil = new MessagesUtil(plugin);
-                    Map<String, String> placeholders = MessagesUtil.placeholders(
-                            "player", Bukkit.getOfflinePlayer(request.getRequesterUUID()).getName());
-                    String message = messageUtil.getMessage("request.expired", placeholders);
-                    requestedPlayer.sendMessage(message);
-                    
-                    // Close GUI if open
-                    plugin.getRequestGUIManager().closeGUI(requestedPlayer);
-                }
-                
-                Player requester = Bukkit.getPlayer(request.getRequesterUUID());
-                if (requester != null && requester.isOnline()) {
-                    MessagesUtil messageUtil = new MessagesUtil(plugin);
-                    Map<String, String> placeholders = MessagesUtil.placeholders(
-                            "player", Bukkit.getOfflinePlayer(requestedPlayerUUID).getName());
-                    String message = messageUtil.getMessage("request.expired-other", placeholders);
-                    requester.sendMessage(message);
+        CurrencyManager cm = plugin.getCurrencyManager();
+        long now = System.currentTimeMillis();
+
+        // Collect all expired requests
+        List<CurrencyRequest> expiredRequests = new ArrayList<>();
+        List<UUID> expiredRequestedPlayers = new ArrayList<>();
+
+        for (UUID requestedPlayer : cm.getRequestHolders()) {
+            List<CurrencyRequest> requests = cm.getRequestsTo(requestedPlayer);
+            if (requests == null) continue;
+
+            for (CurrencyRequest request : requests) {
+                if (request.isExpired()) {
+                    // FIX: Only remove the specific expired request, not all requests.
+                    // Previously, the entire list of requests for a player was cleared,
+                    // which could remove non-expired requests.
+                    expiredRequests.add(request);
+                    expiredRequestedPlayers.add(requestedPlayer);
                 }
             }
         }
-        
-        // Remove expired requests
-        for (UUID uuid : toRemove) {
-            plugin.getCurrencyManager().removeRequest(uuid);
+
+        // Process expired requests
+        for (int i = 0; i < expiredRequests.size(); i++) {
+            CurrencyRequest expiredRequest = expiredRequests.get(i);
+            UUID requestedPlayer = expiredRequestedPlayers.get(i);
+
+            // Remove only the specific expired request using CurrencyManager's method
+            cm.removeRequest(requestedPlayer, expiredRequest);
+
+            // Notify the requester that their request has expired
+            Player requester = Bukkit.getPlayer(expiredRequest.getRequester());
+            if (requester != null && requester.isOnline()) {
+                online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, requester, () -> {
+                    MessagesUtil.sendMessage(requester, "request-expired-timeout",
+                            "%player%", getPlayerName(expiredRequest.getRequestedPlayer()),
+                            "%amount%", String.format("%,.2f", expiredRequest.getAmount()),
+                            "%currency%", expiredRequest.getCurrencyType().name().toLowerCase());
+                });
+            }
+
+            // Notify the requested player if online
+            Player requested = Bukkit.getPlayer(requestedPlayer);
+            if (requested != null && requested.isOnline()) {
+                online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, requested, () -> {
+                    MessagesUtil.sendMessage(requested, "request-expired-notify",
+                            "%player%", getPlayerName(expiredRequest.getRequester()),
+                            "%amount%", String.format("%,.2f", expiredRequest.getAmount()),
+                            "%currency%", expiredRequest.getCurrencyType().name().toLowerCase());
+
+                    // Close request GUI if open for this specific request
+                    closeRequestGUI(requested);
+                });
+            }
         }
+
+        if (!expiredRequests.isEmpty()) {
+            plugin.getLogger().info("[RequestTimeout] Cleaned up " + expiredRequests.size() + " expired request(s).");
+        }
+    }
+
+    /**
+     * Close the request GUI for a player if they have one open.
+     */
+    private void closeRequestGUI(Player player) {
+        try {
+            if (player.getOpenInventory() != null && player.getOpenInventory().getTitle() != null) {
+                String title = player.getOpenInventory().getTitle();
+                if (title.contains("Request")) {
+                    player.closeInventory();
+                }
+            }
+        } catch (Exception e) {
+            // Inventory operations can sometimes throw in edge cases
+            plugin.getLogger().warning("[RequestTimeout] Failed to close GUI for " + player.getName() + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Safely get a player's name from their UUID.
+     */
+    private String getPlayerName(UUID uuid) {
+        Player player = Bukkit.getPlayer(uuid);
+        if (player != null) {
+            return player.getName();
+        }
+        String offlineName = Bukkit.getOfflinePlayer(uuid).getName();
+        return offlineName != null ? offlineName : uuid.toString().substring(0, 8) + "...";
     }
 }

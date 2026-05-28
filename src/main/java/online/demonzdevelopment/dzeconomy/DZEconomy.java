@@ -2,98 +2,91 @@ package online.demonzdevelopment.dzeconomy;
 
 import online.demonzdevelopment.dzeconomy.api.DZEconomyAPI;
 import online.demonzdevelopment.dzeconomy.api.DZEconomyAPIImpl;
-import online.demonzdevelopment.dzeconomy.command.EconomyCommand;
-import online.demonzdevelopment.dzeconomy.command.GemCommand;
-import online.demonzdevelopment.dzeconomy.command.MobCoinCommand;
-import online.demonzdevelopment.dzeconomy.command.MoneyCommand;
+import online.demonzdevelopment.dzeconomy.command.*;
 import online.demonzdevelopment.dzeconomy.config.ConfigManager;
-import online.demonzdevelopment.dzeconomy.manager.CombatTagManager;
-import online.demonzdevelopment.dzeconomy.manager.CurrencyManager;
-import online.demonzdevelopment.dzeconomy.listener.CombatTagListener;
-import online.demonzdevelopment.dzeconomy.listener.EntityDeathListener;
-import online.demonzdevelopment.dzeconomy.listener.PlayerDeathListener;
-import online.demonzdevelopment.dzeconomy.listener.PlayerJoinListener;
-import online.demonzdevelopment.dzeconomy.listener.PlayerQuitListener;
+import online.demonzdevelopment.dzeconomy.config.ConfigMigrator;
+import online.demonzdevelopment.dzeconomy.currency.CurrencyManager;
+import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
+import online.demonzdevelopment.dzeconomy.data.PlayerData;
 import online.demonzdevelopment.dzeconomy.gui.RequestGUIManager;
 import online.demonzdevelopment.dzeconomy.integration.LuckPermsIntegration;
-import online.demonzdevelopment.dzeconomy.integration.PlaceholderAPI;
+import online.demonzdevelopment.dzeconomy.integration.PlaceholderAPIExpansion;
+import online.demonzdevelopment.dzeconomy.listener.*;
+import online.demonzdevelopment.dzeconomy.manager.CombatTagManager;
+import online.demonzdevelopment.dzeconomy.manager.MigrationManager;
 import online.demonzdevelopment.dzeconomy.manager.RankManager;
 import online.demonzdevelopment.dzeconomy.storage.StorageProvider;
-import online.demonzdevelopment.dzeconomy.storage.impl.FlatFileStorageProvider;
-import online.demonzdevelopment.dzeconomy.storage.impl.MySQLStorageProvider;
-import online.demonzdevelopment.dzeconomy.storage.impl.SQLiteStorageProvider;
-import online.demonzdevelopment.dzeconomy.task.AutoSaveTask;
-import online.demonzdevelopment.dzeconomy.task.CombatTagCleanupTask;
-import online.demonzdevelopment.dzeconomy.task.DailyResetTask;
-import online.demonzdevelopment.dzeconomy.task.RequestTimeoutTask;
-import online.demonzdevelopment.dzeconomy.update.UpdateChecker;
+import online.demonzdevelopment.dzeconomy.storage.StorageType;
+import online.demonzdevelopment.dzeconomy.storage.impl.*;
+import online.demonzdevelopment.dzeconomy.task.*;
 import online.demonzdevelopment.dzeconomy.update.UpdateManager;
+import online.demonzdevelopment.dzeconomy.util.ColorUtil;
+import online.demonzdevelopment.dzeconomy.util.FoliaAdapter;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
-import org.bukkit.plugin.ServicePriority;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-/**
- * DZEconomy - Professional Multi-Currency Economy Plugin
- * 
- * Main plugin class handling initialization, dependency management,
- * and lifecycle management for the economy system.
- * 
- * @author DemonZ Development
- * @version 1.2.0
- */
-public final class DZEconomy extends JavaPlugin {
+import java.util.logging.Level;
 
-    private static DZEconomy instance;
+public class DZEconomy extends JavaPlugin {
+
+    private static volatile DZEconomy instance;
     
-    // Core managers
     private ConfigManager configManager;
     private StorageProvider storageProvider;
     private CurrencyManager currencyManager;
     private RankManager rankManager;
     private RequestGUIManager requestGUIManager;
     private CombatTagManager combatTagManager;
-    
-    // Integration
     private LuckPermsIntegration luckPermsIntegration;
-    
-    // API
-    private DZEconomyAPIImpl api;
-    
-    // Update checker
-    private UpdateChecker updateChecker;
+    private UpdateManager updateManager;
+    private MigrationManager migrationManager;
+    private DZEconomyAPI api;
+    private online.demonzdevelopment.dzeconomy.util.MessagesUtil messagesUtil;
+    private EntityDeathListener entityDeathListener;
+    private PlaceholderAPIExpansion placeholderExpansion;
+
+    private long startupTime;
 
     @Override
     public void onEnable() {
         instance = this;
+        startupTime = System.currentTimeMillis();
         
-        long startTime = System.currentTimeMillis();
-        getLogger().info("==================================");
-        getLogger().info("   DZEconomy v" + getDescription().getVersion());
-        getLogger().info("   By DemonZ Development");
-        getLogger().info("==================================");
+        // Print beautiful startup banner
+        printStartupBanner();
         
-        // Initialize configuration
-        if (!initializeConfiguration()) {
-            getLogger().severe("Failed to initialize configuration! Disabling plugin...");
-            getServer().getPluginManager().disablePlugin(this);
-            return;
-        }
+        // Initialize configuration with migration
+        configManager = new ConfigManager(this);
+        configManager.loadAll();
+        
+        // Run config migration if needed
+        ConfigMigrator migrator = new ConfigMigrator(this);
+        migrator.migrate();
         
         // Initialize storage
         if (!initializeStorage()) {
             getLogger().severe("Failed to initialize storage! Disabling plugin...");
-            getServer().getPluginManager().disablePlugin(this);
+            setEnabled(false);
             return;
         }
-        
-        // Initialize integrations
-        initializeIntegrations();
         
         // Initialize managers
         this.currencyManager = new CurrencyManager(this);
         this.rankManager = new RankManager(this);
-        this.combatTagManager = new CombatTagManager(this);
+        this.luckPermsIntegration = new LuckPermsIntegration(this);
         this.requestGUIManager = new RequestGUIManager(this);
+        this.combatTagManager = new CombatTagManager(this);
+        this.migrationManager = new MigrationManager(this);
+        
+        // Initialize API
+        this.api = new DZEconomyAPIImpl();
+        Bukkit.getServicesManager().register(DZEconomyAPI.class, this.api, this, org.bukkit.plugin.ServicePriority.Normal);
+        
+        // Initialize cached utilities
+        this.messagesUtil = new online.demonzdevelopment.dzeconomy.util.MessagesUtil(this);
         
         // Register commands
         registerCommands();
@@ -101,283 +94,254 @@ public final class DZEconomy extends JavaPlugin {
         // Register events
         registerEvents();
         
-        // Register API
-        registerAPI();
+        // Register integrations
+        registerIntegrations();
         
-        // Start tasks
-        startTasks();
+        // Initialize bStats (wrapped in try-catch to allow MockBukkit tests to pass without shadow relocation)
+        try {
+            int pluginId = 24898;
+            Metrics metrics = new Metrics(this, pluginId);
+            getLogger().info("bStats metrics enabled.");
+        } catch (IllegalStateException e) {
+            getLogger().info("bStats metrics skipped (likely running in a test environment).");
+        }
         
-        // Check for updates
-        checkForUpdates();
+        // Schedule tasks
+        scheduleTasks();
         
-        long endTime = System.currentTimeMillis();
-        getLogger().info("==================================");
-        getLogger().info("   DZEconomy enabled successfully!");
-        getLogger().info("   Took " + (endTime - startTime) + "ms");
-        getLogger().info("==================================");
+        // Initialize update checker (Modrinth, checks every 6 hours)
+        this.updateManager = new UpdateManager(this);
+        updateManager.checkForUpdates();
+        
+        getLogger().info("DZEconomy v2.0.0 has been successfully enabled!");
+        getLogger().info("Running on " + (FoliaAdapter.isFolia() ? "Folia" : Bukkit.getName()) + " " + Bukkit.getVersion());
+        getLogger().info("Support & Wiki: https://wiki.demonzdevelopment.online/dzeconomy");
+        getLogger().info("Thank you for choosing DZEconomy!");
     }
 
     @Override
     public void onDisable() {
-        getLogger().info("Shutting down DZEconomy...");
+        // Cancel all tasks first to prevent any new storage access
+        FoliaAdapter.cancelTasks(this);
         
-        // Cancel all tasks
-        getServer().getScheduler().cancelTasks(this);
-        
-        // Save all data
+        // Save all player data before shutdown
         if (currencyManager != null) {
-            getLogger().info("Saving all player data...");
-            currencyManager.saveAllPlayers();
+            try {
+                currencyManager.saveAllPlayersSync();
+            } catch (Exception e) {
+                getLogger().log(Level.SEVERE, "Error saving player data during shutdown", e);
+            }
         }
         
         // Close storage
         if (storageProvider != null) {
-            getLogger().info("Closing storage connection...");
-            storageProvider.close();
-        }
-        
-        // Close GUI manager
-        if (requestGUIManager != null) {
-            requestGUIManager.closeAllGUIs();
-        }
-        
-        getLogger().info("DZEconomy disabled successfully!");
-    }
-    
-    /**
-     * Initialize configuration files
-     */
-    private boolean initializeConfiguration() {
-        try {
-            getLogger().info("Loading configuration files...");
-            this.configManager = new ConfigManager(this);
-            configManager.loadAll();
-            getLogger().info("Configuration loaded successfully!");
-            return true;
-        } catch (Exception e) {
-            getLogger().severe("Failed to load configuration: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-    
-    /**
-     * Initialize storage provider based on configuration
-     */
-    private boolean initializeStorage() {
-        try {
-            String storageType = configManager.getConfig().getString("storage.type", "FLATFILE").toUpperCase();
-            getLogger().info("Initializing " + storageType + " storage...");
-            
-            switch (storageType) {
-                case "MYSQL":
-                    this.storageProvider = new MySQLStorageProvider(this);
-                    break;
-                case "SQLITE":
-                    this.storageProvider = new SQLiteStorageProvider(this);
-                    break;
-                case "FLATFILE":
-                default:
-                    this.storageProvider = new FlatFileStorageProvider(this);
-                    break;
+            try {
+                storageProvider.close();
+            } catch (Exception e) {
+                getLogger().log(Level.SEVERE, "Error closing storage provider", e);
             }
-            
-            storageProvider.initialize();
-            getLogger().info("Storage initialized successfully!");
-            return true;
+        }
+        
+        if (placeholderExpansion != null) {
+            try {
+                placeholderExpansion.unregister();
+            } catch (Exception e) {
+                getLogger().log(Level.WARNING, "Failed to unregister PlaceholderAPI expansion", e);
+            }
+            placeholderExpansion = null;
+        }
+
+        if (this.api != null) {
+            try {
+                Bukkit.getServicesManager().unregister(DZEconomyAPI.class, this.api);
+            } catch (Exception e) {
+                getLogger().log(Level.WARNING, "Failed to unregister API service", e);
+            }
+            this.api = null;
+        }
+
+        if (luckPermsIntegration != null) {
+            try {
+                luckPermsIntegration.cleanup();
+            } catch (Exception e) {
+                getLogger().log(Level.WARNING, "Failed to cleanup LuckPerms integration", e);
+            }
+        }
+
+        instance = null;
+        getLogger().info("DZEconomy v2.0.0 has been disabled. Thank you for using DZEconomy!");
+    }
+    
+    private void printStartupBanner() {
+        String[] banner = {
+            "",
+            ColorUtil.translate("&a  ____             ____&2___  __"),
+            ColorUtil.translate("&a |  _ \\ _ __ ___ |__ &2/ _ \\|  \\/  |"),
+            ColorUtil.translate("&a | | | | '__/ _ \\  &2| | | | |\\/| |"),
+            ColorUtil.translate("&a | |_| | | | (_) | &2| |_| | |  | |"),
+            ColorUtil.translate("&a |____/|_|  \\___/  &2\\___/|_|  |_|"),
+            "",
+            ColorUtil.translate("&7  Version &a2.0.0 &7| &7By &aDemonZ Development"),
+            ColorUtil.translate("&7  Wiki: &ahttps://wiki.demonzdevelopment.online/dzeconomy"),
+            ColorUtil.translate("&7  Modrinth: &ahttps://modrinth.com/plugin/dzeconomy"),
+            ColorUtil.translate("&7  Thank you for choosing DZEconomy! &a<3"),
+            ""
+        };
+        for (String line : banner) {
+            Bukkit.getConsoleSender().sendMessage(line);
+        }
+    }
+    
+    private boolean initializeStorage() {
+        String storageType = configManager.getConfig().getString("storage.type", "sqlite").toLowerCase();
+        
+        switch (storageType) {
+            case "mysql":
+                storageProvider = new MySQLStorageProvider(this);
+                break;
+            case "sqlite":
+                storageProvider = new SQLiteStorageProvider(this);
+                break;
+            case "flatfile":
+                storageProvider = new FlatFileStorageProvider(this);
+                break;
+            default:
+                getLogger().warning("Unknown storage type: " + storageType + ". Defaulting to SQLite.");
+                storageProvider = new SQLiteStorageProvider(this);
+                break;
+        }
+        
+        try {
+            return storageProvider.initialize();
         } catch (Exception e) {
-            getLogger().severe("Failed to initialize storage: " + e.getMessage());
-            e.printStackTrace();
+            getLogger().log(Level.SEVERE, "Failed to initialize " + storageType + " storage", e);
             return false;
         }
     }
     
-    /**
-     * Initialize integrations with other plugins
-     */
-    private void initializeIntegrations() {
-        // LuckPerms integration
-        if (getServer().getPluginManager().getPlugin("LuckPerms") != null) {
-            getLogger().info("Hooking into LuckPerms...");
-            this.luckPermsIntegration = new LuckPermsIntegration(this);
+    private void registerCommands() {
+        safeRegisterCommand("money", new MoneyCommand(this));
+        safeRegisterCommand("mobcoin", new MobCoinCommand(this));
+        safeRegisterCommand("gem", new GemCommand(this));
+        safeRegisterCommand("economy", new EconomyCommand(this));
+    }
+    
+    private void safeRegisterCommand(String name, org.bukkit.command.CommandExecutor executor) {
+        PluginCommand cmd = getCommand(name);
+        if (cmd != null) {
+            cmd.setExecutor(executor);
+            if (executor instanceof org.bukkit.command.TabCompleter) {
+                cmd.setTabCompleter((org.bukkit.command.TabCompleter) executor);
+            }
+        } else {
+            getLogger().warning("Command /" + name + " not found in plugin.yml! Skipping registration.");
+        }
+    }
+    
+    private void registerEvents() {
+        PluginManager pm = Bukkit.getPluginManager();
+        pm.registerEvents(new PlayerJoinListener(this), this);
+        pm.registerEvents(new PlayerQuitListener(this), this);
+        pm.registerEvents(new PlayerDeathListener(this), this);
+        this.entityDeathListener = new EntityDeathListener(this);
+        pm.registerEvents(entityDeathListener, this);
+        pm.registerEvents(new CombatTagListener(this), this);
+        pm.registerEvents(requestGUIManager, this);
+    }
+    
+    private void registerIntegrations() {
+        // PlaceholderAPI
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            this.placeholderExpansion = new PlaceholderAPIExpansion(this);
+            this.placeholderExpansion.register();
+            getLogger().info("PlaceholderAPI integration enabled!");
+        }
+        
+        // LuckPerms
+        if (luckPermsIntegration.setup()) {
             getLogger().info("LuckPerms integration enabled!");
         } else {
-            getLogger().warning("LuckPerms not found! Rank system will use default rank only.");
-        }
-        
-        // PlaceholderAPI integration
-        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            getLogger().info("Hooking into PlaceholderAPI...");
-            new PlaceholderAPI(this).register();
-            getLogger().info("PlaceholderAPI integration enabled!");
-        } else {
-            getLogger().warning("PlaceholderAPI not found! Placeholders will not be available.");
+            getLogger().warning("LuckPerms not found. Rank detection will use config-based defaults.");
         }
     }
     
-    /**
-     * Register all plugin commands
-     */
-    private void registerCommands() {
-        getLogger().info("Registering commands...");
-        getCommand("money").setExecutor(new MoneyCommand(this));
-        getCommand("mobcoin").setExecutor(new MobCoinCommand(this));
-        getCommand("gem").setExecutor(new GemCommand(this));
-        getCommand("economy").setExecutor(new EconomyCommand(this));
-        getLogger().info("Commands registered!");
-    }
-    
-    /**
-     * Register all event listeners
-     */
-    private void registerEvents() {
-        getLogger().info("Registering event listeners...");
-        getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
-        getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this);
-        getServer().getPluginManager().registerEvents(new EntityDeathListener(this), this);
-        getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
-        getServer().getPluginManager().registerEvents(new CombatTagListener(this), this);
-        getLogger().info("Event listeners registered!");
-    }
-    
-    /**
-     * Register the public API
-     */
-    private void registerAPI() {
-        getLogger().info("Registering API...");
-        this.api = new DZEconomyAPIImpl(this);
-        getServer().getServicesManager().register(
-            DZEconomyAPI.class,
-            api,
-            this,
-            ServicePriority.Normal
-        );
-        getLogger().info("API registered successfully!");
-    }
-    
-    /**
-     * Start scheduled tasks
-     */
-    private void startTasks() {
-        getLogger().info("Starting scheduled tasks...");
-        
-        // Auto-save task
-        int autoSaveInterval = configManager.getConfig().getInt("storage.auto-save-interval", 5);
-        new AutoSaveTask(this).runTaskTimerAsynchronously(this, 20L * 60 * autoSaveInterval, 20L * 60 * autoSaveInterval);
-        
-        // Daily reset task
-        new DailyResetTask(this).runTaskTimer(this, 20L, 20L * 60); // Check every minute
-        
-        // Request timeout task
-        new RequestTimeoutTask(this).runTaskTimer(this, 20L, 20L); // Check every second
-        
-        // Combat tag cleanup task
-        new CombatTagCleanupTask(this).runTaskTimer(this, 100L, 100L); // Check every 5 seconds
-        
-        // Runtime update check task
-        if (configManager.getConfig().getBoolean("update-checker.runtime-check-enabled", true)) {
-            int runtimeInterval = configManager.getConfig().getInt("update-checker.runtime-check-interval", 1);
-            long intervalTicks = 20L * 60 * 60 * runtimeInterval; // Convert hours to ticks
-            new online.demonzdevelopment.dzeconomy.task.RuntimeUpdateCheckTask(this)
-                    .runTaskTimerAsynchronously(this, intervalTicks, intervalTicks);
-            getLogger().info("Runtime update checker started (interval: " + runtimeInterval + " hour(s))");
+    private void scheduleTasks() {
+        // Detect Folia and log accordingly
+        if (FoliaAdapter.isFolia()) {
+            getLogger().info("Folia detected! Using region-based scheduling.");
         }
         
-        getLogger().info("Scheduled tasks started!");
-    }
-    
-    /**
-     * Check for plugin updates
-     */
-    private void checkForUpdates() {
-        if (!configManager.getConfig().getBoolean("update-checker.enabled", true)) {
-            return;
+        // Auto-save (default 5 minutes)
+        long autoSaveInterval = configManager.getConfig().getLong("auto-save.interval", 300) * 20L;
+        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTaskTimerAsynchronously(this, () -> new AutoSaveTask(this).run(), autoSaveInterval, autoSaveInterval);
+        
+        // Daily reset (check every minute)
+        FoliaAdapter.runTaskTimer(this, () -> new DailyResetTask(this).run(), 1200L, 1200L);
+        
+        // Request timeout
+        long requestTimeout = configManager.getConfig().getLong("request.timeout", 60) * 20L;
+        FoliaAdapter.runTaskTimer(this, () -> new RequestTimeoutTask(this).run(), requestTimeout, requestTimeout);
+        
+        // Combat tag cleanup
+        if (configManager.getConfig().getBoolean("combat-tag.enabled", true)) {
+            FoliaAdapter.runTaskTimer(this, () -> new CombatTagCleanupTask(combatTagManager).run(), 100L, 100L);
         }
         
-        getLogger().info("Checking for updates...");
-        
-        updateChecker = new UpdateChecker(this);
-        updateChecker.checkForUpdates().thenAccept(hasUpdate -> {
-            // Log status to console
-            updateChecker.logUpdateStatus();
-        });
-        
-        // Auto-update on start if enabled
-        if (configManager.getConfig().getBoolean("updater.autoOnStart", false)) {
-            getLogger().info("Auto-update on start is enabled. Checking for updates...");
-            UpdateManager updateManager = new UpdateManager(this);
-            updateManager.autoUpdate().thenAccept(result -> {
-                if (result.isSuccess()) {
-                    getLogger().info("Auto-update completed! Restart server to apply v" + result.getVersion());
-                }
-            });
-        }
+        // Modrinth update check (every 6 hours = 4320000 ticks)
+        long updateInterval = configManager.getConfig().getLong("updates.check-interval", 21600) * 20L;
+        FoliaAdapter.runTaskTimer(this, () -> updateManager.checkForUpdates(), 1200L, updateInterval);
     }
     
-    /**
-     * Reload all configuration files
-     */
     public void reload() {
-        getLogger().info("Reloading DZEconomy...");
-        
-        // Reload configurations
-        configManager.loadAll();
-        
-        // Reload rank cache for all online players
-        rankManager.reloadAllPlayerRanks();
-        
-        // Reload combat tag manager
+        configManager.reloadAll();
+        if (rankManager != null) {
+            rankManager.reloadRanks();
+        }
         if (combatTagManager != null) {
             combatTagManager.reload();
         }
-        
-        // Check for updates again
-        if (updateChecker != null) {
-            updateChecker.checkForUpdates();
+        if (entityDeathListener != null) {
+            entityDeathListener.reload();
         }
-        
-        getLogger().info("DZEconomy reloaded successfully!");
     }
     
     // Getters
-    
-    public static DZEconomy getInstance() {
-        return instance;
+    public static DZEconomy getInstance() { return instance; }
+    public ConfigManager getConfigManager() { return configManager; }
+    public StorageProvider getStorageProvider() { return storageProvider; }
+    public CurrencyManager getCurrencyManager() { return currencyManager; }
+    public RankManager getRankManager() { return rankManager; }
+    public RequestGUIManager getRequestGUIManager() { return requestGUIManager; }
+    public CombatTagManager getCombatTagManager() { return combatTagManager; }
+    public LuckPermsIntegration getLuckPermsIntegration() { return luckPermsIntegration; }
+    public UpdateManager getUpdateManager() { return updateManager; }
+    public MigrationManager getMigrationManager() { return migrationManager; }
+    public DZEconomyAPI getAPI() { return api; }
+    public PlaceholderAPIExpansion getPlaceholderExpansion() { return placeholderExpansion; }
+
+    public long getStartupTime() { return startupTime; }
+
+    public online.demonzdevelopment.dzeconomy.util.MessagesUtil getMessagesUtil() {
+        return messagesUtil;
     }
-    
-    public ConfigManager getConfigManager() {
-        return configManager;
+
+    public boolean isUpdateAvailable() {
+        return updateManager != null && updateManager.isUpdateAvailable();
     }
-    
-    public StorageProvider getStorageProvider() {
-        return storageProvider;
+
+    public String getLatestVersion() {
+        return updateManager != null ? updateManager.getLatestVersionNumber() : null;
     }
-    
-    public CurrencyManager getCurrencyManager() {
-        return currencyManager;
-    }
-    
-    public RankManager getRankManager() {
-        return rankManager;
-    }
-    
-    public RequestGUIManager getRequestGUIManager() {
-        return requestGUIManager;
-    }
-    
-    public LuckPermsIntegration getLuckPermsIntegration() {
-        return luckPermsIntegration;
-    }
-    
-    public DZEconomyAPI getAPI() {
-        return api;
-    }
-    
-    public UpdateChecker getUpdateChecker() {
-        return updateChecker;
-    }
-    
-    public CombatTagManager getCombatTagManager() {
-        return combatTagManager;
+
+    /**
+     * Create a storage provider for the given type.
+     * Used by MigrationManager.
+     */
+    public StorageProvider createStorageProvider(StorageType type) {
+        return switch (type) {
+            case SQLITE -> new SQLiteStorageProvider(this);
+            case MYSQL -> new MySQLStorageProvider(this);
+            case FLATFILE -> new FlatFileStorageProvider(this);
+        };
     }
 }

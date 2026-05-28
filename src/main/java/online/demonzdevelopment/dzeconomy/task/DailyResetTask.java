@@ -1,70 +1,100 @@
 package online.demonzdevelopment.dzeconomy.task;
 
 import online.demonzdevelopment.dzeconomy.DZEconomy;
+import online.demonzdevelopment.dzeconomy.currency.CurrencyManager;
+import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
 import online.demonzdevelopment.dzeconomy.data.PlayerData;
+
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
+import java.io.File;
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
-/**
- * Task to reset daily limits at configured time
- */
 public class DailyResetTask extends BukkitRunnable {
-    
+
     private final DZEconomy plugin;
-    private boolean hasResetToday = false;
-    
+
+    // FIX: Use date-based comparison instead of a boolean flag.
+    // Store lastResetDate and compare against current date to determine
+    // whether a reset is needed. This prevents missed resets if the server
+    // was offline at the scheduled time, and avoids double-resets.
+    // Load and persist lastResetDate from data.yml to survive daily server restarts.
+    private LocalDate lastResetDate;
+
     public DailyResetTask(DZEconomy plugin) {
         this.plugin = plugin;
-    }
-    
-    @Override
-    public void run() {
-        try {
-            // Get configured reset time (default: 00:00)
-            String resetTimeStr = plugin.getConfigManager().getConfig().getString("daily-reset.time", "00:00");
-            LocalTime resetTime = LocalTime.parse(resetTimeStr, DateTimeFormatter.ofPattern("HH:mm"));
-            LocalTime currentTime = LocalTime.now();
-            
-            // Check if it's time to reset
-            if (isTimeToReset(currentTime, resetTime)) {
-                if (!hasResetToday) {
-                    performDailyReset();
-                    hasResetToday = true;
+        File dataFile = new File(plugin.getDataFolder(), "data.yml");
+        if (dataFile.exists()) {
+            YamlConfiguration dataConfig = YamlConfiguration.loadConfiguration(dataFile);
+            String lastResetStr = dataConfig.getString("last-reset-date");
+            if (lastResetStr != null) {
+                try {
+                    this.lastResetDate = LocalDate.parse(lastResetStr);
+                } catch (Exception e) {
+                    this.lastResetDate = LocalDate.now();
                 }
             } else {
-                // Reset the flag when we're past the reset time
-                hasResetToday = false;
+                this.lastResetDate = LocalDate.now().minusDays(1);
             }
-        } catch (Exception e) {
-            plugin.getLogger().warning("Error in daily reset task: " + e.getMessage());
+        } else {
+            this.lastResetDate = LocalDate.now().minusDays(1);
         }
     }
-    
-    /**
-     * Check if current time matches reset time (within 1 minute window)
-     */
-    private boolean isTimeToReset(LocalTime current, LocalTime reset) {
-        int currentMinutes = current.getHour() * 60 + current.getMinute();
-        int resetMinutes = reset.getHour() * 60 + reset.getMinute();
-        
-        return Math.abs(currentMinutes - resetMinutes) <= 1;
-    }
-    
-    /**
-     * Perform daily reset for all cached players
-     */
-    private void performDailyReset() {
-        plugin.getLogger().info("Performing daily limit reset...");
-        
+
+    @Override
+    public void run() {
+        LocalDate today = LocalDate.now();
+
+        // Only reset if the date has changed since last reset
+        if (!today.isAfter(lastResetDate)) {
+            return;
+        }
+
+        plugin.getLogger().info("[DailyReset] Performing daily reset for " + today + "...");
+
+        CurrencyManager cm = plugin.getCurrencyManager();
+        Set<UUID> cachedPlayers = new HashSet<>(cm.getCachedPlayerUUIDs());
+
         int resetCount = 0;
-        for (PlayerData data : plugin.getCurrencyManager().getAllPlayerData()) {
-            data.resetDailyLimits();
-            plugin.getCurrencyManager().savePlayerDataAsync(data.getUUID());
-            resetCount++;
+
+        for (UUID uuid : cachedPlayers) {
+            try {
+                PlayerData data = cm.loadPlayerData(uuid);
+                if (data != null) {
+                    for (CurrencyType type : CurrencyType.values()) {
+                        data.resetDailyTransactions(type);
+                    }
+                    resetCount++;
+                }
+            } catch (Exception e) {
+                plugin.getLogger().warning("[DailyReset] Failed to reset daily data for player " + uuid + ": " + e.getMessage());
+            }
         }
-        
-        plugin.getLogger().info("Daily reset completed! Reset " + resetCount + " player(s)");
+
+        // Update lastResetDate to today
+        lastResetDate = today;
+
+        // Persist to data.yml
+        try {
+            File dataFile = new File(plugin.getDataFolder(), "data.yml");
+            YamlConfiguration dataConfig = YamlConfiguration.loadConfiguration(dataFile);
+            dataConfig.set("last-reset-date", today.toString());
+            dataConfig.save(dataFile);
+        } catch (Exception e) {
+            plugin.getLogger().warning("[DailyReset] Failed to save last reset date: " + e.getMessage());
+        }
+
+        plugin.getLogger().info("[DailyReset] Daily reset complete: " + resetCount + " players reset for " + today);
+    }
+
+    /**
+     * Get the last reset date. Useful for debugging or status commands.
+     */
+    public LocalDate getLastResetDate() {
+        return lastResetDate;
     }
 }

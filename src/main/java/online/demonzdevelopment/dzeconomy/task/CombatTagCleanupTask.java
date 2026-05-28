@@ -1,27 +1,20 @@
 package online.demonzdevelopment.dzeconomy.task;
 
-import online.demonzdevelopment.dzeconomy.DZEconomy;
+import online.demonzdevelopment.dzeconomy.manager.CombatTagManager;
+
 import org.bukkit.scheduler.BukkitRunnable;
 
-/**
- * Task to periodically clean up expired combat tags
- * Runs every 5 seconds to remove expired tags and free memory
- * 
- * @author DemonZ Development
- * @version 1.2.0
- */
 public class CombatTagCleanupTask extends BukkitRunnable {
-    
-    private final DZEconomy plugin;
-    
-    public CombatTagCleanupTask(DZEconomy plugin) {
-        this.plugin = plugin;
+
+    private final CombatTagManager combatTagManager;
+
+    public CombatTagCleanupTask(CombatTagManager combatTagManager) {
+        this.combatTagManager = combatTagManager;
     }
-    
+
     @Override
     public void run() {
-        if (plugin.getCombatTagManager() != null) {
-            plugin.getCombatTagManager().cleanupExpiredTags();
-        }
+        // Simple cleanup: remove all expired combat tags
+        combatTagManager.cleanupExpiredCombatTags();
     }
 }

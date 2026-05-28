@@ -1,340 +1,334 @@
 package online.demonzdevelopment.dzeconomy.gui;
 
 import online.demonzdevelopment.dzeconomy.DZEconomy;
-import online.demonzdevelopment.dzeconomy.data.CurrencyRequest;
-import online.demonzdevelopment.dzeconomy.rank.Rank;
+import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
 import online.demonzdevelopment.dzeconomy.util.ColorUtil;
 import online.demonzdevelopment.dzeconomy.util.NumberFormatter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Manages currency request GUIs
+ * GUI manager for money requests.
+ * Features combat tag check, currency-specific materials,
+ * timer indicators, and accept/deny handling.
  */
 public class RequestGUIManager implements Listener {
     
     private final DZEconomy plugin;
-    private final Map<UUID, Inventory> openGUIs;
-    private final Map<UUID, BukkitTask> updateTasks;
+    
+    // Currency-specific materials
+    private static final Map<String, Material> CURRENCY_MATERIALS = new LinkedHashMap<>();
+    static {
+        CURRENCY_MATERIALS.put("money", Material.GOLD_INGOT);
+        CURRENCY_MATERIALS.put("mobcoin", Material.EMERALD);
+        CURRENCY_MATERIALS.put("gem", Material.DIAMOND);
+    }
+    
+    // Accept/Deny materials
+    private static final Material ACCEPT_MATERIAL = Material.LIME_CONCRETE;
+    private static final Material DENY_MATERIAL = Material.RED_CONCRETE;
+    
+    // Active request GUIs: target UUID -> request data
+    private final Map<UUID, PendingRequest> pendingRequests = new java.util.concurrent.ConcurrentHashMap<>();
     
     public RequestGUIManager(DZEconomy plugin) {
         this.plugin = plugin;
-        this.openGUIs = new ConcurrentHashMap<>();
-        this.updateTasks = new ConcurrentHashMap<>();
-        
-        // Register event listener
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
     
     /**
-     * Open request GUI for a player
+     * Open a request GUI for the target player.
      */
-    public void openRequestGUI(Player player, CurrencyRequest request) {
-        // Check if GUI is enabled
-        if (!plugin.getConfigManager().getConfig().getBoolean("gui.request.enabled", true)) {
+    public void openRequestGUI(Player target, UUID requesterUUID, String currency, double amount) {
+        // Combat tag check
+        if (plugin.getCombatTagManager() != null && plugin.getCombatTagManager().isInCombat(target.getUniqueId())) {
+            int remaining = plugin.getCombatTagManager().getRemainingCombatTime(target.getUniqueId());
+            target.sendMessage(ColorUtil.translate(
+                plugin.getMessagesUtil().getPrefixedMessage("request.combat-tagged",
+                    "%time%", String.valueOf(remaining))
+            ));
             return;
         }
         
-        // Check if player is in combat
-        if (plugin.getCombatTagManager().isInCombat(player.getUniqueId()) && 
-            plugin.getCombatTagManager().shouldBlockRequestGUI()) {
-            // Player is in combat, don't open GUI
-            // Send message to requester that target is in combat
-            Player requester = Bukkit.getPlayer(request.getRequesterUUID());
-            if (requester != null && requester.isOnline()) {
-                String message = plugin.getConfigManager().getMessages()
-                    .getString("combat.target-in-combat", "&c{player} is currently in combat! GUI request blocked.");
-                requester.sendMessage(ColorUtil.translate(message.replace("{player}", player.getName())));
-            }
-            return;
-        }
-        
-        // Check if player has inventory open (respect existing GUIs)
-        if (plugin.getConfigManager().getConfig().getBoolean("gui.request.respect-open-inventories", true)) {
-            InventoryView openInventory = player.getOpenInventory();
-            if (openInventory != null && openInventory.getType() != InventoryType.CRAFTING) {
-                // Player has another inventory open, don't force-close it
-                return;
-            }
-        }
-        
-        // Create GUI
-        String currencyName = plugin.getCurrencyManager().getCurrencyDisplayName(request.getCurrency());
-        String requesterName = Bukkit.getOfflinePlayer(request.getRequesterUUID()).getName();
-        String title = ColorUtil.translate(plugin.getConfigManager().getMessages()
-                .getString("gui.request.title", "&e{currency} Request from {player}")
-                .replace("{currency}", ColorUtil.strip(currencyName))
-                .replace("{player}", requesterName));
-        
-        Inventory gui = Bukkit.createInventory(null, 27, title);
-        
-        // Build GUI contents
-        updateGUIContents(gui, player, request);
-        
-        // Open GUI
-        player.openInventory(gui);
-        openGUIs.put(player.getUniqueId(), gui);
-        
-        // Play sound
-        String soundName = plugin.getConfigManager().getConfig().getString("gui.request.sounds.open", "BLOCK_NOTE_BLOCK_PLING");
-        try {
-            player.playSound(player.getLocation(), Sound.valueOf(soundName), 1.0f, 1.0f);
-        } catch (IllegalArgumentException ignored) {}
-        
-        // Start update task
-        startUpdateTask(player, request);
-    }
-    
-    /**
-     * Update GUI contents
-     */
-    private void updateGUIContents(Inventory gui, Player player, CurrencyRequest request) {
-        gui.clear();
-        
-        String symbol = plugin.getCurrencyManager().getCurrencySymbol(request.getCurrency());
-        double amount = request.getAmount();
-        
-        // Calculate tax
-        Rank playerRank = plugin.getRankManager().getPlayerRank(player.getUniqueId());
-        Rank.RankCurrencySettings settings = playerRank.getSettingsFor(request.getCurrency());
-        double taxPercent = settings.getTransferTax();
-        double tax = NumberFormatter.truncateDecimal(amount * (taxPercent / 100.0));
-        double total = NumberFormatter.truncateDecimal(amount + tax);
-        
-        // Calculate remaining time
-        int timeoutSeconds = plugin.getConfigManager().getConfig().getInt("limits.request-timeout", 120);
-        long remaining = request.getRemainingTime(timeoutSeconds);
-        
-        // Info item (slot 4) - Enhanced with better visuals
-        Material infoMaterial = Material.PAPER;
-        // Use currency-specific materials for visual appeal
-        if (request.getCurrency().getId().equals("money")) {
-            infoMaterial = Material.GOLD_INGOT;
-        } else if (request.getCurrency().getId().equals("mobcoin")) {
-            infoMaterial = Material.EMERALD;
-        } else if (request.getCurrency().getId().equals("gem")) {
-            infoMaterial = Material.DIAMOND;
-        }
-        
-        ItemStack infoItem = new ItemStack(infoMaterial);
-        ItemMeta infoMeta = infoItem.getItemMeta();
-        infoMeta.setDisplayName(ColorUtil.translate("&e&l⚡ Request Information ⚡"));
-        
-        List<String> lore = new ArrayList<>();
-        List<String> configLore = plugin.getConfigManager().getMessages().getStringList("gui.request.info-lore");
-        
-        String requesterName = Bukkit.getOfflinePlayer(request.getRequesterUUID()).getName();
-        
-        // Add decorative header
-        lore.add(ColorUtil.translate("&7&m━━━━━━━━━━━━━━━━━━━━"));
-        
-        for (String line : configLore) {
-            lore.add(ColorUtil.translate(line
-                    .replace("{player}", requesterName)
-                    .replace("{symbol}", symbol)
-                    .replace("{amount}", NumberFormatter.formatShort(amount))
-                    .replace("{total}", NumberFormatter.formatShort(total))
-                    .replace("{tax}", NumberFormatter.formatShort(tax))
-                    .replace("{tax_percent}", String.valueOf((int) taxPercent))
-                    .replace("{time}", String.valueOf(remaining))));
-        }
-        
-        // Add visual timer indicator
-        lore.add("");
-        if (remaining > 90) {
-            lore.add(ColorUtil.translate("&a⏰ Plenty of time remaining!"));
-        } else if (remaining > 60) {
-            lore.add(ColorUtil.translate("&e⏰ Time running out..."));
-        } else if (remaining > 30) {
-            lore.add(ColorUtil.translate("&6⏰ Hurry up!"));
+        // Get requester name with null check for offline players
+        String requesterName = "Unknown";
+        Player requesterPlayer = Bukkit.getPlayer(requesterUUID);
+        if (requesterPlayer != null) {
+            requesterName = requesterPlayer.getName();
         } else {
-            lore.add(ColorUtil.translate("&c⏰ ALMOST EXPIRED!"));
+            // Try offline player
+            org.bukkit.OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(requesterUUID);
+            if (offlinePlayer.getName() != null) {
+                requesterName = offlinePlayer.getName();
+            }
         }
         
-        lore.add(ColorUtil.translate("&7&m━━━━━━━━━━━━━━━━━━━━"));
+        // Store pending request
+        UUID requestId = UUID.randomUUID();
+        PendingRequest request = new PendingRequest(requesterUUID, requesterName, target.getUniqueId(), currency, amount, System.currentTimeMillis());
+        pendingRequests.put(requestId, request);
         
-        infoMeta.setLore(lore);
-        infoItem.setItemMeta(infoMeta);
-        gui.setItem(4, infoItem);
+        // Build inventory
+        String title = ColorUtil.translate("&8Money Request");
+        Inventory inv = Bukkit.createInventory(new RequestInventoryHolder(requestId), 27, title);
         
-        // Accept button (slot 20) - Enhanced with lore
-        ItemStack acceptItem = new ItemStack(Material.LIME_CONCRETE);
+        // Currency item in center
+        Material currencyMat = CURRENCY_MATERIALS.getOrDefault(currency.toLowerCase(), Material.PAPER);
+        ItemStack currencyItem = new ItemStack(currencyMat);
+        ItemMeta currencyMeta = currencyItem.getItemMeta();
+        if (currencyMeta != null) {
+            currencyMeta.setDisplayName(ColorUtil.translate("&6&l" + currency.substring(0, 1).toUpperCase() + currency.substring(1) + " Request"));
+            List<String> lore = new ArrayList<>();
+            lore.add(ColorUtil.translate("&7From: &e" + requesterName));
+            lore.add(ColorUtil.translate("&7Amount: &e" + NumberFormatter.formatFull(amount)));
+            lore.add(ColorUtil.translate("&7Currency: &e" + currency));
+            // Timer indicator
+            lore.add(ColorUtil.translate("&7Expires in: &c30 seconds"));
+            lore.add("");
+            lore.add(ColorUtil.translate("&aClick &2Accept &aor &cDeny"));
+            currencyMeta.setLore(lore);
+            currencyItem.setItemMeta(currencyMeta);
+        }
+        inv.setItem(13, currencyItem);
+        
+        // Accept button (slot 11)
+        ItemStack acceptItem = new ItemStack(ACCEPT_MATERIAL);
         ItemMeta acceptMeta = acceptItem.getItemMeta();
-        String acceptName = plugin.getConfigManager().getMessages().getString("gui.request.accept-name", "&a&lACCEPT");
-        acceptMeta.setDisplayName(ColorUtil.translate("&a&l✓ " + acceptName + " ✓"));
+        if (acceptMeta != null) {
+            acceptMeta.setDisplayName(ColorUtil.translate("&a&l✔ Accept Request"));
+            List<String> acceptLore = new ArrayList<>();
+            acceptLore.add(ColorUtil.translate("&7Click to accept the"));
+            acceptLore.add(ColorUtil.translate("&7request from &e" + requesterName));
+            acceptMeta.setLore(acceptLore);
+            acceptItem.setItemMeta(acceptMeta);
+        }
+        inv.setItem(11, acceptItem);
         
-        List<String> acceptLore = new ArrayList<>();
-        acceptLore.add(ColorUtil.translate("&7Click to accept this request"));
-        acceptLore.add(ColorUtil.translate("&7"));
-        acceptLore.add(ColorUtil.translate("&7You will send: &c" + symbol + NumberFormatter.formatShort(total)));
-        acceptLore.add(ColorUtil.translate("&7They receive: &a" + symbol + NumberFormatter.formatShort(amount)));
-        acceptLore.add(ColorUtil.translate("&7Tax: &e" + symbol + NumberFormatter.formatShort(tax) + " &7(&e" + (int)taxPercent + "%&7)"));
-        acceptMeta.setLore(acceptLore);
-        
-        acceptItem.setItemMeta(acceptMeta);
-        gui.setItem(20, acceptItem);
-        
-        // Deny button (slot 24) - Enhanced with lore
-        ItemStack denyItem = new ItemStack(Material.RED_CONCRETE);
+        // Deny button (slot 15)
+        ItemStack denyItem = new ItemStack(DENY_MATERIAL);
         ItemMeta denyMeta = denyItem.getItemMeta();
-        String denyName = plugin.getConfigManager().getMessages().getString("gui.request.deny-name", "&c&lDENY");
-        denyMeta.setDisplayName(ColorUtil.translate("&c&l✗ " + denyName + " ✗"));
+        if (denyMeta != null) {
+            denyMeta.setDisplayName(ColorUtil.translate("&c&l✘ Deny Request"));
+            List<String> denyLore = new ArrayList<>();
+            denyLore.add(ColorUtil.translate("&7Click to deny the"));
+            denyLore.add(ColorUtil.translate("&7request from &e" + requesterName));
+            denyMeta.setLore(denyLore);
+            denyItem.setItemMeta(denyMeta);
+        }
+        inv.setItem(15, denyItem);
         
-        List<String> denyLore = new ArrayList<>();
-        denyLore.add(ColorUtil.translate("&7Click to deny this request"));
-        denyLore.add(ColorUtil.translate("&7"));
-        denyLore.add(ColorUtil.translate("&cNo funds will be transferred"));
-        denyMeta.setLore(denyLore);
-        
-        denyItem.setItemMeta(denyMeta);
-        gui.setItem(24, denyItem);
-        
-        // Fill empty slots with decorative glass panes (alternating pattern)
-        for (int i = 0; i < gui.getSize(); i++) {
-            if (gui.getItem(i) == null) {
-                Material fillerMaterial;
-                
-                // Create alternating border pattern
-                if (i < 9 || i >= 18) {
-                    // Top and bottom rows
-                    fillerMaterial = (i % 2 == 0) ? Material.CYAN_STAINED_GLASS_PANE : Material.LIGHT_BLUE_STAINED_GLASS_PANE;
-                } else {
-                    // Middle row
-                    fillerMaterial = Material.GRAY_STAINED_GLASS_PANE;
-                }
-                
-                ItemStack filler = new ItemStack(fillerMaterial);
-                ItemMeta fillerMeta = filler.getItemMeta();
-                fillerMeta.setDisplayName(" ");
-                filler.setItemMeta(fillerMeta);
-                gui.setItem(i, filler);
+        // Fill borders with gray glass
+        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta fillerMeta = filler.getItemMeta();
+        if (fillerMeta != null) {
+            fillerMeta.setDisplayName(ColorUtil.translate("&r"));
+            fillerMeta.setLore(Collections.emptyList());
+            filler.setItemMeta(fillerMeta);
+        }
+        for (int i = 0; i < 27; i++) {
+            if (inv.getItem(i) == null) {
+                inv.setItem(i, filler);
             }
         }
-    }
-    
-    /**
-     * Start GUI update task
-     */
-    private void startUpdateTask(Player player, CurrencyRequest request) {
-        int updateInterval = plugin.getConfigManager().getConfig().getInt("gui.request.update-interval", 20);
         
-        BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            Inventory gui = openGUIs.get(player.getUniqueId());
-            if (gui == null) {
-                stopUpdateTask(player);
-                return;
-            }
-            
-            // Check if request expired
-            int timeoutSeconds = plugin.getConfigManager().getConfig().getInt("limits.request-timeout", 120);
-            if (request.isExpired(timeoutSeconds)) {
-                closeGUI(player);
-                player.sendMessage(ColorUtil.translate(plugin.getConfigManager().getMessages()
-                        .getString("gui.timeout-message", "&cRequest expired!")));
-                return;
-            }
-            
-            // Update GUI
-            updateGUIContents(gui, player, request);
-        }, updateInterval, updateInterval);
-        
-        updateTasks.put(player.getUniqueId(), task);
-    }
-    
-    /**
-     * Stop GUI update task
-     */
-    private void stopUpdateTask(Player player) {
-        BukkitTask task = updateTasks.remove(player.getUniqueId());
-        if (task != null) {
-            task.cancel();
-        }
-    }
-    
-    /**
-     * Close GUI for a player
-     */
-    public void closeGUI(Player player) {
-        stopUpdateTask(player);
-        openGUIs.remove(player.getUniqueId());
-        player.closeInventory();
-    }
-    
-    /**
-     * Close all open GUIs
-     */
-    public void closeAllGUIs() {
-        for (UUID uuid : new HashSet<>(openGUIs.keySet())) {
-            Player player = Bukkit.getPlayer(uuid);
-            if (player != null) {
-                closeGUI(player);
-            }
-        }
+        target.openInventory(inv);
     }
     
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) return;
+        if (event.getInventory() == null || !(event.getInventory().getHolder() instanceof RequestInventoryHolder)) return;
         
         Player player = (Player) event.getWhoClicked();
-        Inventory clickedInventory = event.getClickedInventory();
-        
-        if (clickedInventory == null) return;
-        
-        // Check if it's a request GUI
-        if (!openGUIs.containsKey(player.getUniqueId())) return;
-        if (!clickedInventory.equals(openGUIs.get(player.getUniqueId()))) return;
-        
         event.setCancelled(true);
+        
+        org.bukkit.event.inventory.ClickType clickType = event.getClick();
+        if (clickType == org.bukkit.event.inventory.ClickType.SHIFT_LEFT || 
+            clickType == org.bukkit.event.inventory.ClickType.SHIFT_RIGHT || 
+            clickType == org.bukkit.event.inventory.ClickType.DOUBLE_CLICK ||
+            event.getAction() == org.bukkit.event.inventory.InventoryAction.COLLECT_TO_CURSOR ||
+            event.getAction() == org.bukkit.event.inventory.InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+            return;
+        }
+        
+        RequestInventoryHolder holder = (RequestInventoryHolder) event.getInventory().getHolder();
+        UUID requestId = holder.getRequestId();
+        
+        PendingRequest request = pendingRequests.get(requestId);
+        if (request == null) {
+            player.closeInventory();
+            return;
+        }
+        
+        if (!player.getUniqueId().equals(request.getTargetUUID())) {
+            event.setCancelled(true);
+            player.closeInventory();
+            return;
+        }
+        
+        // Check expiration (30 seconds)
+        if (System.currentTimeMillis() - request.getTimestamp() > 30_000) {
+            pendingRequests.remove(requestId);
+            player.closeInventory();
+            player.sendMessage(ColorUtil.translate(
+                plugin.getMessagesUtil().getPrefixedMessage("request.expired")
+            ));
+            return;
+        }
+        
+        if (event.getClickedInventory() != event.getView().getTopInventory()) {
+            return;
+        }
         
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
         
-        // Get request
-        CurrencyRequest request = plugin.getCurrencyManager().getPendingRequest(player.getUniqueId());
-        if (request == null) {
-            closeGUI(player);
-            return;
-        }
-        
-        // Handle clicks
-        int slot = event.getSlot();
-        
-        if (slot == 20) {
-            // Accept button
-            closeGUI(player);
-            player.performCommand(request.getCurrency().getId() + " accept");
-        } else if (slot == 24) {
-            // Deny button
-            closeGUI(player);
-            player.performCommand(request.getCurrency().getId() + " deny");
+        if (clicked.getType() == ACCEPT_MATERIAL) {
+            pendingRequests.remove(requestId);
+            handleAccept(player, request);
+        } else if (clicked.getType() == DENY_MATERIAL) {
+            pendingRequests.remove(requestId);
+            handleDeny(player, request);
         }
     }
     
     @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
-        if (!(event.getPlayer() instanceof Player)) return;
+    public void onInventoryClose(org.bukkit.event.inventory.InventoryCloseEvent event) {
+        if (event.getInventory() != null && event.getInventory().getHolder() instanceof RequestInventoryHolder) {
+            RequestInventoryHolder holder = (RequestInventoryHolder) event.getInventory().getHolder();
+            pendingRequests.remove(holder.getRequestId());
+        }
+    }
+
+    @EventHandler
+    public void onInventoryDrag(org.bukkit.event.inventory.InventoryDragEvent event) {
+        if (event.getInventory() != null && event.getInventory().getHolder() instanceof RequestInventoryHolder) {
+            event.setCancelled(true);
+        }
+    }
+    
+    @EventHandler
+    public void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+        UUID playerUuid = event.getPlayer().getUniqueId();
+        pendingRequests.values().removeIf(req -> req.getRequesterUUID().equals(playerUuid));
+    }
+    
+    private void handleAccept(Player target, PendingRequest request) {
+        target.closeInventory();
         
-        Player player = (Player) event.getPlayer();
+        // Process the request through the economy system
+        CurrencyType currencyType = CurrencyType.fromString(request.getCurrency());
+        if (currencyType == null) return;
+        boolean success = plugin.getCurrencyManager().transfer(
+            target.getUniqueId(), request.getRequesterUUID(), 
+            currencyType, request.getAmount()
+        );
         
-        if (openGUIs.containsKey(player.getUniqueId())) {
-            stopUpdateTask(player);
-            openGUIs.remove(player.getUniqueId());
+        if (success) {
+            target.sendMessage(ColorUtil.translate(
+                plugin.getMessagesUtil().getPrefixedMessage("request.accepted-target",
+                    "%player%", request.getRequesterName(),
+                    "%amount%", NumberFormatter.formatFull(request.getAmount()),
+                    "%currency%", request.getCurrency())
+            ));
+            
+            // Notify requester
+            Player requester = Bukkit.getPlayer(request.getRequesterUUID());
+            if (requester != null) {
+                requester.sendMessage(ColorUtil.translate(
+                    plugin.getMessagesUtil().getPrefixedMessage("request.accepted-requester",
+                        "%player%", target.getName(),
+                        "%amount%", NumberFormatter.formatFull(request.getAmount()),
+                        "%currency%", request.getCurrency())
+                ));
+            }
+        } else {
+            target.sendMessage(ColorUtil.translate(
+                plugin.getMessagesUtil().getPrefixedMessage("request.accept-failed")
+            ));
+        }
+
+        // If the requester is offline, unload their player data from cache asynchronously
+        if (Bukkit.getPlayer(request.getRequesterUUID()) == null) {
+            online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTaskAsynchronously(plugin, () -> {
+                plugin.getCurrencyManager().unloadPlayerData(request.getRequesterUUID());
+            });
+        }
+    }
+    
+    private void handleDeny(Player target, PendingRequest request) {
+        target.closeInventory();
+        
+        target.sendMessage(ColorUtil.translate(
+            plugin.getMessagesUtil().getPrefixedMessage("request.denied-target",
+                "%player%", request.getRequesterName())
+        ));
+        
+        // Notify requester
+        Player requester = Bukkit.getPlayer(request.getRequesterUUID());
+        if (requester != null) {
+            requester.sendMessage(ColorUtil.translate(
+                plugin.getMessagesUtil().getPrefixedMessage("request.denied-requester",
+                    "%player%", target.getName())
+            ));
+        }
+    }
+    
+    /**
+     * Remove a player's pending request (on disconnect, etc).
+     */
+    public void removePendingRequest(UUID uuid) {
+        pendingRequests.values().removeIf(req -> req.getTargetUUID().equals(uuid) || req.getRequesterUUID().equals(uuid));
+    }
+    
+    /**
+     * Simple data class for pending requests.
+     */
+    private static class PendingRequest {
+        private final UUID requesterUUID;
+        private final String requesterName;
+        private final UUID targetUUID;
+        private final String currency;
+        private final double amount;
+        private final long timestamp;
+        
+        PendingRequest(UUID requesterUUID, String requesterName, UUID targetUUID, String currency, double amount, long timestamp) {
+            this.requesterUUID = requesterUUID;
+            this.requesterName = requesterName;
+            this.targetUUID = targetUUID;
+            this.currency = currency;
+            this.amount = amount;
+            this.timestamp = timestamp;
+        }
+        
+        UUID getRequesterUUID() { return requesterUUID; }
+        String getRequesterName() { return requesterName; }
+        UUID getTargetUUID() { return targetUUID; }
+        String getCurrency() { return currency; }
+        double getAmount() { return amount; }
+        long getTimestamp() { return timestamp; }
+    }
+
+    public static class RequestInventoryHolder implements org.bukkit.inventory.InventoryHolder {
+        private final UUID requestId;
+        public RequestInventoryHolder(UUID requestId) {
+            this.requestId = requestId;
+        }
+        public UUID getRequestId() {
+            return requestId;
+        }
+        @Override
+        public Inventory getInventory() {
+            return null;
         }
     }
 }

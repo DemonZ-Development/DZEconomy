@@ -1,0 +1,619 @@
+[CENTER]
+[IMG]https://raw.githubusercontent.com/DemonZDevelopment/DZEconomy/main/assets/banner.png[/IMG]
+
+[SIZE=7][COLOR=#FFA500][B]DZEconomy[/B][/COLOR][/SIZE]
+[SIZE=4][COLOR=#888888]Multi-Currency Economy Plugin | v2.0.0[/COLOR][/SIZE]
+
+[SIZE=3][COLOR=#55FF55]A powerful economy plugin with 3 currencies, rank multipliers, combat tagging, mob rewards, and Folia support.[/COLOR][/SIZE]
+
+[HR][/HR]
+
+[SIZE=5][B][COLOR=#FFA500]✦ Features ✦[/COLOR][/B][/SIZE]
+
+[SPOILER="💵 Three Currencies"]
+[LIST]
+[*][B]Money ($)[/B] — Primary currency with decimal support, starting balance, and transaction limits
+[*][B]MobCoins (⛃)[/B] — Earned by killing mobs, configurable per-mob rewards
+[*][B]Gems (◆)[/B] — Premium currency from boss kills and conversion
+[*]Each currency is independently configurable: symbol, decimal places, starting balance, max balance, min transaction, and display format
+[*]Disable any currency to hide its commands and GUI
+[/LIST]
+[/SPOILER]
+
+[SPOILER="🏆 Rank Multipliers"]
+[LIST]
+[*]LuckPerms integration — automatic group detection
+[*]Per-currency earning multipliers (1.5x Money, 2x MobCoins, etc.)
+[*]Rank perks: reduced cooldowns, increased daily limits, combat tag bypass
+[*]Interest system — earn passive income on your balance
+[*]Priority system for players with multiple groups
+[*]Multiplier stacking: MULTIPLY, ADD, or HIGHEST mode
+[/LIST]
+[/SPOILER]
+
+[SPOILER="⚔️ Combat Tagging"]
+[LIST]
+[*]Block economy actions (send, request, accept) during combat
+[*]Configurable tag duration (default: 15 seconds)
+[*]Action bar indicator with countdown timer
+[*]Optional PVE combat tag support
+[*]Rank perk to bypass combat tag restrictions
+[/LIST]
+[/SPOILER]
+
+[SPOILER="💀 PvP Loot"]
+[LIST]
+[*]Kill players to steal a percentage of their balance
+[*]Per-currency loss percentages (5% Money, 2% MobCoins, 0% Gems)
+[*]Minimum balance protection after death
+[*]Broadcast high-value kills
+[*]World blacklist support
+[/LIST]
+[/SPOILER]
+
+[SPOILER="🐷 Mob Rewards"]
+[LIST]
+[*]4 mob categories: neutral, easy, hard, boss
+[*]Per-mob reward configuration with chance-based drops
+[*]Random range rewards (min/max amount)
+[*]Kill streak bonuses with configurable tiers
+[*]Global multipliers and time-based event multipliers
+[*]Spawner and spawn egg mob filtering
+[*]World whitelist/blacklist
+[*]Custom reward messages per mob
+[/LIST]
+[/SPOILER]
+
+[SPOILER="🔄 Currency Conversion"]
+[LIST]
+[*]Convert between any two currencies
+[*]Configurable exchange rates for all currency pairs
+[*]Transaction fee support (percentage-based)
+[*]Admin-only or player-accessible (configurable)
+[/LIST]
+[/SPOILER]
+
+[SPOILER="📊 Leaderboards"]
+[LIST]
+[*]Per-currency baltop with pagination
+[*]Global baltop across all currencies
+[*]Cached refresh for performance
+[*]Offline player inclusion (configurable)
+[*]Special formatting for top 3 players
+[/LIST]
+[/SPOILER]
+
+[SPOILER="💸 Payment Requests"]
+[LIST]
+[*]Request currency from other players
+[*]Accept or deny with simple commands
+[*]Configurable timeout (default: 120 seconds)
+[*]Max pending requests limit
+[*]Sound notifications
+[*]Request GUI manager
+[/LIST]
+[/SPOILER]
+
+[SPOILER="🗄️ Storage & Performance"]
+[LIST]
+[*][B]SQLite[/B] — Default, zero-config, file-based
+[*][B]MySQL[/B] — HikariCP connection pooling, remote database support
+[*][B]Flat File[/B] — YAML-based, for testing/small servers
+[*]Live migration between backends: [CODE]/economy migrate sqlite mysql[/CODE]
+[*]Configurable auto-save intervals
+[*]Manual backup creation: [CODE]/economy backup[/CODE]
+[*]Optional transaction logging with file rotation
+[/LIST]
+[/SPOILER]
+
+[SPOILER="🚀 Folia Support"]
+[LIST]
+[*]Full region-based scheduling compatibility
+[*]Automatic Folia detection on startup
+[*]Global, Region, and Entity scheduler support
+[*]Thread-safe balance operations with per-player locks
+[*]Transparent scheduler adaptation via FoliaAdapter
+[/LIST]
+[/SPOILER]
+
+[SPOILER="🌐 PlaceholderAPI"]
+[LIST]
+[*]15+ placeholders with 3-second caching
+[*][CODE]%dz_money%[/CODE] — Money balance
+[*][CODE]%dz_mobcoin%[/CODE] — MobCoin balance
+[*][CODE]%dz_gem%[/CODE] — Gem balance
+[*][CODE]%dz_money_short%[/CODE] — Short-form Money (1.5K)
+[*][CODE]%dz_rank%[/CODE] — Rank display name
+[*][CODE]%dz_combat_tagged%[/CODE] — Combat tag status
+[*]And more...
+[/LIST]
+[/SPOILER]
+
+[HR][/HR]
+
+[SIZE=5][B][COLOR=#FFA500]✦ Commands ✦[/COLOR][/B][/SIZE]
+
+[SIZE=3][B]Currency Commands[/B] ([COLOR=#55FF55]/money[/COLOR], [COLOR=#55FF55]/mobcoin[/COLOR], [COLOR=#55FF55]/gem[/COLOR])[/SIZE]
+
+[TABLE]
+[TR]
+[TH]Command[/TH]
+[TH]Description[/TH]
+[TH]Permission[/TH]
+[TH]Default[/TH]
+[/TR]
+[TR]
+[TD]/<currency>[/TD]
+[TD]Check your balance[/TD]
+[TD]dzeconomy.<currency>.balance[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]/<currency> balance [player][/TD]
+[TD]Check balance[/TD]
+[TD]dzeconomy.<currency>.balance[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]/<currency> send <player> <amount>[/TD]
+[TD]Send currency[/TD]
+[TD]dzeconomy.<currency>.send[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]/<currency> request <player> <amount>[/TD]
+[TD]Request currency[/TD]
+[TD]dzeconomy.<currency>.request[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]/<currency> accept <player>[/TD]
+[TD]Accept request[/TD]
+[TD]dzeconomy.<currency>.accept[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]/<currency> deny <player>[/TD]
+[TD]Deny request[/TD]
+[TD]dzeconomy.<currency>.deny[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]/<currency> top [page][/TD]
+[TD]View leaderboard[/TD]
+[TD]dzeconomy.<currency>.top[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]/<currency> add <player> <amount>[/TD]
+[TD]Add currency[/TD]
+[TD]dzeconomy.<currency>.add[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]/<currency> remove <player> <amount>[/TD]
+[TD]Remove currency[/TD]
+[TD]dzeconomy.<currency>.remove[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]/<currency> set <player> <amount>[/TD]
+[TD]Set balance[/TD]
+[TD]dzeconomy.<currency>.set[/TD]
+[TD]op[/TD]
+[/TR]
+[/TABLE]
+
+[SIZE=3][B]Admin Commands[/B] ([COLOR=#55FF55]/economy[/COLOR])[/SIZE]
+
+[TABLE]
+[TR]
+[TH]Command[/TH]
+[TH]Description[/TH]
+[TH]Permission[/TH]
+[TH]Default[/TH]
+[/TR]
+[TR]
+[TD]/economy info[/TD]
+[TD]View plugin info[/TD]
+[TD]dzeconomy.economy.info[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]/economy credits[/TD]
+[TD]View credits[/TD]
+[TD]None[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]/economy reload[/TD]
+[TD]Reload configuration[/TD]
+[TD]dzeconomy.admin.reload[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]/economy version[/TD]
+[TD]Version information[/TD]
+[TD]dzeconomy.admin[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]/economy status[/TD]
+[TD]Plugin status & stats[/TD]
+[TD]dzeconomy.admin.status[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]/economy convert <player> <from> <to> <amount>[/TD]
+[TD]Convert currency[/TD]
+[TD]dzeconomy.admin.convert[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]/economy migrate <from> <to>[/TD]
+[TD]Migrate storage backend[/TD]
+[TD]dzeconomy.admin.migrate[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]/economy baltop [currency] [page][/TD]
+[TD]Global leaderboard[/TD]
+[TD]dzeconomy.admin.baltop[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]/economy payall <currency> <amount>[/TD]
+[TD]Pay all online players[/TD]
+[TD]dzeconomy.admin.payall[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]/economy backup[/TD]
+[TD]Create data backup[/TD]
+[TD]dzeconomy.admin.backup[/TD]
+[TD]op[/TD]
+[/TR]
+[/TABLE]
+
+[HR][/HR]
+
+[SIZE=5][B][COLOR=#FFA500]✦ Permissions ✦[/COLOR][/B][/SIZE]
+
+[SPOILER="Full Permission List"]
+[TABLE]
+[TR]
+[TH]Node[/TH]
+[TH]Description[/TH]
+[TH]Default[/TH]
+[/TR]
+[TR]
+[TD]dzeconomy.money.balance[/TD]
+[TD]Check own Money balance[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.money.balance.others[/TD]
+[TD]Check others' Money balance[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.money.send[/TD]
+[TD]Send Money[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.money.request[/TD]
+[TD]Request Money[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.money.accept[/TD]
+[TD]Accept Money requests[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.money.deny[/TD]
+[TD]Deny Money requests[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.money.top[/TD]
+[TD]View Money leaderboard[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.money.add[/TD]
+[TD]Add Money (admin)[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.money.remove[/TD]
+[TD]Remove Money (admin)[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.money.set[/TD]
+[TD]Set Money balance (admin)[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.mobcoin.balance[/TD]
+[TD]Check own MobCoin balance[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.mobcoin.balance.others[/TD]
+[TD]Check others' MobCoin balance[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.mobcoin.send[/TD]
+[TD]Send MobCoins[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.mobcoin.request[/TD]
+[TD]Request MobCoins[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.mobcoin.accept[/TD]
+[TD]Accept MobCoin requests[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.mobcoin.deny[/TD]
+[TD]Deny MobCoin requests[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.mobcoin.top[/TD]
+[TD]View MobCoin leaderboard[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.mobcoin.add[/TD]
+[TD]Add MobCoins (admin)[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.mobcoin.remove[/TD]
+[TD]Remove MobCoins (admin)[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.mobcoin.set[/TD]
+[TD]Set MobCoin balance (admin)[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.gem.balance[/TD]
+[TD]Check own Gem balance[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.gem.balance.others[/TD]
+[TD]Check others' Gem balance[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.gem.send[/TD]
+[TD]Send Gems[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.gem.request[/TD]
+[TD]Request Gems[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.gem.accept[/TD]
+[TD]Accept Gem requests[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.gem.deny[/TD]
+[TD]Deny Gem requests[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.gem.top[/TD]
+[TD]View Gem leaderboard[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.gem.add[/TD]
+[TD]Add Gems (admin)[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.gem.remove[/TD]
+[TD]Remove Gems (admin)[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.gem.set[/TD]
+[TD]Set Gem balance (admin)[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.economy.info[/TD]
+[TD]View plugin info[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.admin[/TD]
+[TD]All admin permissions (parent)[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.admin.reload[/TD]
+[TD]Reload configuration[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.admin.convert[/TD]
+[TD]Convert currencies[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.admin.migrate[/TD]
+[TD]Migrate storage[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.admin.status[/TD]
+[TD]View plugin status[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.admin.baltop[/TD]
+[TD]Global leaderboard[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.admin.payall[/TD]
+[TD]Pay all online players[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.admin.update[/TD]
+[TD]Update notifications[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.admin.backup[/TD]
+[TD]Create backup[/TD]
+[TD]op[/TD]
+[/TR]
+[/TABLE]
+[/SPOILER]
+
+[HR][/HR]
+
+[SIZE=5][B][COLOR=#FFA500]✦ Configuration Showcase ✦[/COLOR][/B][/SIZE]
+
+[SPOILER="config.yml (excerpt)"]
+[CODE=yaml]# Storage
+storage:
+  type: SQLITE  # SQLITE or MYSQL
+  mysql:
+    host: localhost
+    port: 3306
+    database: dzeconomy
+    username: root
+    password: changeme
+    pool-size: 10
+    connection-timeout: 30
+
+# Currencies
+currencies:
+  money:
+    enabled: true
+    singular: "Dollar"
+    plural: "Dollars"
+    symbol: "$"
+    decimal-places: 2
+    starting-balance: 500.00
+    max-balance: -1
+    min-transaction: 0.01
+    display-format: "{symbol}{amount}"
+  mobcoin:
+    enabled: true
+    singular: "MobCoin"
+    plural: "MobCoins"
+    symbol: "⛃"
+    decimal-places: 0
+    starting-balance: 0
+    max-balance: -1
+    min-transaction: 1
+  gem:
+    enabled: true
+    singular: "Gem"
+    plural: "Gems"
+    symbol: "◆"
+    decimal-places: 0
+    starting-balance: 0
+    max-balance: -1
+    min-transaction: 1
+
+# PvP
+pvp:
+  enabled: true
+  loss-percent:
+    money: 5.0
+    mobcoin: 2.0
+    gem: 0.0
+  minimum-balance:
+    money: 100.0
+
+# Combat Tag
+combat-tag:
+  enabled: true
+  duration: 15
+  blocked-actions: [send, request, accept]
+  action-bar:
+    enabled: true
+    format: "&c&l⚔ &eCombat Tag &7- &c{time}s remaining"[/CODE]
+[/SPOILER]
+
+[SPOILER="ranks.yml (excerpt)"]
+[CODE=yaml]premium:
+  display-name: "&6Premium"
+  priority: 2
+  multipliers:
+    money: 1.5
+    mobcoin: 2.0
+    gem: 1.5
+  perks:
+    reduced-cooldown: true
+    cooldown-reduction: 0.5
+    increased-daily-limit: true
+    limit-multiplier: 2.0
+    bypass-combat-tag: true
+    interest:
+      enabled: true
+      rate: 0.1
+      interval: 86400
+      max-balance: 100000
+  permissions:
+    - "dzeconomy.premium.chat"
+    - "dzeconomy.premium.join-message"[/CODE]
+[/SPOILER]
+
+[HR][/HR]
+
+[SIZE=5][B][COLOR=#FFA500]✦ Installation ✦[/COLOR][/B][/SIZE]
+
+[LIST=1]
+[*]Download the latest [B]DZEconomy-2.0.0.jar[/B]
+[*]Place it in your server's [B]plugins/[/B] folder
+[*]Restart your server
+[*]Configure [B]config.yml[/B], [B]ranks.yml[/B], and [B]mob-rewards.yml[/B]
+[*]Run [B]/economy reload[/B] to apply changes
+[/LIST]
+
+[SIZE=3][B]Requirements:[/B] Java 17+ (21 recommended) | Minecraft 1.16+ | Bukkit/Spigot/Paper/Folia/Purpur[/SIZE]
+
+[HR][/HR]
+
+[SIZE=5][B][COLOR=#FFA500]✦ bStats Live Graph ✦[/COLOR][/B][/SIZE]
+
+[IMG]https://bstats.org/signatures/bukkit/DZEconomy.svg[/IMG]
+
+[HR][/HR]
+
+[SIZE=5][B][COLOR=#FFA500]✦ Support ✦[/COLOR][/B][/SIZE]
+
+[LIST]
+[*][B]Wiki:[/B] [URL]https://github.com/DemonZDevelopment/DZEconomy/wiki[/URL]
+[*][B]Discord:[/B] [URL]https://discord.gg/dzeconomy[/URL]
+[*][B]GitHub:[/B] [URL]https://github.com/DemonZDevelopment/DZEconomy[/URL]
+[*][B]Issues:[/B] [URL]https://github.com/DemonZDevelopment/DZEconomy/issues[/URL]
+[*][B]Website:[/B] [URL]https://demonzdevelopment.online[/URL]
+[/LIST]
+
+[HR][/HR]
+
+[SIZE=2][COLOR=#888888]DZEconomy v2.0.0 | Licensed under GNU GPLv3 | Made with ❤️ by DemonZ Development[/COLOR][/SIZE]
+[/CENTER]

@@ -1,60 +1,43 @@
 package online.demonzdevelopment.dzeconomy.rank;
 
-import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
+import java.util.Collections;
+import java.util.Map;
 
 /**
- * Represents a rank with all its currency-specific settings
+ * Immutable data class representing a rank with per-currency settings.
+ * Once constructed, cannot be modified.
  */
 public class Rank {
     
-    private final String id;
+    private final String name;
     private final String displayName;
     private final int priority;
-    
-    // Per-currency settings
-    private final RankCurrencySettings moneySettings;
-    private final RankCurrencySettings mobcoinSettings;
-    private final RankCurrencySettings gemSettings;
-    
-    // Conversion settings
-    private final boolean conversionEnabled;
-    private final double conversionTax;
-    
-    public Rank(String id, String displayName, int priority,
-                RankCurrencySettings moneySettings,
-                RankCurrencySettings mobcoinSettings,
-                RankCurrencySettings gemSettings,
-                boolean conversionEnabled, double conversionTax) {
-        this.id = id;
-        this.displayName = displayName;
-        this.priority = priority;
-        this.moneySettings = moneySettings;
-        this.mobcoinSettings = mobcoinSettings;
-        this.gemSettings = gemSettings;
-        this.conversionEnabled = conversionEnabled;
-        this.conversionTax = conversionTax;
-    }
+    private final Map<String, RankCurrencySettings> currencySettings;
+    private final Map<String, Double> multipliers;
     
     /**
-     * Get settings for a specific currency
+     * Construct a new Rank.
+     *
+     * @param name            Internal rank name
+     * @param displayName     Display name shown to players
+     * @param priority        Priority for rank resolution (higher = more important)
+     * @param currencySettings Map of currency key to settings (will be stored as unmodifiable)
+     * @param multipliers     Map of currency key to reward multiplier (will be stored as unmodifiable)
      */
-    public RankCurrencySettings getSettingsFor(CurrencyType currency) {
-        switch (currency) {
-            case MONEY:
-                return moneySettings;
-            case MOBCOIN:
-                return mobcoinSettings;
-            case GEM:
-                return gemSettings;
-            default:
-                return moneySettings;
-        }
+    public Rank(String name, String displayName, int priority, Map<String, RankCurrencySettings> currencySettings, Map<String, Double> multipliers) {
+        this.name = name;
+        this.displayName = displayName;
+        this.priority = priority;
+        this.currencySettings = currencySettings != null 
+            ? Collections.unmodifiableMap(currencySettings) 
+            : Collections.emptyMap();
+        this.multipliers = multipliers != null
+            ? Collections.unmodifiableMap(multipliers)
+            : Collections.emptyMap();
     }
     
-    // Getters
-    
-    public String getId() {
-        return id;
+    public String getName() {
+        return name;
     }
     
     public String getDisplayName() {
@@ -64,69 +47,98 @@ public class Rank {
     public int getPriority() {
         return priority;
     }
-    
-    public RankCurrencySettings getMoneySettings() {
-        return moneySettings;
+
+    public double getMultiplier(String currencyKey) {
+        return multipliers.getOrDefault(currencyKey.toLowerCase(), 1.0);
     }
-    
-    public RankCurrencySettings getMobcoinSettings() {
-        return mobcoinSettings;
+
+    public double getMultiplier(online.demonzdevelopment.dzeconomy.currency.CurrencyType type) {
+        return getMultiplier(type.getId());
     }
-    
-    public RankCurrencySettings getGemSettings() {
-        return gemSettings;
-    }
-    
-    public boolean isConversionEnabled() {
-        return conversionEnabled;
-    }
-    
-    public double getConversionTax() {
-        return conversionTax;
+
+    public Map<String, Double> getAllMultipliers() {
+        return multipliers;
     }
     
     /**
-     * Inner class for currency-specific rank settings
+     * Get currency settings for a specific currency type.
+     * Returns null if no settings defined for this currency.
+     */
+    public RankCurrencySettings getCurrencySettings(String currencyKey) {
+        return currencySettings.get(currencyKey);
+    }
+    
+    /**
+     * Get all currency settings. Returned map is unmodifiable.
+     */
+    public Map<String, RankCurrencySettings> getAllCurrencySettings() {
+        return currencySettings;
+    }
+    
+    @Override
+    public String toString() {
+        return "Rank{name='" + name + "', displayName='" + displayName + "', priority=" + priority + "}";
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Rank rank = (Rank) o;
+        return name.equalsIgnoreCase(rank.name);
+    }
+    
+    @Override
+    public int hashCode() {
+        return name.toLowerCase().hashCode();
+    }
+    
+    /**
+     * Immutable per-currency settings for a rank.
      */
     public static class RankCurrencySettings {
-        private final boolean enabled;
-        private final double transferTax;
-        private final int transferCooldown;
-        private final int dailyTransferLimit;
-        private final int dailyRequestLimit;
-        private final int requestCooldown;
-        private final double bossKillBonus; // Only for MobCoin
         
-        public RankCurrencySettings(boolean enabled, double transferTax, int transferCooldown,
-                                    int dailyTransferLimit, int dailyRequestLimit,
-                                    int requestCooldown, double bossKillBonus) {
-            this.enabled = enabled;
+        private final String currencyKey;
+        private final double transferTax;
+        private final int cooldown;
+        private final double dailyLimit;
+        private final int requestCooldown;
+        private final double bossKillBonus;
+        
+        /**
+         * Construct per-currency settings.
+         *
+         * @param currencyKey     The currency identifier
+         * @param transferTax     Tax rate applied to transfers (0.0 - 1.0)
+         * @param cooldown        Cooldown between transactions in seconds
+         * @param dailyLimit      Maximum daily transaction amount (-1 = unlimited)
+         * @param requestCooldown Cooldown between money requests in seconds
+         * @param bossKillBonus   Bonus multiplier for boss kills
+         */
+        public RankCurrencySettings(String currencyKey, double transferTax, int cooldown, 
+                                     double dailyLimit, int requestCooldown, double bossKillBonus) {
+            this.currencyKey = currencyKey;
             this.transferTax = transferTax;
-            this.transferCooldown = transferCooldown;
-            this.dailyTransferLimit = dailyTransferLimit;
-            this.dailyRequestLimit = dailyRequestLimit;
+            this.cooldown = cooldown;
+            this.dailyLimit = dailyLimit;
             this.requestCooldown = requestCooldown;
             this.bossKillBonus = bossKillBonus;
         }
         
-        public boolean isEnabled() {
-            return enabled;
+        public String getCurrencyKey() {
+            return currencyKey;
         }
         
         public double getTransferTax() {
             return transferTax;
         }
         
-        public int getTransferCooldown() {
-            return transferCooldown;
+        public int getCooldown() {
+            return cooldown;
         }
         
-        public int getDailyTransferLimit() {
-            return dailyTransferLimit;
-        }
-        
-        public int getDailyRequestLimit() {
-            return dailyRequestLimit;
+        public double getDailyLimit() {
+            return dailyLimit;
         }
         
         public int getRequestCooldown() {
@@ -135,6 +147,13 @@ public class Rank {
         
         public double getBossKillBonus() {
             return bossKillBonus;
+        }
+        
+        @Override
+        public String toString() {
+            return "RankCurrencySettings{currency='" + currencyKey + "', tax=" + transferTax 
+                + ", cooldown=" + cooldown + ", dailyLimit=" + dailyLimit 
+                + ", requestCooldown=" + requestCooldown + ", bossKillBonus=" + bossKillBonus + "}";
         }
     }
 }

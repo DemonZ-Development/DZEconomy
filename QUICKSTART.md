@@ -9,7 +9,7 @@ Welcome to DZEconomy! This guide will help you get started quickly.
 1. **Download** the latest DZEconomy JAR file
 2. **Stop** your server
 3. **Install dependencies**:
-   - Download [LuckPerms](https://luckperms.net/) (REQUIRED)
+   - Download [LuckPerms](https://luckperms.net/) (Optional but recommended)
    - Download [PlaceholderAPI](https://www.spigotmc.org/resources/6245/) (Optional but recommended)
 4. **Place** all JARs in your `plugins` folder
 5. **Start** your server
@@ -63,7 +63,7 @@ Try these commands in-game:
 /money send Steve 1000   - Send $1000 to Steve
 /mobcoin balance         - Check MobCoins
 /gem balance            - Check Gems
-/economy convert money gem 10000  - Convert currencies
+/economy convert Steve money gem 10000  - Convert currencies for a player
 ```
 
 ---
@@ -267,7 +267,8 @@ storage:
 - Read the full **README.md** for detailed documentation
 - Check **API_EXAMPLE.java** if you're a developer
 - Contact: DemonZ Development
-- Website: https://demonzdevelopment.online
+- Website: [demonzdevelopment.online](https://demonzdevelopment.online)
+- GitHub: [github.com/DemonZDevelopment/DZEconomy](https://github.com/DemonZDevelopment/DZEconomy)
 
 ---
 

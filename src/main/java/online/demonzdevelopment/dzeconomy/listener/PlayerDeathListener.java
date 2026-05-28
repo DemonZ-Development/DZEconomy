@@ -1,10 +1,11 @@
 package online.demonzdevelopment.dzeconomy.listener;
 
 import online.demonzdevelopment.dzeconomy.DZEconomy;
+import online.demonzdevelopment.dzeconomy.currency.CurrencyManager;
 import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
-import online.demonzdevelopment.dzeconomy.util.ColorUtil;
+import online.demonzdevelopment.dzeconomy.config.ConfigManager;
 import online.demonzdevelopment.dzeconomy.util.MessagesUtil;
-import online.demonzdevelopment.dzeconomy.util.NumberFormatter;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,116 +13,101 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
-import java.util.Map;
+import java.util.UUID;
 
-/**
- * Handles player death events for PVP economy transfers
- */
 public class PlayerDeathListener implements Listener {
-    
+
     private final DZEconomy plugin;
-    private final MessagesUtil messageUtil;
-    
+
     public PlayerDeathListener(DZEconomy plugin) {
         this.plugin = plugin;
-        this.messageUtil = new MessagesUtil(plugin);
     }
-    
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerDeath(PlayerDeathEvent event) {
-        // Early exit checks (performance optimization)
-        if (!plugin.getConfigManager().getConfig().getBoolean("pvp-economy.enabled", true)) {
+        if (event.getKeepInventory()) {
             return;
         }
-        
         Player victim = event.getEntity();
         Player killer = victim.getKiller();
-        
-        // Quick validation checks
-        if (killer == null || killer.getUniqueId().equals(victim.getUniqueId())) {
+
+        if (killer == null || killer.equals(victim)) {
             return;
         }
-        
-        // Get victim's balances
-        double victimMoney = plugin.getCurrencyManager().getBalance(victim.getUniqueId(), CurrencyType.MONEY);
-        double victimMobcoin = plugin.getCurrencyManager().getBalance(victim.getUniqueId(), CurrencyType.MOBCOIN);
-        double victimGem = plugin.getCurrencyManager().getBalance(victim.getUniqueId(), CurrencyType.GEM);
-        
-        // Check if any currency to transfer
-        if (victimMoney == 0 && victimMobcoin == 0 && victimGem == 0) {
+
+        ConfigManager config = plugin.getConfigManager();
+        CurrencyManager cm = plugin.getCurrencyManager();
+
+        if (!config.getConfig().getBoolean("pvp.enabled", false)) {
             return;
         }
-        
-        // Transfer currencies based on config
-        boolean transferMoney = plugin.getConfigManager().getConfig().getBoolean("pvp-economy.transfer-money", true);
-        boolean transferMobcoins = plugin.getConfigManager().getConfig().getBoolean("pvp-economy.transfer-mobcoins", true);
-        boolean transferGems = plugin.getConfigManager().getConfig().getBoolean("pvp-economy.transfer-gems", true);
-        
-        if (transferMoney && victimMoney > 0) {
-            plugin.getCurrencyManager().setBalance(victim.getUniqueId(), CurrencyType.MONEY, 0);
-            plugin.getCurrencyManager().addBalance(killer.getUniqueId(), CurrencyType.MONEY, victimMoney);
-        }
-        
-        if (transferMobcoins && victimMobcoin > 0) {
-            plugin.getCurrencyManager().setBalance(victim.getUniqueId(), CurrencyType.MOBCOIN, 0);
-            plugin.getCurrencyManager().addBalance(killer.getUniqueId(), CurrencyType.MOBCOIN, victimMobcoin);
-        }
-        
-        if (transferGems && victimGem > 0) {
-            plugin.getCurrencyManager().setBalance(victim.getUniqueId(), CurrencyType.GEM, 0);
-            plugin.getCurrencyManager().addBalance(killer.getUniqueId(), CurrencyType.GEM, victimGem);
-        }
-        
-        // Save data
-        plugin.getCurrencyManager().savePlayerDataAsync(victim.getUniqueId());
-        plugin.getCurrencyManager().savePlayerDataAsync(killer.getUniqueId());
-        
-        // Get currency symbols
-        String moneySymbol = plugin.getCurrencyManager().getCurrencySymbol(CurrencyType.MONEY);
-        String mobcoinSymbol = plugin.getCurrencyManager().getCurrencySymbol(CurrencyType.MOBCOIN);
-        String gemSymbol = plugin.getCurrencyManager().getCurrencySymbol(CurrencyType.GEM);
-        
-        // Send notifications
-        Map<String, String> killerPlaceholders = MessagesUtil.placeholders(
-                "player", victim.getName(),
-                "money_symbol", moneySymbol,
-                "money", transferMoney ? NumberFormatter.formatShort(victimMoney) : "0",
-                "mobcoin_symbol", mobcoinSymbol,
-                "mobcoin", transferMobcoins ? NumberFormatter.formatShort(victimMobcoin) : "0",
-                "gem_symbol", gemSymbol,
-                "gem", transferGems ? NumberFormatter.formatShort(victimGem) : "0");
-        
-        sendMessage(killer, "pvp.killer", killerPlaceholders);
-        
-        Map<String, String> victimPlaceholders = MessagesUtil.placeholders("player", killer.getName());
-        sendMessage(victim, "pvp.victim", victimPlaceholders);
-        
-        // Broadcast if enabled and threshold met
-        if (plugin.getConfigManager().getConfig().getBoolean("pvp-economy.broadcast.enabled", true)) {
-            double threshold = plugin.getConfigManager().getConfig().getDouble("pvp-economy.broadcast.threshold", 100000.0);
-            
-            if (victimMoney >= threshold) {
-                Map<String, String> broadcastPlaceholders = MessagesUtil.placeholders(
-                        "killer", killer.getName(),
-                        "victim", victim.getName(),
-                        "money_symbol", moneySymbol,
-                        "money", NumberFormatter.formatShort(victimMoney),
-                        "mobcoin_symbol", mobcoinSymbol,
-                        "mobcoin", NumberFormatter.formatShort(victimMobcoin),
-                        "gem_symbol", gemSymbol,
-                        "gem", NumberFormatter.formatShort(victimGem));
-                
-                String broadcast = messageUtil.getMessage("pvp.broadcast", broadcastPlaceholders);
-                Bukkit.broadcastMessage(broadcast);
+
+        UUID victimUuid = victim.getUniqueId();
+        UUID killerUuid = killer.getUniqueId();
+
+        for (CurrencyType type : CurrencyType.values()) {
+            String currencyName = type.name().toLowerCase();
+            String path = "pvp." + currencyName;
+
+            if (!config.getConfig().getBoolean(path + ".enabled", false)) {
+                continue;
+            }
+
+            // Get the loss percentage (0.0 to 1.0, not always 100%)
+            double lossPercentage = config.getConfig().getDouble(path + ".loss-percentage", 1.0);
+            lossPercentage = Math.max(0.0, Math.min(1.0, lossPercentage));
+
+            if (lossPercentage <= 0) {
+                continue;
+            }
+
+            double victimBalance = cm.getBalance(victimUuid, type);
+            if (victimBalance <= 0) {
+                continue;
+            }
+
+            // Calculate amount to transfer based on configurable loss percentage
+            double amount = victimBalance * lossPercentage;
+
+            // Round to 2 decimal places
+            amount = Math.round(amount * 100.0) / 100.0;
+
+            if (amount <= 0) {
+                continue;
+            }
+
+            // Atomic transfer via CurrencyManager
+            boolean success = cm.transfer(victimUuid, killerUuid, type, amount);
+
+            if (success) {
+                double victimNewBalance = cm.getBalance(victimUuid, type);
+                double killerNewBalance = cm.getBalance(killerUuid, type);
+
+                // Notify victim
+                MessagesUtil.sendMessage(victim, "pvp-lost-" + currencyName,
+                        "%killer%", killer.getName(),
+                        "%amount%", String.format("%,.2f", amount),
+                        "%percentage%", String.format("%.0f", lossPercentage * 100),
+                        "%balance%", String.format("%,.2f", victimNewBalance));
+
+                // Notify killer
+                MessagesUtil.sendMessage(killer, "pvp-gained-" + currencyName,
+                        "%victim%", victim.getName(),
+                        "%amount%", String.format("%,.2f", amount),
+                        "%percentage%", String.format("%.0f", lossPercentage * 100),
+                        "%balance%", String.format("%,.2f", killerNewBalance));
+
+                // Broadcast with threshold
+                double broadcastThreshold = config.getConfig().getDouble(path + ".broadcast-threshold", 1000);
+                if (amount >= broadcastThreshold && broadcastThreshold > 0) {
+                    String broadcastMessage = MessagesUtil.getStaticMessage("pvp-broadcast",
+                            "%killer%", killer.getName(),
+                            "%victim%", victim.getName(),
+                            "%amount%", String.format("%,.2f", amount),
+                            "%currency%", currencyName);
+                    Bukkit.broadcastMessage(broadcastMessage);
+                }
             }
         }
-    }
-    
-    /**
-     * Send a message with placeholders
-     */
-    private void sendMessage(Player player, String path, Map<String, String> placeholders) {
-        String message = messageUtil.getMessage(path, placeholders);
-        player.sendMessage(message);
     }
 }

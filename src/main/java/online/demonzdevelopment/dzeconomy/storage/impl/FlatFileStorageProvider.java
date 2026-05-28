@@ -8,130 +8,312 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
+import java.util.logging.Level;
 
-/**
- * FlatFile (YAML) storage implementation
- */
 public class FlatFileStorageProvider implements StorageProvider {
     
     private final DZEconomy plugin;
-    private File dataFolder;
+    private File dataDir;
+    
+    // In-memory cache for all player balances to prevent disk scans during getTopBalances
+    private final Map<UUID, Map<String, Double>> allBalancesCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private volatile boolean initialLoaded = false;
     
     public FlatFileStorageProvider(DZEconomy plugin) {
         this.plugin = plugin;
     }
     
     @Override
-    public void initialize() {
-        dataFolder = new File(plugin.getDataFolder(), "data/players");
-        if (!dataFolder.exists()) {
-            dataFolder.mkdirs();
+    public boolean initialize() {
+        dataDir = new File(plugin.getDataFolder(), "playerdata");
+        if (!dataDir.exists()) {
+            if (!dataDir.mkdirs()) {
+                plugin.getLogger().severe("Failed to create playerdata directory!");
+                return false;
+            }
         }
+        plugin.getLogger().info("FlatFile storage initialized successfully!");
+        return true;
+    }
+    
+    private void ensureInitialLoad() {
+        if (initialLoaded) return;
+        synchronized (this) {
+            if (initialLoaded) return;
+            plugin.getLogger().info("Loading flatfile player balances into cache...");
+            File[] files = dataDir.listFiles((dir, name) -> name.endsWith(".yml"));
+            if (files != null) {
+                for (File file : files) {
+                    String fileName = file.getName();
+                    String uuidStr = fileName.substring(0, fileName.length() - 4);
+                    try {
+                        UUID uuid = UUID.fromString(uuidStr);
+                        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+                        Map<String, Double> balances = new HashMap<>();
+                        balances.put("money", yaml.getDouble("balances.money", 0.0));
+                        balances.put("mobcoin", yaml.getDouble("balances.mobcoin", 0.0));
+                        balances.put("gem", yaml.getDouble("balances.gem", 0.0));
+                        allBalancesCache.put(uuid, balances);
+                    } catch (IllegalArgumentException ignored) {
+                    }
+                }
+            }
+            initialLoaded = true;
+            plugin.getLogger().info("Loaded " + allBalancesCache.size() + " players into flatfile cache.");
+        }
+    }
+    
+    private File getPlayerFile(UUID uuid) {
+        return new File(dataDir, uuid.toString() + ".yml");
+    }
+    
+    private File getTempFile(UUID uuid) {
+        return new File(dataDir, uuid.toString() + "_" + Thread.currentThread().getId() + ".yml.tmp");
     }
     
     @Override
     public PlayerData loadPlayerData(UUID uuid) {
-        File playerFile = new File(dataFolder, uuid.toString() + ".yml");
-        
-        if (!playerFile.exists()) {
+        File file = getPlayerFile(uuid);
+        if (!file.exists()) {
             return null;
         }
         
-        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(playerFile);
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
         PlayerData data = new PlayerData(uuid);
         
-        // Load basic info
-        data.setUsername(yaml.getString("username", "Unknown"));
-        data.setFirstJoin(yaml.getLong("first-join", System.currentTimeMillis()));
-        data.setLastSeen(yaml.getLong("last-seen", System.currentTimeMillis()));
-        
-        // Load balances
-        for (CurrencyType type : CurrencyType.values()) {
-            String path = "balances." + type.getId();
-            data.setBalance(type, yaml.getDouble(path, 0.0));
-        }
-        
-        // Load statistics
-        for (CurrencyType type : CurrencyType.values()) {
-            data.getMoneySent().put(type, yaml.getLong("statistics." + type.getId() + "-sent", 0L));
-            data.getMoneyReceived().put(type, yaml.getLong("statistics." + type.getId() + "-received", 0L));
-        }
+        data.setUsername(yaml.getString("username", null));
+        data.setFirstJoin(yaml.getLong("first-join", 0L));
+        data.setLastSeen(yaml.getLong("last-seen", 0L));
+        data.setBalance(CurrencyType.MONEY, yaml.getDouble("balances.money", 0.0));
+        data.setBalance(CurrencyType.MOBCOIN, yaml.getDouble("balances.mobcoin", 0.0));
+        data.setBalance(CurrencyType.GEM, yaml.getDouble("balances.gem", 0.0));
+        data.setMoneySent(CurrencyType.MONEY, yaml.getDouble("stats.money-sent", 0.0));
+        data.setMoneyReceived(CurrencyType.MONEY, yaml.getDouble("stats.money-received", 0.0));
+        data.setMoneySent(CurrencyType.MOBCOIN, yaml.getDouble("stats.mobcoin-sent", 0.0));
+        data.setMoneyReceived(CurrencyType.MOBCOIN, yaml.getDouble("stats.mobcoin-received", 0.0));
+        data.setMoneySent(CurrencyType.GEM, yaml.getDouble("stats.gem-sent", 0.0));
+        data.setMoneyReceived(CurrencyType.GEM, yaml.getDouble("stats.gem-received", 0.0));
         
         // Load daily limits
         for (CurrencyType type : CurrencyType.values()) {
-            data.getDailySendCounts().put(type, yaml.getInt("daily-limits." + type.getId() + "-sends-today", 0));
-            data.getDailyRequestCounts().put(type, yaml.getInt("daily-limits." + type.getId() + "-requests-today", 0));
+            String path = "daily-limits." + type.getId();
+            data.setDailySendCount(type, yaml.getLong(path + ".send-count", 0L));
+            data.setDailyRequestCount(type, yaml.getLong(path + ".request-count", 0L));
         }
-        data.setLastDailyReset(yaml.getLong("daily-limits.last-reset", 0L));
         
         // Load cooldowns
         for (CurrencyType type : CurrencyType.values()) {
-            data.getSendCooldowns().put(type, yaml.getLong("cooldowns." + type.getId() + "-send", 0L));
-            data.getRequestCooldowns().put(type, yaml.getLong("cooldowns." + type.getId() + "-request", 0L));
+            String path = "cooldowns." + type.getId();
+            data.setSendCooldown(type, yaml.getLong(path + ".send-cooldown", 0L));
+            data.setRequestCooldown(type, yaml.getLong(path + ".request-cooldown", 0L));
         }
+        
+        data.setDirty(false);
+        
+        // Cache balances in memory
+        Map<String, Double> balances = allBalancesCache.computeIfAbsent(uuid, k -> new HashMap<>());
+        balances.put("money", data.getBalance(CurrencyType.MONEY));
+        balances.put("mobcoin", data.getBalance(CurrencyType.MOBCOIN));
+        balances.put("gem", data.getBalance(CurrencyType.GEM));
         
         return data;
     }
     
     @Override
-    public void savePlayerData(PlayerData playerData) {
-        File playerFile = new File(dataFolder, playerData.getUUID().toString() + ".yml");
+    public void savePlayerData(PlayerData data) {
+        UUID uuid = data.getUuid();
+        File file = getPlayerFile(uuid);
+        File tempFile = getTempFile(uuid);
+        
         YamlConfiguration yaml = new YamlConfiguration();
         
-        // Save basic info
-        yaml.set("uuid", playerData.getUUID().toString());
-        yaml.set("username", playerData.getUsername());
-        yaml.set("first-join", playerData.getFirstJoin());
-        yaml.set("last-seen", playerData.getLastSeen());
-        
-        // Save balances
-        for (CurrencyType type : CurrencyType.values()) {
-            yaml.set("balances." + type.getId(), playerData.getBalance(type));
-        }
-        
-        // Save statistics
-        for (CurrencyType type : CurrencyType.values()) {
-            yaml.set("statistics." + type.getId() + "-sent", playerData.getMoneySent().get(type));
-            yaml.set("statistics." + type.getId() + "-received", playerData.getMoneyReceived().get(type));
-        }
+        yaml.set("username", data.getUsername());
+        yaml.set("first-join", data.getFirstJoin());
+        yaml.set("last-seen", data.getLastSeen());
+        yaml.set("balances.money", data.getBalance(CurrencyType.MONEY));
+        yaml.set("balances.mobcoin", data.getBalance(CurrencyType.MOBCOIN));
+        yaml.set("balances.gem", data.getBalance(CurrencyType.GEM));
+        yaml.set("stats.money-sent", data.getMoneySent(CurrencyType.MONEY));
+        yaml.set("stats.money-received", data.getMoneyReceived(CurrencyType.MONEY));
+        yaml.set("stats.mobcoin-sent", data.getMoneySent(CurrencyType.MOBCOIN));
+        yaml.set("stats.mobcoin-received", data.getMoneyReceived(CurrencyType.MOBCOIN));
+        yaml.set("stats.gem-sent", data.getMoneySent(CurrencyType.GEM));
+        yaml.set("stats.gem-received", data.getMoneyReceived(CurrencyType.GEM));
         
         // Save daily limits
         for (CurrencyType type : CurrencyType.values()) {
-            yaml.set("daily-limits." + type.getId() + "-sends-today", playerData.getDailySendCounts().get(type));
-            yaml.set("daily-limits." + type.getId() + "-requests-today", playerData.getDailyRequestCounts().get(type));
+            String path = "daily-limits." + type.getId();
+            yaml.set(path + ".send-count", data.getDailySendCount(type));
+            yaml.set(path + ".request-count", data.getDailyRequestCount(type));
         }
-        yaml.set("daily-limits.last-reset", playerData.getLastDailyReset());
         
         // Save cooldowns
         for (CurrencyType type : CurrencyType.values()) {
-            yaml.set("cooldowns." + type.getId() + "-send", playerData.getSendCooldowns().get(type));
-            yaml.set("cooldowns." + type.getId() + "-request", playerData.getRequestCooldowns().get(type));
+            String path = "cooldowns." + type.getId();
+            yaml.set(path + ".send-cooldown", data.getSendCooldown(type));
+            yaml.set(path + ".request-cooldown", data.getRequestCooldown(type));
+        }
+        
+        // Atomic write: write to .tmp file first, then atomically move into place
+        try {
+            yaml.save(tempFile);
+        } catch (IOException e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to write temp file for " + uuid, e);
+            deleteTempFile(tempFile);
+            return;
         }
         
         try {
-            yaml.save(playerFile);
+            Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            data.setDirty(false);
         } catch (IOException e) {
-            plugin.getLogger().severe("Failed to save player data for " + playerData.getUUID() + ": " + e.getMessage());
+            // ATOMIC_MOVE may not be supported on all filesystems; try REPLACE_EXISTING alone
+            try {
+                Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                data.setDirty(false);
+            } catch (IOException ex) {
+                plugin.getLogger().log(Level.SEVERE, "Failed to move temp file to final location for " + uuid, ex);
+                try {
+                    yaml.save(file);
+                    data.setDirty(false);
+                } catch (IOException ex2) {
+                    plugin.getLogger().log(Level.SEVERE, "Fallback save also failed for " + uuid, ex2);
+                }
+                deleteTempFile(tempFile);
+            }
         }
+        
+        // Cache balances in memory
+        Map<String, Double> balances = allBalancesCache.computeIfAbsent(uuid, k -> new HashMap<>());
+        balances.put("money", data.getBalance(CurrencyType.MONEY));
+        balances.put("mobcoin", data.getBalance(CurrencyType.MOBCOIN));
+        balances.put("gem", data.getBalance(CurrencyType.GEM));
     }
     
     @Override
     public boolean playerDataExists(UUID uuid) {
-        File playerFile = new File(dataFolder, uuid.toString() + ".yml");
-        return playerFile.exists();
+        return allBalancesCache.containsKey(uuid) || getPlayerFile(uuid).exists();
     }
     
     @Override
     public void deletePlayerData(UUID uuid) {
-        File playerFile = new File(dataFolder, uuid.toString() + ".yml");
-        if (playerFile.exists()) {
-            playerFile.delete();
+        allBalancesCache.remove(uuid);
+        File file = getPlayerFile(uuid);
+        if (file.exists()) {
+            if (!file.delete()) {
+                plugin.getLogger().log(Level.SEVERE, "Failed to delete player data file for " + uuid);
+            }
+        }
+        // Also clean up any leftover temp file
+        File tempFile = getTempFile(uuid);
+        if (tempFile.exists()) {
+            if (!tempFile.delete()) {
+                plugin.getLogger().warning("Failed to delete temp file: " + tempFile.getAbsolutePath());
+            }
         }
     }
     
     @Override
+    public List<UUID> getAllPlayerUUIDs() {
+        ensureInitialLoad();
+        return new ArrayList<>(allBalancesCache.keySet());
+    }
+    
+    private void deleteTempFile(File tempFile) {
+        if (tempFile.exists() && !tempFile.delete()) {
+            plugin.getLogger().warning("Failed to delete temp file: " + tempFile.getAbsolutePath());
+        }
+    }
+
+    @Override
+    public Map<String, Double> getAllBalances(UUID uuid) {
+        ensureInitialLoad();
+        Map<String, Double> balances = allBalancesCache.get(uuid);
+        if (balances != null) {
+            return new HashMap<>(balances);
+        }
+        
+        File file = getPlayerFile(uuid);
+        if (!file.exists()) return Map.of();
+        
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        Map<String, Double> result = new HashMap<>();
+        result.put("money", yaml.getDouble("balances.money", 0.0));
+        result.put("mobcoin", yaml.getDouble("balances.mobcoin", 0.0));
+        result.put("gem", yaml.getDouble("balances.gem", 0.0));
+        
+        allBalancesCache.put(uuid, result);
+        return result;
+    }
+
+    @Override
+    public void setBalance(UUID uuid, String currencyKey, double amount) {
+        if (currencyKey == null) return;
+        
+        File file = getPlayerFile(uuid);
+        YamlConfiguration yaml;
+        if (file.exists()) {
+            yaml = YamlConfiguration.loadConfiguration(file);
+        } else {
+            yaml = new YamlConfiguration();
+        }
+        String path;
+        String key = currencyKey.toLowerCase();
+        if (key.equals("mobcoins")) key = "mobcoin";
+        if (key.equals("gems")) key = "gem";
+        
+        switch (key) {
+            case "money": path = "balances.money"; break;
+            case "mobcoin": path = "balances.mobcoin"; break;
+            case "gem": path = "balances.gem"; break;
+            default: return;
+        }
+        yaml.set(path, amount);
+        try {
+            yaml.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to save balance for " + uuid, e);
+        }
+        
+        // Update cache
+        Map<String, Double> balances = allBalancesCache.computeIfAbsent(uuid, k -> new HashMap<>());
+        balances.put(key, amount);
+    }
+
+    @Override
+    public List<Map.Entry<UUID, Double>> getTopBalances(String currencyKey, int limit) {
+        if (currencyKey == null) return new ArrayList<>();
+        String key = currencyKey.toLowerCase();
+        if (key.equals("mobcoins")) key = "mobcoin";
+        if (key.equals("gems")) key = "gem";
+        
+        ensureInitialLoad();
+        
+        List<Map.Entry<UUID, Double>> result = new ArrayList<>();
+        for (Map.Entry<UUID, Map<String, Double>> entry : allBalancesCache.entrySet()) {
+            Double bal = entry.getValue().get(key);
+            if (bal != null) {
+                result.add(new AbstractMap.SimpleEntry<>(entry.getKey(), bal));
+            }
+        }
+        
+        result.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
+        return getSubList(result, limit);
+    }
+    
+    private List<Map.Entry<UUID, Double>> getSubList(List<Map.Entry<UUID, Double>> list, int limit) {
+        if (list.size() <= limit) {
+            return new ArrayList<>(list);
+        }
+        return new ArrayList<>(list.subList(0, limit));
+    }
+
+    @Override
     public void close() {
-        // No connections to close for flatfile
+        allBalancesCache.clear();
+        initialLoaded = false;
     }
 }

@@ -1,42 +1,48 @@
 package online.demonzdevelopment.dzeconomy.storage;
 
 import online.demonzdevelopment.dzeconomy.data.PlayerData;
-
+import java.util.AbstractMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-/**
- * Abstract storage provider interface for different storage types
- */
 public interface StorageProvider {
-    
-    /**
-     * Initialize the storage system
-     */
-    void initialize();
-    
-    /**
-     * Load player data from storage
-     * @return PlayerData object or null if not found
-     */
+    boolean initialize();
     PlayerData loadPlayerData(UUID uuid);
-    
-    /**
-     * Save player data to storage
-     */
-    void savePlayerData(PlayerData playerData);
-    
-    /**
-     * Check if player data exists
-     */
+    void savePlayerData(PlayerData data);
     boolean playerDataExists(UUID uuid);
-    
-    /**
-     * Delete player data
-     */
     void deletePlayerData(UUID uuid);
-    
-    /**
-     * Close storage connections
-     */
+    List<UUID> getAllPlayerUUIDs();
     void close();
+
+    /**
+     * Get all balances for a player across all currencies.
+     * Used for migration between storage backends.
+     */
+    default Map<String, Double> getAllBalances(UUID uuid) {
+        return Map.of();
+    }
+
+    /**
+     * Set a specific currency balance for a player.
+     * Used for migration between storage backends.
+     */
+    default void setBalance(UUID uuid, String currencyKey, double amount) {
+    }
+
+    /**
+     * Get the top balances for a given currency across all players.
+     * Used for leaderboard display.
+     */
+    default List<Map.Entry<UUID, Double>> getTopBalances(String currencyKey, int limit) {
+        return List.of();
+    }
+
+    /**
+     * Shutdown the storage provider (alias for close with cleanup).
+     * Used for migration between storage backends.
+     */
+    default void shutdown() {
+        close();
+    }
 }

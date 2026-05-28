@@ -1,195 +1,236 @@
 package online.demonzdevelopment.dzeconomy.manager;
 
 import online.demonzdevelopment.dzeconomy.DZEconomy;
-import online.demonzdevelopment.dzeconomy.cache.RankCache;
+import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
 import online.demonzdevelopment.dzeconomy.rank.Rank;
-import org.bukkit.Bukkit;
+import online.demonzdevelopment.dzeconomy.rank.Rank.RankCurrencySettings;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Player;
+import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Manages player ranks and rank data
- * Optimized with smart caching
- * 
- * @author DemonZ Development
- * @version 1.1.1
+ * Manages player ranks loaded from ranks.yml.
+ * Resolves player rank via LuckPerms integration or config default.
+ * Thread-safe via ConcurrentHashMap.
  */
 public class RankManager {
     
     private final DZEconomy plugin;
-    private final Map<String, Rank> ranks;
-    private final RankCache rankCache;
+    private final ConcurrentHashMap<String, Rank> ranks = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, Rank> playerRanks = new ConcurrentHashMap<>();
+    private String defaultRankName;
     
     public RankManager(DZEconomy plugin) {
         this.plugin = plugin;
-        this.ranks = new HashMap<>();
-        this.rankCache = new RankCache();
-        loadRanks();
     }
     
     /**
-     * Load all ranks from ranks.yml
+     * Load all ranks from ranks.yml config.
      */
     public void loadRanks() {
         ranks.clear();
+        playerRanks.clear();
         
-        ConfigurationSection ranksSection = plugin.getConfigManager().getRanks().getConfigurationSection("ranks");
-        if (ranksSection == null) {
-            plugin.getLogger().warning("No ranks defined in ranks.yml!");
+        FileConfiguration ranksConfig = plugin.getConfigManager().getRanks();
+        if (ranksConfig == null) {
+            plugin.getLogger().warning("ranks.yml is null, cannot load ranks!");
             return;
         }
         
-        for (String rankId : ranksSection.getKeys(false)) {
+        defaultRankName = ranksConfig.getString("default-rank", "default");
+        
+        ConfigurationSection ranksSection = ranksConfig.getConfigurationSection("ranks");
+        if (ranksSection == null) {
+            ranksSection = ranksConfig;
+        }
+        
+        for (String rankName : ranksSection.getKeys(false)) {
+            if (rankName.equals("default-rank") || rankName.equals("config-version")) continue;
+            ConfigurationSection rankSection = ranksSection.getKeys(false).contains(rankName) ? ranksSection.getConfigurationSection(rankName) : null;
+            if (rankSection == null) continue;
+            
             try {
-                Rank rank = loadRank(rankId, ranksSection.getConfigurationSection(rankId));
-                ranks.put(rankId.toLowerCase(), rank);
-                plugin.getLogger().info("Loaded rank: " + rankId);
+                Rank rank = loadRankFromSection(rankName, rankSection);
+                ranks.put(rankName.toLowerCase(), rank);
+                plugin.getLogger().info("Loaded rank: " + rankName);
             } catch (Exception e) {
-                plugin.getLogger().severe("Failed to load rank " + rankId + ": " + e.getMessage());
-                e.printStackTrace();
+                plugin.getLogger().warning("Failed to load rank '" + rankName + "': " + e.getMessage());
             }
         }
         
-        plugin.getLogger().info("Loaded " + ranks.size() + " rank(s)");
+        // Validate default rank exists
+        if (!ranks.containsKey(defaultRankName.toLowerCase())) {
+            plugin.getLogger().warning("Default rank '" + defaultRankName + "' not found in ranks.yml! Available: " + ranks.keySet());
+        }
     }
     
-    /**
-     * Load a single rank from configuration
-     */
-    private Rank loadRank(String id, ConfigurationSection section) {
-        String displayName = section.getString("display-name", id);
+    private Rank loadRankFromSection(String name, ConfigurationSection section) {
+        String displayName = section.getString("display-name", name);
         int priority = section.getInt("priority", 0);
         
-        // Load money settings
-        Rank.RankCurrencySettings moneySettings = loadCurrencySettings(section.getConfigurationSection("money"));
+        Map<String, RankCurrencySettings> currencySettings = new LinkedHashMap<>();
         
-        // Load mobcoin settings
-        Rank.RankCurrencySettings mobcoinSettings = loadCurrencySettings(section.getConfigurationSection("mobcoin"));
-        
-        // Load gem settings
-        Rank.RankCurrencySettings gemSettings = loadCurrencySettings(section.getConfigurationSection("gem"));
-        
-        // Load conversion settings
-        ConfigurationSection conversionSection = section.getConfigurationSection("conversion");
-        boolean conversionEnabled = conversionSection != null && conversionSection.getBoolean("enabled", true);
-        double conversionTax = conversionSection != null ? conversionSection.getDouble("tax", 3.0) : 3.0;
-        
-        return new Rank(id, displayName, priority, moneySettings, mobcoinSettings, gemSettings, 
-                       conversionEnabled, conversionTax);
-    }
-    
-    /**
-     * Load currency settings from configuration section
-     */
-    private Rank.RankCurrencySettings loadCurrencySettings(ConfigurationSection section) {
-        if (section == null) {
-            // Return default settings
-            return new Rank.RankCurrencySettings(true, 5.0, 300, 5, 5, 300, 0.0);
+        ConfigurationSection currenciesSection = section.getConfigurationSection("currencies");
+        if (currenciesSection != null) {
+            for (String currencyKey : currenciesSection.getKeys(false)) {
+                ConfigurationSection currencySection = currenciesSection.getConfigurationSection(currencyKey);
+                if (currencySection == null) continue;
+                
+                RankCurrencySettings settings = new RankCurrencySettings(
+                    currencyKey,
+                    currencySection.getDouble("transfer-tax", 0.05),
+                    currencySection.getInt("cooldown", 0),
+                    currencySection.getDouble("daily-limit", -1),
+                    currencySection.getInt("request-cooldown", 60),
+                    currencySection.getDouble("boss-kill-bonus", 0.0)
+                );
+                currencySettings.put(currencyKey.toLowerCase(), settings);
+            }
         }
         
-        boolean enabled = section.getBoolean("enabled", true);
-        double transferTax = section.getDouble("transfer-tax", 5.0);
-        int transferCooldown = section.getInt("transfer-cooldown", 300);
-        int dailyTransferLimit = section.getInt("daily-transfer-limit", 5);
-        int dailyRequestLimit = section.getInt("daily-request-limit", 5);
-        int requestCooldown = section.getInt("request-cooldown", 300);
-        double bossKillBonus = section.getDouble("boss-kill-bonus", 0.0);
-        
-        return new Rank.RankCurrencySettings(enabled, transferTax, transferCooldown,
-                dailyTransferLimit, dailyRequestLimit, requestCooldown, bossKillBonus);
-    }
-    
-    /**
-     * Get a player's rank (with smart caching)
-     */
-    public Rank getPlayerRank(UUID uuid) {
-        // Check cache first
-        Rank cached = rankCache.getRank(uuid);
-        if (cached != null) {
-            return cached;
+        Map<String, Double> multipliers = new LinkedHashMap<>();
+        ConfigurationSection multipliersSection = section.getConfigurationSection("multipliers");
+        if (multipliersSection != null) {
+            for (String currencyKey : multipliersSection.getKeys(false)) {
+                multipliers.put(currencyKey.toLowerCase(), multipliersSection.getDouble(currencyKey, 1.0));
+            }
         }
         
-        // Load rank
-        Rank rank = loadPlayerRank(uuid);
-        rankCache.cacheRank(uuid, rank);
-        return rank;
+        return new Rank(name, displayName, priority, Collections.unmodifiableMap(currencySettings), Collections.unmodifiableMap(multipliers));
     }
     
     /**
-     * Load a player's rank from LuckPerms
+     * Reload ranks from config.
      */
-    private Rank loadPlayerRank(UUID uuid) {
-        Player player = Bukkit.getPlayer(uuid);
-        
-        // Check if LuckPerms integration is available
-        if (plugin.getLuckPermsIntegration() != null && player != null) {
-            String primaryGroup = plugin.getLuckPermsIntegration().getPrimaryGroup(player);
-            
-            if (primaryGroup != null) {
-                Rank rank = ranks.get(primaryGroup.toLowerCase());
+    public void reloadRanks() {
+        loadRanks();
+        // Re-resolve online player ranks
+        for (UUID uuid : playerRanks.keySet()) {
+            loadPlayerRank(uuid);
+        }
+    }
+    
+    /**
+     * Load and cache a player's rank based on LuckPerms group or default.
+     */
+    public void loadPlayerRank(UUID uuid) {
+        Rank resolved = resolveRankFromLuckPerms(uuid);
+        if (resolved == null) {
+            resolved = getDefaultRank();
+        }
+        if (resolved != null) {
+            playerRanks.put(uuid, resolved);
+        }
+    }
+    
+    /**
+     * Resolve player rank via LuckPerms or fall back to default.
+     */
+    private Rank resolveRankFromLuckPerms(UUID uuid) {
+        if (plugin.getLuckPermsIntegration() != null && plugin.getLuckPermsIntegration().isEnabled()) {
+            String groupName = plugin.getLuckPermsIntegration().getPlayerGroup(uuid);
+            if (groupName != null) {
+                Rank rank = ranks.get(groupName.toLowerCase());
                 if (rank != null) {
                     return rank;
                 }
             }
         }
-        
-        // Fallback to default rank
-        String fallbackRankId = plugin.getConfigManager().getConfig()
-                .getString("integrations.luckperms.fallback-rank", "default");
-        
-        Rank fallbackRank = ranks.get(fallbackRankId.toLowerCase());
-        if (fallbackRank == null) {
-            // If even default doesn't exist, create a basic one
-            plugin.getLogger().warning("Fallback rank '" + fallbackRankId + "' not found! Using basic default.");
-            return createBasicDefaultRank();
+        return null;
+    }
+    
+    /**
+     * Get a player's rank. Resolves from cache or loads on demand.
+     */
+    public Rank getPlayerRank(UUID uuid) {
+        Rank cached = playerRanks.get(uuid);
+        if (cached != null) {
+            return cached;
         }
-        
-        return fallbackRank;
+        // Try to load
+        loadPlayerRank(uuid);
+        Rank loaded = playerRanks.get(uuid);
+        return loaded != null ? loaded : getDefaultRank();
     }
     
     /**
-     * Create a basic default rank if none exists
+     * Get the default rank.
      */
-    private Rank createBasicDefaultRank() {
-        Rank.RankCurrencySettings defaultSettings = 
-                new Rank.RankCurrencySettings(true, 5.0, 300, 5, 5, 300, 0.0);
-        
-        return new Rank("default", "&7Default", 0, defaultSettings, defaultSettings, 
-                       defaultSettings, true, 3.0);
-    }
-    
-    /**
-     * Reload a specific player's rank
-     */
-    public void reloadPlayerRank(UUID uuid) {
-        rankCache.invalidate(uuid);
-        getPlayerRank(uuid);
-    }
-    
-    /**
-     * Reload all online players' ranks
-     */
-    public void reloadAllPlayerRanks() {
-        rankCache.clearAll();
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            getPlayerRank(player.getUniqueId());
+    public Rank getDefaultRank() {
+        Rank def = ranks.get(defaultRankName.toLowerCase());
+        if (def == null && !ranks.isEmpty()) {
+            // Fall back to first available rank
+            return ranks.values().iterator().next();
         }
+        return def;
     }
     
     /**
-     * Get all loaded ranks
+     * Get the transfer tax rate for a player and currency.
      */
-    public Collection<Rank> getAllRanks() {
-        return ranks.values();
+    public double getTransferTaxRate(UUID uuid, String currencyType) {
+        Rank rank = getPlayerRank(uuid);
+        if (rank == null) return 0.05; // default 5%
+        
+        RankCurrencySettings settings = rank.getCurrencySettings(currencyType.toLowerCase());
+        if (settings != null) {
+            return settings.getTransferTax();
+        }
+        return 0.05;
+    }
+
+    /**
+     * Get the transfer tax rate for a player and currency type (overload accepting CurrencyType enum).
+     */
+    public double getTransferTaxRate(UUID uuid, CurrencyType currencyType) {
+        return getTransferTaxRate(uuid, currencyType.name().toLowerCase());
     }
     
     /**
-     * Get a rank by ID
+     * Get all loaded ranks.
      */
-    public Rank getRankById(String id) {
-        return ranks.get(id.toLowerCase());
+    public List<Rank> getAllRanks() {
+        return new ArrayList<>(ranks.values());
+    }
+    
+    /**
+     * Get a rank by name.
+     */
+    public Rank getRank(String name) {
+        if (name == null) return null;
+        return ranks.get(name.toLowerCase());
+    }
+    
+    /**
+     * Remove a player's cached rank (on disconnect).
+     */
+    public void removePlayerRank(UUID uuid) {
+        playerRanks.remove(uuid);
+    }
+    
+    
+    /**
+     * Get reward multiplier for a player and currency.
+     */
+    public double getMultiplier(UUID uuid, String currencyType) {
+        Rank rank = getPlayerRank(uuid);
+        if (rank == null) return 1.0;
+        return rank.getMultiplier(currencyType);
+    }
+
+    /**
+     * Get reward multiplier for a player and currency type.
+     */
+    public double getMultiplier(UUID uuid, CurrencyType currencyType) {
+        return getMultiplier(uuid, currencyType.name().toLowerCase());
+    }
+
+    /**
+     * Get the default rank name.
+     */
+    public String getDefaultRankName() {
+        return defaultRankName;
     }
 }

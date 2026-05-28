@@ -1,0 +1,99 @@
+name: 🐛 Bug Report
+description: Report a bug or issue with DZEconomy
+title: "[Bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please fill out the form below to help us fix it.
+
+  - type: input
+    id: version
+    attributes:
+      label: DZEconomy Version
+      description: Which version of DZEconomy are you using?
+      placeholder: "2.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: server
+    attributes:
+      label: Server Software & Version
+      description: What server software and Minecraft version are you running?
+      placeholder: "Paper 1.21.4"
+    validations:
+      required: true
+
+  - type: input
+    id: java
+    attributes:
+      label: Java Version
+      description: What Java version is your server using?
+      placeholder: "21.0.2"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of the bug.
+      placeholder: Describe what happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this bug?
+      placeholder: |
+        1. Run command '...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console Logs / Stack Traces
+      description: Paste any relevant console output or error logs.
+      render: text
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant Configuration
+      description: Paste any relevant config.yml sections (remove sensitive data like MySQL passwords).
+      render: yaml
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I am using the latest version of DZEconomy
+          required: true
+        - label: I have searched for existing issues before creating this one
+          required: true
+        - label: I have removed sensitive information from logs and configs
+          required: true

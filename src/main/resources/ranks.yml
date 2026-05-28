@@ -1,119 +1,181 @@
-# ============================================
-#           DZEconomy Rank System
-# ============================================
-# Define unlimited custom ranks with per-currency control
-# Ranks are detected via LuckPerms primary group
-# Priority: Higher number = higher rank (used for conflicts)
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                    DZEconomy v2.0.0                        ║
+# ║                   Rank Configuration                       ║
+# ║                                                            ║
+# ║   Wiki: https://wiki.demonzdevelopment.online/dzeconomy/ranks           ║
+# ║   Support: https://discord.demonzdevelopment.online                      ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# ┌──────────────────────────────────────────────────────────────┐
+# │  Ranks provide multipliers and perks based on a player's    │
+# │  LuckPerms group. Each rank is defined by its LuckPerms     │
+# │  group name as the key.                                     │
+# │                                                              │
+# │  How it works:                                               │
+# │  1. When a player performs an economy action (earning,      │
+# │     receiving mob rewards, etc.), the plugin checks their   │
+# │     LuckPerms group.                                        │
+# │  2. If the group matches a rank defined below, the rank's   │
+# │     multipliers are applied.                                │
+# │  3. The way multipliers stack is controlled by              │
+# │     config.yml → ranks.multiplier-stacking                  │
+# │                                                              │
+# │  Rank Properties:                                            │
+# │    display-name   – Friendly name shown in messages & GUI.  │
+# │    priority       – Higher number = higher priority.        │
+# │                     Used when a player has multiple groups. │
+# │                     The highest-priority rank is used when  │
+# │                     stacking mode is HIGHEST.               │
+# │    multipliers    – Per-currency reward multipliers.        │
+# │                     1.0 = no bonus, 1.5 = 50% bonus, etc.  │
+# │    perks          – Special perks for this rank.            │
+# │                     See perk descriptions below.            │
+# │    permissions    – Additional permissions granted while    │
+# │                     this rank is active (optional).         │
+# │                                                              │
+# │  NOTE: This requires LuckPerms to be installed!             │
+# │        If LuckPerms is not present, all players use the     │
+# │        "default" rank.                                      │
+# └──────────────────────────────────────────────────────────────┘
 
-ranks:
-  default:
-    # LuckPerms permission node (not required, just for reference)
-    permission: "dzeconomy.default"
-    display-name: "&7Default"
-    priority: 0
-    
-    money:
-      enabled: true
-      # Transfer tax percentage (5 = 5%)
-      transfer-tax: 5.0
-      # Transfer cooldown in seconds
-      transfer-cooldown: 300
-      # Daily transfer limit
-      daily-transfer-limit: 5
-      # Daily request limit
-      daily-request-limit: 5
-      # Request cooldown in seconds
-      request-cooldown: 300
-    
-    mobcoin:
-      enabled: true
-      transfer-tax: 5.0
-      transfer-cooldown: 300
-      daily-transfer-limit: 5
-      daily-request-limit: 5
-      request-cooldown: 300
-      # Boss kill bonus percentage (0 = no bonus)
-      boss-kill-bonus: 0.0
-    
-    gem:
-      enabled: true
-      transfer-tax: 5.0
-      transfer-cooldown: 300
-      daily-transfer-limit: 5
-      daily-request-limit: 5
-      request-cooldown: 300
-    
-    conversion:
-      enabled: true
-      # Conversion tax percentage
-      tax: 3.0
-  
-  example:
-    permission: "dzeconomy.example"
-    display-name: "&6Example Rank"
-    priority: 10
-    
-    money:
-      enabled: true
-      transfer-tax: 2.0
-      transfer-cooldown: 150
-      daily-transfer-limit: 10
-      daily-request-limit: 10
-      request-cooldown: 150
-    
-    mobcoin:
-      enabled: true
-      transfer-tax: 2.0
-      transfer-cooldown: 150
-      daily-transfer-limit: 10
-      daily-request-limit: 10
-      request-cooldown: 150
-      boss-kill-bonus: 5.0
-    
-    gem:
-      enabled: true
-      transfer-tax: 2.0
-      transfer-cooldown: 150
-      daily-transfer-limit: 10
-      daily-request-limit: 10
-      request-cooldown: 150
-    
-    conversion:
-      enabled: true
-      tax: 1.5
-  
-  vip:
-    permission: "dzeconomy.vip"
-    display-name: "&a&lVIP"
-    priority: 20
-    
-    money:
-      enabled: true
-      transfer-tax: 1.0
-      transfer-cooldown: 60
-      daily-transfer-limit: 20
-      daily-request-limit: 20
-      request-cooldown: 60
-    
-    mobcoin:
-      enabled: true
-      transfer-tax: 1.0
-      transfer-cooldown: 60
-      daily-transfer-limit: 20
-      daily-request-limit: 20
-      request-cooldown: 60
-      boss-kill-bonus: 10.0
-    
-    gem:
-      enabled: true
-      transfer-tax: 1.0
-      transfer-cooldown: 60
-      daily-transfer-limit: 20
-      daily-request-limit: 20
-      request-cooldown: 60
-    
-    conversion:
-      enabled: true
-      tax: 0.5
+# ── Default Rank ───────────────────────────────────────────────
+# Applied to all players who don't match any other rank.
+# This rank is ALWAYS present and cannot be removed.
+default:
+  # Display name shown in messages, GUI, and placeholders.
+  display-name: "&7Default"
 
-# ADD MORE CUSTOM RANKS HERE with the same structure!
+  # Priority level (higher = more important).
+  # When a player has multiple LuckPerms groups, the rank with
+  # the highest priority is used as the primary rank.
+  priority: 0
+
+  # ── Multipliers ──────────────────────────────────────────────
+  # Multipliers applied to currency earnings.
+  # 1.0 = normal (100%), 1.5 = 50% bonus, 2.0 = double, etc.
+  # These apply to: mob rewards, PVP loot, payall, and admin additions.
+  multipliers:
+    money: 1.0
+    mobcoin: 1.0
+    gem: 1.0
+
+  # ── Perks ────────────────────────────────────────────────────
+  # Special perks granted by this rank.
+  perks:
+    # Whether this rank has reduced transfer cooldowns.
+    # If true, the transfer cooldown is multiplied by cooldown-reduction.
+    reduced-cooldown: false
+    # Cooldown multiplier (only if reduced-cooldown is true).
+    # 0.5 = half the normal cooldown.
+    cooldown-reduction: 1.0
+
+    # Whether this rank has an increased daily transfer limit.
+    # If true, the daily limit is multiplied by limit-multiplier.
+    increased-daily-limit: false
+    # Daily limit multiplier (only if increased-daily-limit is true).
+    # 2.0 = double the normal daily limit.
+    limit-multiplier: 1.0
+
+    # Whether this rank can bypass combat tag restrictions.
+    # If true, the player can still send/request while combat-tagged.
+    bypass-combat-tag: false
+
+    # Whether this rank earns interest on their balance.
+    interest:
+      enabled: false
+      # Interest rate per interval (percentage).
+      # 0.5 = 0.5% interest per interval.
+      rate: 0.0
+      # How often interest is paid (in seconds).
+      interval: 86400
+      # Maximum balance that earns interest (-1 = unlimited).
+      max-balance: -1
+
+  # ── Permissions ──────────────────────────────────────────────
+  # Additional permissions granted while this rank is active.
+  # These are applied temporarily and removed when the rank changes.
+  permissions: []
+
+# ── VIP Rank ───────────────────────────────────────────────────
+# A basic donor rank with modest bonuses.
+vip:
+  display-name: "&aVIP"
+  priority: 1
+  multipliers:
+    money: 1.25
+    mobcoin: 1.5
+    gem: 1.0
+  perks:
+    reduced-cooldown: true
+    cooldown-reduction: 0.75
+    increased-daily-limit: true
+    limit-multiplier: 1.5
+    bypass-combat-tag: false
+    interest:
+      enabled: false
+      rate: 0.0
+      interval: 86400
+      max-balance: -1
+  permissions:
+    - "dzeconomy.vip.chat"
+
+# ── Premium Rank ───────────────────────────────────────────────
+# A premium donor rank with significant bonuses and perks.
+premium:
+  display-name: "&6Premium"
+  priority: 2
+  multipliers:
+    money: 1.5
+    mobcoin: 2.0
+    gem: 1.5
+  perks:
+    reduced-cooldown: true
+    cooldown-reduction: 0.5
+    increased-daily-limit: true
+    limit-multiplier: 2.0
+    bypass-combat-tag: true
+    interest:
+      enabled: true
+      # 0.1% interest per day on Money balance.
+      rate: 0.1
+      interval: 86400
+      # Interest only accrues on the first 100,000.
+      max-balance: 100000
+  permissions:
+    - "dzeconomy.premium.chat"
+    - "dzeconomy.premium.join-message"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║              ADDING CUSTOM RANKS                            ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# To add a new rank, simply add a new section below with the
+# LuckPerms group name as the key. For example:
+#
+# mythic:
+#   display-name: "&d&lMythic"
+#   priority: 3
+#   multipliers:
+#     money: 2.0
+#     mobcoin: 2.5
+#     gem: 2.0
+#   perks:
+#     reduced-cooldown: true
+#     cooldown-reduction: 0.25
+#     increased-daily-limit: true
+#     limit-multiplier: 3.0
+#     bypass-combat-tag: true
+#     interest:
+#       enabled: true
+#       rate: 0.25
+#       interval: 43200
+#       max-balance: 500000
+#   permissions:
+#     - "dzeconomy.mythic.chat"
+#     - "dzeconomy.mythic.join-message"
+#     - "dzeconomy.mythic.particle"
+#
+# ┌────────────────────────────────────────────────────────────┐
+# │  IMPORTANT: The rank key MUST match the LuckPerms group    │
+# │  name EXACTLY (case-sensitive).                            │
+# └────────────────────────────────────────────────────────────┘

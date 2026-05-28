@@ -1,0 +1,61 @@
+# === Build outputs ===
+build/
+target/
+out/
+bin/
+*.jar
+*.war
+*.ear
+*.class
+
+# === Gradle ===
+.gradle/
+gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# === Maven ===
+dependency-reduced-pom.xml
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# === IDE — IntelliJ IDEA ===
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# === IDE — Eclipse ===
+.classpath
+.project
+.settings/
+.factorypath
+
+# === IDE — VS Code ===
+.vscode/
+
+# === IDE — NetBeans ===
+nbproject/
+nbbuild/
+nbdist/
+nb-configuration.xml
+
+# === OS files ===
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# === Logs ===
+*.log
+logs/
+
+# === Runtime data ===
+data.db
+playerdata/
+backups/
+transactions.log

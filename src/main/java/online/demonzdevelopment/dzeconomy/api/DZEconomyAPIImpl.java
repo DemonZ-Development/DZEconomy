@@ -1,128 +1,111 @@
 package online.demonzdevelopment.dzeconomy.api;
 
 import online.demonzdevelopment.dzeconomy.DZEconomy;
+import online.demonzdevelopment.dzeconomy.currency.CurrencyManager;
 import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
+import online.demonzdevelopment.dzeconomy.data.PlayerData;
+import online.demonzdevelopment.dzeconomy.manager.RankManager;
 import online.demonzdevelopment.dzeconomy.rank.Rank;
 import online.demonzdevelopment.dzeconomy.util.NumberFormatter;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Implementation of the DZEconomy API
- * 
- * @author DemonZ Development
- * @version 1.1.1
- */
 public class DZEconomyAPIImpl implements DZEconomyAPI {
     
-    private final DZEconomy plugin;
-    
-    public DZEconomyAPIImpl(DZEconomy plugin) {
-        this.plugin = plugin;
+    public DZEconomyAPIImpl() {
     }
     
-    @Override
-    public double getBalance(UUID player, CurrencyType currency) {
-        return plugin.getCurrencyManager().getBalance(player, currency);
-    }
-    
-    @Override
-    public boolean hasBalance(UUID player, CurrencyType currency, double amount) {
-        return plugin.getCurrencyManager().hasBalance(player, currency, amount);
-    }
-    
-    @Override
-    public void addCurrency(UUID player, CurrencyType currency, double amount) {
-        plugin.getCurrencyManager().addBalance(player, currency, amount);
-    }
-    
-    @Override
-    public void removeCurrency(UUID player, CurrencyType currency, double amount) {
-        plugin.getCurrencyManager().removeBalance(player, currency, amount);
-    }
-    
-    @Override
-    public void setCurrency(UUID player, CurrencyType currency, double amount) {
-        plugin.getCurrencyManager().setBalance(player, currency, amount);
-    }
-    
-    @Override
-    public boolean transferCurrency(UUID from, UUID to, CurrencyType currency, double amount) {
-        // Check if sender has balance
-        if (!hasBalance(from, currency, amount)) {
-            return false;
+    private DZEconomy getPlugin() {
+        DZEconomy plugin = DZEconomy.getInstance();
+        if (plugin == null) {
+            throw new IllegalStateException("DZEconomy is currently disabled!");
         }
-        
-        // Perform transfer (no tax for API calls)
-        removeCurrency(from, currency, amount);
-        addCurrency(to, currency, amount);
-        
-        return true;
+        return plugin;
     }
     
     @Override
-    public boolean convertCurrency(UUID player, CurrencyType from, CurrencyType to, double amount) {
-        // Check if player has balance
-        if (!hasBalance(player, from, amount)) {
-            return false;
-        }
-        
-        // Calculate conversion rate
-        double conversionRate = getConversionRate(from, to);
-        double convertedAmount = NumberFormatter.truncateDecimal(amount * conversionRate);
-        
-        // Perform conversion (no tax for API calls)
-        removeCurrency(player, from, amount);
-        addCurrency(player, to, convertedAmount);
-        
-        return true;
-    }
-    
-    /**
-     * Get conversion rate between two currencies
-     */
-    private double getConversionRate(CurrencyType from, CurrencyType to) {
-        double gemToMobcoin = plugin.getConfigManager().getConfig().getDouble("conversion.rates.gem-to-mobcoin", 100.0);
-        double gemToMoney = plugin.getConfigManager().getConfig().getDouble("conversion.rates.gem-to-money", 10000.0);
-        double mobcoinToMoney = plugin.getConfigManager().getConfig().getDouble("conversion.rates.mobcoin-to-money", 100.0);
-        
-        if (from == CurrencyType.GEM && to == CurrencyType.MOBCOIN) {
-            return gemToMobcoin;
-        } else if (from == CurrencyType.GEM && to == CurrencyType.MONEY) {
-            return gemToMoney;
-        } else if (from == CurrencyType.MOBCOIN && to == CurrencyType.GEM) {
-            return 1.0 / gemToMobcoin;
-        } else if (from == CurrencyType.MOBCOIN && to == CurrencyType.MONEY) {
-            return mobcoinToMoney;
-        } else if (from == CurrencyType.MONEY && to == CurrencyType.GEM) {
-            return 1.0 / gemToMoney;
-        } else if (from == CurrencyType.MONEY && to == CurrencyType.MOBCOIN) {
-            return 1.0 / mobcoinToMoney;
-        }
-        
-        return 1.0;
+    public double getBalance(@NotNull UUID uuid, @NotNull CurrencyType type) {
+        CurrencyManager cm = getPlugin().getCurrencyManager();
+        PlayerData data = cm.loadPlayerData(uuid);
+        return data != null ? data.getBalance(type) : 0.0;
     }
     
     @Override
-    public Rank getPlayerRank(UUID player) {
-        return plugin.getRankManager().getPlayerRank(player);
+    public boolean hasBalance(@NotNull UUID uuid, @NotNull CurrencyType type, double amount) {
+        if (amount < 0) return false;
+        return online.demonzdevelopment.dzeconomy.util.MoneyUtil.compare(getBalance(uuid, type), amount) >= 0;
     }
     
     @Override
-    public List<Rank> getAllRanks() {
-        return new ArrayList<>(plugin.getRankManager().getAllRanks());
+    public boolean addCurrency(@NotNull UUID uuid, @NotNull CurrencyType type, double amount) {
+        if (amount < 0) return false;
+        CurrencyManager cm = getPlugin().getCurrencyManager();
+        return cm.addBalance(uuid, type, amount);
     }
     
     @Override
-    public String formatCurrency(double amount, CurrencyType currency) {
-        String symbol = plugin.getCurrencyManager().getCurrencySymbol(currency);
-        return symbol + NumberFormatter.formatShort(amount);
+    public boolean removeCurrency(@NotNull UUID uuid, @NotNull CurrencyType type, double amount) {
+        if (amount < 0) return false;
+        CurrencyManager cm = getPlugin().getCurrencyManager();
+        return cm.removeBalance(uuid, type, amount);
     }
     
     @Override
-    public String formatCurrencyShort(double amount, CurrencyType currency) {
+    public boolean setCurrency(@NotNull UUID uuid, @NotNull CurrencyType type, double amount) {
+        if (amount < 0) return false;
+        CurrencyManager cm = getPlugin().getCurrencyManager();
+        return cm.setBalance(uuid, type, amount);
+    }
+    
+    @Override
+    public boolean transferCurrency(@NotNull UUID from, @NotNull UUID to, @NotNull CurrencyType type, double amount) {
+        if (amount <= 0 || from.equals(to)) return false;
+        CurrencyManager cm = getPlugin().getCurrencyManager();
+        return cm.transfer(from, to, type, amount);
+    }
+    
+    @Override
+    public boolean convertCurrency(@NotNull UUID uuid, @NotNull CurrencyType from, @NotNull CurrencyType to, double amount) {
+        if (amount <= 0 || from == to) return false;
+        CurrencyManager cm = getPlugin().getCurrencyManager();
+        return cm.convert(uuid, from, to, amount);
+    }
+    
+    @Override
+    public double getConversionRate(@NotNull CurrencyType from, @NotNull CurrencyType to) {
+        if (from == to) return 1.0;
+        return getPlugin().getConfigManager().getConfig().getDouble(
+            "conversion.rates." + from.name().toLowerCase() + "-to-" + to.name().toLowerCase(), 1.0
+        );
+    }
+    
+    @Override
+    public @Nullable Rank getPlayerRank(@NotNull UUID uuid) {
+        RankManager rm = getPlugin().getRankManager();
+        return rm != null ? rm.getPlayerRank(uuid) : null;
+    }
+    
+    @Override
+    public @NotNull List<Rank> getAllRanks() {
+        RankManager rm = getPlugin().getRankManager();
+        return rm != null ? rm.getAllRanks() : List.of();
+    }
+    
+    @Override
+    public @NotNull String formatCurrency(double amount, @NotNull CurrencyType type) {
+        return type.getDefaultSymbol() + NumberFormatter.formatFull(amount);
+    }
+    
+    @Override
+    public @NotNull String formatCurrencyShort(double amount) {
         return NumberFormatter.formatShort(amount);
+    }
+    
+    @Override
+    public int getAPIVersion() {
+        return 2;
     }
 }

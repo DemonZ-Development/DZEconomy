@@ -1,729 +1,889 @@
 package online.demonzdevelopment.dzeconomy.command;
 
 import online.demonzdevelopment.dzeconomy.DZEconomy;
-import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
+import online.demonzdevelopment.dzeconomy.currency.CurrencyManager;
 import online.demonzdevelopment.dzeconomy.data.CurrencyRequest;
+import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
 import online.demonzdevelopment.dzeconomy.data.PlayerData;
-import online.demonzdevelopment.dzeconomy.rank.Rank;
-import online.demonzdevelopment.dzeconomy.util.ColorUtil;
+import online.demonzdevelopment.dzeconomy.config.ConfigManager;
 import online.demonzdevelopment.dzeconomy.util.MessagesUtil;
-import online.demonzdevelopment.dzeconomy.util.NumberFormatter;
+
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.Sound;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-/**
- * Base currency command handler with all common currency operations
- */
-public abstract class BaseCurrencyCommand implements CommandExecutor, TabCompleter {
-    
+public abstract class BaseCurrencyCommand implements TabExecutor {
+
     protected final DZEconomy plugin;
     protected final CurrencyType currencyType;
-    protected final MessagesUtil messageUtil;
-    
-    public BaseCurrencyCommand(DZEconomy plugin, CurrencyType currencyType) {
+    protected final String commandName;
+
+    public BaseCurrencyCommand(DZEconomy plugin, CurrencyType currencyType, String commandName) {
         this.plugin = plugin;
         this.currencyType = currencyType;
-        this.messageUtil = new MessagesUtil(plugin);
+        this.commandName = commandName;
     }
-    
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            if (sender instanceof Player) {
-                handleBalance(sender, new String[]{});
-            } else {
-                showHelp(sender);
-            }
+            handleBalance(sender, new String[0]);
             return true;
         }
-        
-        String subCommand = args[0].toLowerCase();
-        
-        switch (subCommand) {
+
+        String sub = args[0].toLowerCase();
+
+        switch (sub) {
             case "balance":
             case "bal":
-                handleBalance(sender, Arrays.copyOfRange(args, 1, args.length));
+                handleBalance(sender, shiftArgs(args));
                 break;
             case "send":
             case "pay":
-                handleSend(sender, Arrays.copyOfRange(args, 1, args.length));
+            case "give":
+                handleSend(sender, shiftArgs(args));
                 break;
             case "request":
             case "req":
-                handleRequest(sender, Arrays.copyOfRange(args, 1, args.length));
+                handleRequest(sender, shiftArgs(args));
                 break;
             case "accept":
-                handleAccept(sender);
+                handleAccept(sender, shiftArgs(args));
                 break;
             case "deny":
-                handleDeny(sender);
+            case "reject":
+                handleDeny(sender, shiftArgs(args));
                 break;
             case "add":
-                handleAdd(sender, Arrays.copyOfRange(args, 1, args.length));
+                handleAdd(sender, shiftArgs(args));
                 break;
-            case "help":
+            case "remove":
+            case "take":
+                handleRemove(sender, shiftArgs(args));
+                break;
+            case "set":
+                handleSet(sender, shiftArgs(args));
+                break;
+            case "top":
+            case "baltop":
+                handleTop(sender, shiftArgs(args));
+                break;
             default:
-                showHelp(sender);
+                sendHelp(sender);
                 break;
         }
-        
+
         return true;
     }
-    
-    /**
-     * Handle balance command
-     */
+
+    // ─── Balance ───────────────────────────────────────────────────────────────
+
     private void handleBalance(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player) && args.length == 0) {
-            sender.sendMessage(ColorUtil.translate("&cYou must specify a player from console!"));
+        String perm = "dzeconomy." + commandName + ".balance";
+        if (!sender.hasPermission(perm)) {
+            MessagesUtil.sendMessage(sender, "no-permission");
             return;
         }
-        
-        if (args.length == 0) {
-            // Show own balance
-            Player player = (Player) sender;
-            
-            if (!player.hasPermission("dzeconomy." + currencyType.getId() + ".balance")) {
-                sendMessage(sender, "general.no-permission", null);
+
+        CurrencyManager cm = plugin.getCurrencyManager();
+
+        if (args.length >= 1) {
+            if (!sender.hasPermission("dzeconomy." + commandName + ".balance.others")) {
+                MessagesUtil.sendMessage(sender, "no-permission");
                 return;
             }
-            
-            String formatted = plugin.getCurrencyManager().getFormattedBalance(player.getUniqueId(), currencyType);
-            String displayName = plugin.getCurrencyManager().getCurrencyDisplayName(currencyType);
-            
-            Map<String, String> placeholders = MessagesUtil.placeholders(
-                    "currency", ColorUtil.strip(displayName),
-                    "color", currencyType.getColor(),
-                    "symbol", plugin.getCurrencyManager().getCurrencySymbol(currencyType),
-                    "amount", formatted);
-            
-            sendMessage(sender, "balance.own", placeholders);
+
+            String targetName = args[0];
+            @SuppressWarnings("deprecation")
+            org.bukkit.OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+            if (target == null || (!target.hasPlayedBefore() && !target.isOnline() && !cm.playerDataExists(target.getUniqueId()))) {
+                MessagesUtil.sendMessage(sender, "player-not-found", "%player%", targetName);
+                return;
+            }
+
+            double balance = cm.getBalance(target.getUniqueId(), currencyType);
+            if (!target.isOnline()) {
+                cm.unloadPlayerData(target.getUniqueId());
+            }
+            MessagesUtil.sendMessage(sender, commandName + "-balance-other",
+                    "%player%", target.getName() != null ? target.getName() : targetName,
+                    "%balance%", String.format("%,.2f", balance),
+                    "%currency%", commandName);
         } else {
-            // Show other player's balance
-            if (!sender.hasPermission("dzeconomy." + currencyType.getId() + ".balance.others")) {
-                sendMessage(sender, "general.no-permission", null);
+            if (!(sender instanceof Player)) {
+                MessagesUtil.sendMessage(sender, "player-only");
                 return;
             }
-            
-            OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
-            if (!target.hasPlayedBefore() && !target.isOnline()) {
-                Map<String, String> placeholders = MessagesUtil.placeholders("player", args[0]);
-                sendMessage(sender, "general.player-not-found", placeholders);
-                return;
-            }
-            
-            String formatted = plugin.getCurrencyManager().getFormattedBalance(target.getUniqueId(), currencyType);
-            String displayName = plugin.getCurrencyManager().getCurrencyDisplayName(currencyType);
-            
-            Map<String, String> placeholders = MessagesUtil.placeholders(
-                    "player", target.getName(),
-                    "currency", ColorUtil.strip(displayName),
-                    "color", currencyType.getColor(),
-                    "symbol", plugin.getCurrencyManager().getCurrencySymbol(currencyType),
-                    "amount", formatted);
-            
-            sendMessage(sender, "balance.other", placeholders);
+            Player player = (Player) sender;
+            double balance = cm.getBalance(player.getUniqueId(), currencyType);
+            MessagesUtil.sendMessage(player, commandName + "-balance",
+                    "%balance%", String.format("%,.2f", balance),
+                    "%currency%", commandName);
         }
     }
-    
-    /**
-     * Handle send command with full validation chain
-     */
+
+    // ─── Send ─────────────────────────────────────────────────────────────────
+
     private void handleSend(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ColorUtil.translate("&cOnly players can send currency!"));
+            MessagesUtil.sendMessage(sender, "player-only");
             return;
         }
-        
         Player player = (Player) sender;
         
-        if (!player.hasPermission("dzeconomy." + currencyType.getId() + ".send")) {
-            sendMessage(sender, "general.no-permission", null);
+        String perm = "dzeconomy." + commandName + ".send";
+        if (!player.hasPermission(perm)) {
+            MessagesUtil.sendMessage(player, "no-permission");
             return;
         }
-        
+
         if (args.length < 2) {
-            player.sendMessage(ColorUtil.translate("&cUsage: /" + currencyType.getId() + " send <player> <amount>"));
+            MessagesUtil.sendMessage(player, "usage-" + commandName + "-send");
             return;
         }
-        
-        // VALIDATION CHAIN (strict order as specified)
-        
-        // 1. Verify both players exist via UUID
-        OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
-        if (!target.hasPlayedBefore() && !target.isOnline()) {
-            Map<String, String> placeholders = MessagesUtil.placeholders("player", args[0]);
-            sendMessage(sender, "general.player-not-found", placeholders);
+
+        String targetName = args[0];
+        Player target = Bukkit.getPlayerExact(targetName);
+        if (target == null) {
+            MessagesUtil.sendMessage(player, "player-not-found", "%player%", targetName);
             return;
         }
-        
-        // 2. Prevent self-send
-        if (player.getUniqueId().equals(target.getUniqueId())) {
-            sendMessage(sender, "general.cannot-afford-self", null);
+
+        if (target.getUniqueId().equals(player.getUniqueId())) {
+            MessagesUtil.sendMessage(player, "cannot-send-self");
             return;
         }
-        
-        // 3. Validate amount > 0
+
         double amount;
         try {
-            amount = NumberFormatter.parse(args[1]);
-            if (amount <= 0) {
-                sendMessage(sender, "general.invalid-amount", null);
-                return;
-            }
+            amount = Double.parseDouble(args[1]);
         } catch (NumberFormatException e) {
-            sendMessage(sender, "general.invalid-amount", null);
+            MessagesUtil.sendMessage(player, "invalid-amount", "%input%", args[1]);
             return;
         }
-        
+
+        if (Double.isNaN(amount) || Double.isInfinite(amount) || amount <= 0) {
+            MessagesUtil.sendMessage(player, "amount-must-be-positive");
+            return;
+        }
+
+        ConfigManager config = plugin.getConfigManager();
+        String currencyPath = "currencies." + commandName;
+
         // Check max transaction limit
-        double maxTransaction = plugin.getConfigManager().getConfig().getDouble("limits.max-transaction");
-        if (amount > maxTransaction) {
-            sendMessage(sender, "general.max-transaction-exceeded", null);
+        double maxTransaction = config.getConfig().getDouble(currencyPath + ".max-transaction", -1);
+        if (maxTransaction > 0 && amount > maxTransaction) {
+            MessagesUtil.sendMessage(player, "max-transaction-exceeded",
+                    "%max%", String.format("%,.2f", maxTransaction),
+                    "%amount%", String.format("%,.2f", amount),
+                    "%currency%", commandName);
             return;
         }
-        
-        // 4. Check sender has amount in balance
-        double balance = plugin.getCurrencyManager().getBalance(player.getUniqueId(), currencyType);
-        if (balance < amount) {
-            String symbol = plugin.getCurrencyManager().getCurrencySymbol(currencyType);
-            Map<String, String> placeholders = MessagesUtil.placeholders(
-                    "currency", currencyType.getName(),
-                    "symbol", symbol,
-                    "balance", NumberFormatter.formatShort(balance),
-                    "amount", NumberFormatter.formatShort(amount));
-            sendMessage(sender, "general.insufficient-funds", placeholders);
+
+        // Check cooldown
+        long cooldownSeconds = config.getConfig().getLong(currencyPath + ".send-cooldown", 0);
+        if (cooldownSeconds > 0) {
+            CurrencyManager cm = plugin.getCurrencyManager();
+            PlayerData data = cm.loadPlayerData(player.getUniqueId());
+            if (data != null) {
+                long lastSend = data.getLastSendTime(currencyType);
+                long elapsed = (System.currentTimeMillis() - lastSend) / 1000;
+                if (elapsed < cooldownSeconds) {
+                    long remaining = cooldownSeconds - elapsed;
+                    MessagesUtil.sendMessage(player, "send-cooldown",
+                            "%time%", String.valueOf(remaining),
+                            "%currency%", commandName);
+                    return;
+                }
+            }
+        }
+
+        // Check combat tag
+        CurrencyManager cm = plugin.getCurrencyManager();
+        if (cm.isCombatTagged(player.getUniqueId())) {
+            MessagesUtil.sendMessage(player, "combat-tagged-send");
             return;
         }
-        
-        // 5. Calculate tax
-        Rank senderRank = plugin.getRankManager().getPlayerRank(player.getUniqueId());
-        Rank.RankCurrencySettings settings = senderRank.getSettingsFor(currencyType);
-        double taxPercentage = settings.getTransferTax();
-        double tax = NumberFormatter.truncateDecimal(amount * (taxPercentage / 100.0));
-        double total = NumberFormatter.truncateDecimal(amount + tax);
-        
-        // 6. Check sender has amount + tax
-        if (balance < total) {
-            String symbol = plugin.getCurrencyManager().getCurrencySymbol(currencyType);
-            Map<String, String> placeholders = MessagesUtil.placeholders(
-                    "currency", currencyType.getName(),
-                    "symbol", symbol,
-                    "balance", NumberFormatter.formatShort(balance),
-                    "amount", NumberFormatter.formatShort(amount),
-                    "tax", NumberFormatter.formatShort(tax),
-                    "total", NumberFormatter.formatShort(total));
-            sendMessage(sender, "general.insufficient-funds-tax", placeholders);
-            return;
-        }
-        
-        // 7. Verify daily send limit not exceeded
-        PlayerData senderData = plugin.getCurrencyManager().getPlayerData(player.getUniqueId());
-        int dailySendCount = senderData.getDailySendCount(currencyType);
-        int dailyLimit = settings.getDailyTransferLimit();
-        
-        if (dailySendCount >= dailyLimit) {
-            Map<String, String> placeholders = MessagesUtil.placeholders(
-                    "action", "send",
-                    "limit", String.valueOf(dailyLimit));
-            sendMessage(sender, "general.daily-limit-reached", placeholders);
-            return;
-        }
-        
-        // 8. Verify cooldown expired
-        int cooldownSeconds = settings.getTransferCooldown();
-        if (senderData.isSendCooldownActive(currencyType, cooldownSeconds)) {
-            long remaining = senderData.getSendCooldownRemaining(currencyType, cooldownSeconds);
-            Map<String, String> placeholders = MessagesUtil.placeholders("cooldown", String.valueOf(remaining));
-            sendMessage(sender, "general.cooldown-active", placeholders);
-            return;
-        }
-        
-        // EXECUTION
-        
-        // Deduct from sender
-        plugin.getCurrencyManager().removeBalance(player.getUniqueId(), currencyType, total);
-        
-        // Add to receiver
-        plugin.getCurrencyManager().addBalance(target.getUniqueId(), currencyType, amount);
-        
-        // Update statistics
-        senderData.addMoneySent(currencyType, amount);
-        senderData.incrementDailySendCount(currencyType);
-        senderData.setSendCooldown(currencyType, System.currentTimeMillis());
-        
-        PlayerData targetData = plugin.getCurrencyManager().getPlayerData(target.getUniqueId());
-        targetData.addMoneyReceived(currencyType, amount);
-        
-        // Save data
-        plugin.getCurrencyManager().savePlayerDataAsync(player.getUniqueId());
-        plugin.getCurrencyManager().savePlayerDataAsync(target.getUniqueId());
-        
-        // NOTIFICATIONS
-        String symbol = plugin.getCurrencyManager().getCurrencySymbol(currencyType);
-        Map<String, String> placeholders = MessagesUtil.placeholders(
-                "player", target.getName(),
-                "symbol", symbol,
-                "amount", NumberFormatter.formatShort(amount),
-                "tax", NumberFormatter.formatShort(tax),
-                "currency", currencyType.getName());
-        
-        sendMessage(sender, "send.success-sender", placeholders);
-        sendMessage(sender, "send.balance-update", MessagesUtil.placeholders(
-                "symbol", symbol,
-                "balance", NumberFormatter.formatShort(plugin.getCurrencyManager().getBalance(player.getUniqueId(), currencyType)),
-                "color", currencyType.getColor()));
-        
-        if (target.isOnline()) {
-            Player targetPlayer = target.getPlayer();
-            Map<String, String> targetPlaceholders = MessagesUtil.placeholders(
-                    "player", player.getName(),
-                    "symbol", symbol,
-                    "amount", NumberFormatter.formatShort(amount),
-                    "currency", currencyType.getName());
-            
-            sendMessage(targetPlayer, "send.success-receiver", targetPlaceholders);
-            sendMessage(targetPlayer, "send.balance-update", MessagesUtil.placeholders(
-                    "symbol", symbol,
-                    "balance", NumberFormatter.formatShort(plugin.getCurrencyManager().getBalance(target.getUniqueId(), currencyType)),
-                    "color", currencyType.getColor()));
-            
-            targetPlayer.playSound(targetPlayer.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+
+        // Atomic transfer with daily limit
+        double dailyLimit = config.getConfig().getDouble(currencyPath + ".daily-limit", -1);
+        boolean success = cm.transfer(player.getUniqueId(), target.getUniqueId(), currencyType, amount, dailyLimit);
+        if (success) {
+            // Update cooldown outside the lock
+            cm.executeWithPlayerLock(player.getUniqueId(), () -> {
+                PlayerData senderData = cm.loadPlayerData(player.getUniqueId());
+                if (senderData != null) {
+                    senderData.setLastSendTime(currencyType, System.currentTimeMillis());
+                }
+            });
+
+            double senderBalance = cm.getBalance(player.getUniqueId(), currencyType);
+            double receiverBalance = cm.getBalance(target.getUniqueId(), currencyType);
+
+            MessagesUtil.sendMessage(player, commandName + "-send-success",
+                    "%player%", target.getName(),
+                    "%amount%", String.format("%,.2f", amount),
+                    "%balance%", String.format("%,.2f", senderBalance),
+                    "%currency%", commandName);
+
+            MessagesUtil.sendMessage(target, commandName + "-receive",
+                    "%player%", player.getName(),
+                    "%amount%", String.format("%,.2f", amount),
+                    "%balance%", String.format("%,.2f", receiverBalance),
+                    "%currency%", commandName);
+        } else {
+            MessagesUtil.sendMessage(player, commandName + "-send-failed",
+                    "%player%", target.getName(),
+                    "%amount%", String.format("%,.2f", amount),
+                    "%currency%", commandName);
         }
     }
-    
-    /**
-     * Handle request command with full validation
-     */
+
+    // ─── Request ──────────────────────────────────────────────────────────────
+
     private void handleRequest(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ColorUtil.translate("&cOnly players can request currency!"));
+            MessagesUtil.sendMessage(sender, "player-only");
             return;
         }
-        
         Player player = (Player) sender;
         
-        if (!player.hasPermission("dzeconomy." + currencyType.getId() + ".request")) {
-            sendMessage(sender, "general.no-permission", null);
+        String perm = "dzeconomy." + commandName + ".request";
+        if (!player.hasPermission(perm)) {
+            MessagesUtil.sendMessage(player, "no-permission");
             return;
         }
-        
+
         if (args.length < 2) {
-            player.sendMessage(ColorUtil.translate("&cUsage: /" + currencyType.getId() + " request <player> <amount>"));
+            MessagesUtil.sendMessage(player, "usage-" + commandName + "-request");
             return;
         }
-        
-        // VALIDATION CHAIN
-        
-        // 1. Verify both players exist and ONLINE
-        Player target = Bukkit.getPlayer(args[0]);
-        if (target == null || !target.isOnline()) {
-            Map<String, String> placeholders = MessagesUtil.placeholders("player", args[0]);
-            sendMessage(sender, "general.player-offline", placeholders);
+
+        String targetName = args[0];
+        Player target = Bukkit.getPlayerExact(targetName);
+        if (target == null) {
+            MessagesUtil.sendMessage(player, "player-not-found", "%player%", targetName);
             return;
         }
-        
-        // 2. Prevent self-request
-        if (player.getUniqueId().equals(target.getUniqueId())) {
-            sendMessage(sender, "request.cannot-request-self", null);
+
+        if (target.getUniqueId().equals(player.getUniqueId())) {
+            MessagesUtil.sendMessage(player, "cannot-request-self");
             return;
         }
-        
-        // 3. Validate amount > 0
+
         double amount;
         try {
-            amount = NumberFormatter.parse(args[1]);
-            if (amount <= 0) {
-                sendMessage(sender, "general.invalid-amount", null);
-                return;
-            }
+            amount = Double.parseDouble(args[1]);
         } catch (NumberFormatException e) {
-            sendMessage(sender, "general.invalid-amount", null);
+            MessagesUtil.sendMessage(player, "invalid-amount", "%input%", args[1]);
             return;
         }
-        
-        // 4. Check no duplicate pending request
-        if (plugin.getCurrencyManager().hasPendingRequestWith(player.getUniqueId(), target.getUniqueId())) {
-            sendMessage(sender, "request.already-pending", null);
+
+        if (Double.isNaN(amount) || Double.isInfinite(amount) || amount <= 0) {
+            MessagesUtil.sendMessage(player, "amount-must-be-positive");
             return;
         }
-        
-        // 5. Verify daily request limit not exceeded
-        PlayerData requesterData = plugin.getCurrencyManager().getPlayerData(player.getUniqueId());
-        Rank requesterRank = plugin.getRankManager().getPlayerRank(player.getUniqueId());
-        Rank.RankCurrencySettings settings = requesterRank.getSettingsFor(currencyType);
-        
-        int dailyRequestCount = requesterData.getDailyRequestCount(currencyType);
-        int dailyLimit = settings.getDailyRequestLimit();
-        
-        if (dailyRequestCount >= dailyLimit) {
-            Map<String, String> placeholders = MessagesUtil.placeholders(
-                    "action", "request",
-                    "limit", String.valueOf(dailyLimit));
-            sendMessage(sender, "general.daily-limit-reached", placeholders);
+
+        CurrencyManager cm = plugin.getCurrencyManager();
+
+        // Check if already have pending request with this player
+        if (cm.hasPendingRequestWith(player.getUniqueId(), target.getUniqueId())) {
+            MessagesUtil.sendMessage(player, "request-already-pending",
+                    "%player%", target.getName(),
+                    "%currency%", commandName);
             return;
         }
-        
-        // 6. Verify request cooldown expired
-        int cooldownSeconds = settings.getRequestCooldown();
-        if (requesterData.isRequestCooldownActive(currencyType, cooldownSeconds)) {
-            long remaining = requesterData.getRequestCooldownRemaining(currencyType, cooldownSeconds);
-            Map<String, String> placeholders = MessagesUtil.placeholders("cooldown", String.valueOf(remaining));
-            sendMessage(sender, "general.cooldown-active", placeholders);
+
+        // Check max pending requests
+        ConfigManager config = plugin.getConfigManager();
+        int maxRequests = config.getConfig().getInt("request.max-pending", 5);
+        if (cm.getPendingRequestCount(player.getUniqueId(), currencyType) >= maxRequests) {
+            MessagesUtil.sendMessage(player, "max-requests-reached",
+                    "%max%", String.valueOf(maxRequests));
             return;
         }
-        
-        // CREATE REQUEST
-        CurrencyRequest request = new CurrencyRequest(player.getUniqueId(), target.getUniqueId(), currencyType, amount);
-        plugin.getCurrencyManager().addRequest(request);
-        
-        // Update statistics
-        requesterData.incrementDailyRequestCount(currencyType);
-        plugin.getCurrencyManager().savePlayerDataAsync(player.getUniqueId());
-        
-        // NOTIFICATIONS
-        String symbol = plugin.getCurrencyManager().getCurrencySymbol(currencyType);
-        Map<String, String> placeholders = MessagesUtil.placeholders(
-                "player", target.getName(),
-                "symbol", symbol,
-                "amount", NumberFormatter.formatShort(amount),
-                "currency", currencyType.getName());
-        
-        sendMessage(sender, "request.sent", placeholders);
-        
-        // Send chat notification to target
-        Map<String, String> targetPlaceholders = MessagesUtil.placeholders(
-                "player", player.getName(),
-                "symbol", symbol,
-                "amount", NumberFormatter.formatShort(amount),
-                "currency", currencyType.getName());
-        
-        sendMessage(target, "request.received-chat", targetPlaceholders);
-        
-        // Open GUI if enabled and no inventory open
-        if (plugin.getConfigManager().getConfig().getBoolean("gui.request.enabled", true)) {
-            plugin.getRequestGUIManager().openRequestGUI(target, request);
-        }
+
+        long timeoutSeconds = config.getConfig().getLong("request.timeout", 120);
+        CurrencyRequest request = new CurrencyRequest(
+                player.getUniqueId(),
+                target.getUniqueId(),
+                currencyType,
+                amount,
+                System.currentTimeMillis() + (timeoutSeconds * 1000)
+        );
+
+        cm.addRequest(request);
+
+        MessagesUtil.sendMessage(player, commandName + "-request-sent",
+                "%player%", target.getName(),
+                "%amount%", String.format("%,.2f", amount),
+                "%currency%", commandName);
+
+        MessagesUtil.sendMessage(target, commandName + "-request-received",
+                "%player%", player.getName(),
+                "%amount%", String.format("%,.2f", amount),
+                "%currency%", commandName);
     }
-    
-    /**
-     * Handle accept command with full validation
-     */
-    private void handleAccept(CommandSender sender) {
+
+    // ─── Accept ───────────────────────────────────────────────────────────────
+
+    private void handleAccept(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ColorUtil.translate("&cOnly players can accept requests!"));
+            MessagesUtil.sendMessage(sender, "player-only");
             return;
         }
-        
         Player player = (Player) sender;
         
-        if (!player.hasPermission("dzeconomy." + currencyType.getId() + ".accept")) {
-            sendMessage(sender, "general.no-permission", null);
+        String perm = "dzeconomy." + commandName + ".accept";
+        if (!player.hasPermission(perm)) {
+            MessagesUtil.sendMessage(player, "no-permission");
             return;
         }
-        
-        // Get pending request
-        CurrencyRequest request = plugin.getCurrencyManager().getPendingRequest(player.getUniqueId());
-        
+
+        if (args.length < 1) {
+            MessagesUtil.sendMessage(player, "usage-" + commandName + "-accept");
+            return;
+        }
+
+        String requesterName = args[0];
+        Player requester = Bukkit.getPlayerExact(requesterName);
+        if (requester == null) {
+            MessagesUtil.sendMessage(player, "player-not-found", "%player%", requesterName);
+            return;
+        }
+
+        CurrencyManager cm = plugin.getCurrencyManager();
+        CurrencyRequest request = cm.findRequest(requester.getUniqueId(), player.getUniqueId(), currencyType);
+
         if (request == null) {
-            sendMessage(sender, "request.no-pending", null);
+            MessagesUtil.sendMessage(player, "no-request-found",
+                    "%player%", requester.getName(),
+                    "%currency%", commandName);
             return;
         }
-        
-        // Check currency type matches
-        if (request.getCurrency() != currencyType) {
-            sendMessage(sender, "request.no-pending", null);
+
+        // Check if request expired
+        if (request.isExpired()) {
+            cm.removeRequest(player.getUniqueId(), request);
+            MessagesUtil.sendMessage(player, "request-expired",
+                    "%player%", requester.getName(),
+                    "%currency%", commandName);
             return;
         }
-        
-        // Check not expired
-        int timeoutSeconds = plugin.getConfigManager().getConfig().getInt("limits.request-timeout", 120);
-        if (request.isExpired(timeoutSeconds)) {
-            plugin.getCurrencyManager().removeRequest(player.getUniqueId());
-            sendMessage(sender, "request.expired", null);
+
+        // Check combat tag
+        if (cm.isCombatTagged(player.getUniqueId())) {
+            MessagesUtil.sendMessage(player, "combat-tagged-request");
             return;
         }
-        
-        // Check requester still online
-        Player requester = Bukkit.getPlayer(request.getRequesterUUID());
-        if (requester == null || !requester.isOnline()) {
-            plugin.getCurrencyManager().removeRequest(player.getUniqueId());
-            Map<String, String> placeholders = MessagesUtil.placeholders("player", Bukkit.getOfflinePlayer(request.getRequesterUUID()).getName());
-            sendMessage(sender, "general.player-offline", placeholders);
-            return;
-        }
-        
+
+        // Atomic transfer
         double amount = request.getAmount();
-        
-        // Check accepter has amount
-        double balance = plugin.getCurrencyManager().getBalance(player.getUniqueId(), currencyType);
-        if (balance < amount) {
-            String symbol = plugin.getCurrencyManager().getCurrencySymbol(currencyType);
-            Map<String, String> placeholders = MessagesUtil.placeholders(
-                    "currency", currencyType.getName(),
-                    "symbol", symbol,
-                    "balance", NumberFormatter.formatShort(balance),
-                    "amount", NumberFormatter.formatShort(amount));
-            sendMessage(sender, "general.insufficient-funds", placeholders);
-            return;
+        boolean success = cm.transfer(player.getUniqueId(), requester.getUniqueId(), currencyType, amount);
+
+        if (success) {
+            cm.removeRequest(player.getUniqueId(), request);
+
+            double senderBalance = cm.getBalance(player.getUniqueId(), currencyType);
+            double receiverBalance = cm.getBalance(requester.getUniqueId(), currencyType);
+
+            MessagesUtil.sendMessage(player, commandName + "-accept-sender",
+                    "%player%", requester.getName(),
+                    "%amount%", String.format("%,.2f", amount),
+                    "%balance%", String.format("%,.2f", senderBalance),
+                    "%currency%", commandName);
+
+            MessagesUtil.sendMessage(requester, commandName + "-accept-receiver",
+                    "%player%", player.getName(),
+                    "%amount%", String.format("%,.2f", amount),
+                    "%balance%", String.format("%,.2f", receiverBalance),
+                    "%currency%", commandName);
+        } else {
+            MessagesUtil.sendMessage(player, commandName + "-accept-failed",
+                    "%player%", requester.getName(),
+                    "%amount%", String.format("%,.2f", amount),
+                    "%currency%", commandName);
         }
-        
-        // Calculate tax on accepter's rank
-        Rank accepterRank = plugin.getRankManager().getPlayerRank(player.getUniqueId());
-        Rank.RankCurrencySettings settings = accepterRank.getSettingsFor(currencyType);
-        double taxPercentage = settings.getTransferTax();
-        double tax = NumberFormatter.truncateDecimal(amount * (taxPercentage / 100.0));
-        double total = NumberFormatter.truncateDecimal(amount + tax);
-        
-        // Check accepter has amount + tax
-        if (balance < total) {
-            String symbol = plugin.getCurrencyManager().getCurrencySymbol(currencyType);
-            Map<String, String> placeholders = MessagesUtil.placeholders(
-                    "currency", currencyType.getName(),
-                    "symbol", symbol,
-                    "balance", NumberFormatter.formatShort(balance),
-                    "amount", NumberFormatter.formatShort(amount),
-                    "tax", NumberFormatter.formatShort(tax),
-                    "total", NumberFormatter.formatShort(total));
-            sendMessage(sender, "general.insufficient-funds-tax", placeholders);
-            return;
-        }
-        
-        // Verify accepter's daily send limit
-        PlayerData accepterData = plugin.getCurrencyManager().getPlayerData(player.getUniqueId());
-        int dailySendCount = accepterData.getDailySendCount(currencyType);
-        int dailyLimit = settings.getDailyTransferLimit();
-        
-        if (dailySendCount >= dailyLimit) {
-            Map<String, String> placeholders = MessagesUtil.placeholders(
-                    "action", "send",
-                    "limit", String.valueOf(dailyLimit));
-            sendMessage(sender, "general.daily-limit-reached", placeholders);
-            return;
-        }
-        
-        // Verify accepter's send cooldown
-        int cooldownSeconds = settings.getTransferCooldown();
-        if (accepterData.isSendCooldownActive(currencyType, cooldownSeconds)) {
-            long remaining = accepterData.getSendCooldownRemaining(currencyType, cooldownSeconds);
-            Map<String, String> placeholders = MessagesUtil.placeholders("cooldown", String.valueOf(remaining));
-            sendMessage(sender, "general.cooldown-active", placeholders);
-            return;
-        }
-        
-        // EXECUTION
-        
-        // Deduct from accepter
-        plugin.getCurrencyManager().removeBalance(player.getUniqueId(), currencyType, total);
-        
-        // Add to requester
-        plugin.getCurrencyManager().addBalance(requester.getUniqueId(), currencyType, amount);
-        
-        // Update statistics
-        accepterData.addMoneySent(currencyType, amount);
-        accepterData.incrementDailySendCount(currencyType);
-        accepterData.setSendCooldown(currencyType, System.currentTimeMillis());
-        
-        PlayerData requesterData = plugin.getCurrencyManager().getPlayerData(requester.getUniqueId());
-        requesterData.addMoneyReceived(currencyType, amount);
-        requesterData.setRequestCooldown(currencyType, System.currentTimeMillis());
-        
-        // Remove request
-        plugin.getCurrencyManager().removeRequest(player.getUniqueId());
-        
-        // Save data
-        plugin.getCurrencyManager().savePlayerDataAsync(player.getUniqueId());
-        plugin.getCurrencyManager().savePlayerDataAsync(requester.getUniqueId());
-        
-        // Close GUI if open
-        plugin.getRequestGUIManager().closeGUI(player);
-        
-        // NOTIFICATIONS
-        String symbol = plugin.getCurrencyManager().getCurrencySymbol(currencyType);
-        Map<String, String> placeholders = MessagesUtil.placeholders(
-                "player", requester.getName(),
-                "symbol", symbol,
-                "amount", NumberFormatter.formatShort(amount),
-                "tax", NumberFormatter.formatShort(tax));
-        
-        sendMessage(sender, "request.accepted-accepter", placeholders);
-        sendMessage(sender, "send.balance-update", MessagesUtil.placeholders(
-                "symbol", symbol,
-                "balance", NumberFormatter.formatShort(plugin.getCurrencyManager().getBalance(player.getUniqueId(), currencyType)),
-                "color", currencyType.getColor()));
-        
-        Map<String, String> requesterPlaceholders = MessagesUtil.placeholders(
-                "player", player.getName(),
-                "symbol", symbol,
-                "amount", NumberFormatter.formatShort(amount));
-        
-        sendMessage(requester, "request.accepted-requester", requesterPlaceholders);
-        sendMessage(requester, "send.balance-update", MessagesUtil.placeholders(
-                "symbol", symbol,
-                "balance", NumberFormatter.formatShort(plugin.getCurrencyManager().getBalance(requester.getUniqueId(), currencyType)),
-                "color", currencyType.getColor()));
-        
-        requester.playSound(requester.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
     }
-    
-    /**
-     * Handle deny command
-     */
-    private void handleDeny(CommandSender sender) {
+
+    // ─── Deny ─────────────────────────────────────────────────────────────────
+
+    private void handleDeny(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ColorUtil.translate("&cOnly players can deny requests!"));
+            MessagesUtil.sendMessage(sender, "player-only");
             return;
         }
-        
         Player player = (Player) sender;
         
-        if (!player.hasPermission("dzeconomy." + currencyType.getId() + ".deny")) {
-            sendMessage(sender, "general.no-permission", null);
+        String perm = "dzeconomy." + commandName + ".deny";
+        if (!player.hasPermission(perm)) {
+            MessagesUtil.sendMessage(player, "no-permission");
             return;
         }
-        
-        CurrencyRequest request = plugin.getCurrencyManager().getPendingRequest(player.getUniqueId());
-        
-        if (request == null || request.getCurrency() != currencyType) {
-            sendMessage(sender, "request.no-pending", null);
+
+        if (args.length < 1) {
+            MessagesUtil.sendMessage(player, "usage-" + commandName + "-deny");
             return;
         }
-        
-        Player requester = Bukkit.getPlayer(request.getRequesterUUID());
-        
-        plugin.getCurrencyManager().removeRequest(player.getUniqueId());
-        plugin.getRequestGUIManager().closeGUI(player);
-        
-        sendMessage(sender, "request.denied-denier", null);
-        
-        if (requester != null && requester.isOnline()) {
-            Map<String, String> placeholders = MessagesUtil.placeholders("player", player.getName());
-            sendMessage(requester, "request.denied-requester", placeholders);
+
+        String requesterName = args[0];
+        Player requester = Bukkit.getPlayerExact(requesterName);
+        if (requester == null) {
+            MessagesUtil.sendMessage(player, "player-not-found", "%player%", requesterName);
+            return;
         }
-        
-        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1.0f, 1.0f);
+
+        CurrencyManager cm = plugin.getCurrencyManager();
+        CurrencyRequest request = cm.findRequest(requester.getUniqueId(), player.getUniqueId(), currencyType);
+
+        if (request == null) {
+            MessagesUtil.sendMessage(player, "no-request-found",
+                    "%player%", requester.getName(),
+                    "%currency%", commandName);
+            return;
+        }
+
+        cm.removeRequest(player.getUniqueId(), request);
+
+        MessagesUtil.sendMessage(player, commandName + "-deny-sender",
+                "%player%", requester.getName(),
+                "%amount%", String.format("%,.2f", request.getAmount()),
+                "%currency%", commandName);
+
+        MessagesUtil.sendMessage(requester, commandName + "-deny-receiver",
+                "%player%", player.getName(),
+                "%amount%", String.format("%,.2f", request.getAmount()),
+                "%currency%", commandName);
     }
-    
-    /**
-     * Handle admin add command
-     */
+
+    // ─── Admin: Add ───────────────────────────────────────────────────────────
+
     private void handleAdd(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("dzeconomy.admin." + currencyType.getId() + ".add") && !sender.isOp()) {
-            sendMessage(sender, "general.no-permission", null);
+        String perm = "dzeconomy." + commandName + ".add";
+        if (!sender.hasPermission(perm)) {
+            MessagesUtil.sendMessage(sender, "no-permission");
             return;
         }
-        
+
         if (args.length < 2) {
-            sender.sendMessage(ColorUtil.translate("&cUsage: /" + currencyType.getId() + " add <player> <amount>"));
+            MessagesUtil.sendMessage(sender, "usage-" + commandName + "-add");
             return;
         }
-        
-        OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
-        if (!target.hasPlayedBefore() && !target.isOnline()) {
-            Map<String, String> placeholders = MessagesUtil.placeholders("player", args[0]);
-            sendMessage(sender, "general.player-not-found", placeholders);
+
+        String targetName = args[0];
+        @SuppressWarnings("deprecation")
+        org.bukkit.OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+        CurrencyManager cm = plugin.getCurrencyManager();
+        if (target == null || (!target.hasPlayedBefore() && !target.isOnline() && !cm.playerDataExists(target.getUniqueId()))) {
+            MessagesUtil.sendMessage(sender, "player-not-found", "%player%", targetName);
             return;
         }
-        
+
         double amount;
         try {
-            amount = NumberFormatter.parse(args[1]);
-            if (amount <= 0) {
-                sendMessage(sender, "general.invalid-amount", null);
-                return;
-            }
+            amount = Double.parseDouble(args[1]);
         } catch (NumberFormatException e) {
-            sendMessage(sender, "general.invalid-amount", null);
+            MessagesUtil.sendMessage(sender, "invalid-amount", "%input%", args[1]);
             return;
         }
-        
-        plugin.getCurrencyManager().addBalance(target.getUniqueId(), currencyType, amount);
-        
-        String symbol = plugin.getCurrencyManager().getCurrencySymbol(currencyType);
-        double newBalance = plugin.getCurrencyManager().getBalance(target.getUniqueId(), currencyType);
-        
-        Map<String, String> placeholders = MessagesUtil.placeholders(
-                "player", target.getName(),
-                "symbol", symbol,
-                "amount", NumberFormatter.formatShort(amount),
-                "balance", NumberFormatter.formatShort(newBalance),
-                "currency", currencyType.getName());
-        
-        sendMessage(sender, "admin.add-success", placeholders);
-        
-        if (target.isOnline()) {
-            Player targetPlayer = target.getPlayer();
-            sendMessage(targetPlayer, "admin.add-notify", placeholders);
-            sendMessage(targetPlayer, "send.balance-update", MessagesUtil.placeholders(
-                    "symbol", symbol,
-                    "balance", NumberFormatter.formatShort(newBalance),
-                    "color", currencyType.getColor()));
+
+        if (Double.isNaN(amount) || Double.isInfinite(amount) || amount <= 0) {
+            MessagesUtil.sendMessage(sender, "amount-must-be-positive");
+            return;
         }
-    }
-    
-    /**
-     * Show help menu
-     */
-    private void showHelp(CommandSender sender) {
-        boolean isAdmin = sender.hasPermission("dzeconomy.admin") || sender.isOp();
-        
-        String helpMessage = messageUtil.getMessage("help." + currencyType.getId());
-        
-        if (isAdmin) {
-            String adminCommands = messageUtil.getMessage("help." + currencyType.getId() + "-admin");
-            helpMessage = helpMessage.replace("{admin_commands}", adminCommands);
+
+        boolean success = cm.addBalance(target.getUniqueId(), currencyType, amount);
+
+        if (success) {
+            double newBalance = cm.getBalance(target.getUniqueId(), currencyType);
+            if (!target.isOnline()) {
+                cm.unloadPlayerData(target.getUniqueId());
+            }
+            MessagesUtil.sendMessage(sender, commandName + "-add-success",
+                    "%player%", target.getName() != null ? target.getName() : targetName,
+                    "%amount%", String.format("%,.2f", amount),
+                    "%balance%", String.format("%,.2f", newBalance),
+                    "%currency%", commandName);
+
+            if (target.isOnline() && target instanceof Player) {
+                MessagesUtil.sendMessage((Player) target, commandName + "-added",
+                        "%player%", sender.getName(),
+                        "%amount%", String.format("%,.2f", amount),
+                        "%balance%", String.format("%,.2f", newBalance),
+                        "%currency%", commandName);
+            }
         } else {
-            helpMessage = helpMessage.replace("{admin_commands}", "");
+            MessagesUtil.sendMessage(sender, commandName + "-add-failed",
+                    "%player%", target.getName() != null ? target.getName() : targetName,
+                    "%amount%", String.format("%,.2f", amount),
+                    "%currency%", commandName);
         }
+    }
+
+    // ─── Admin: Remove ────────────────────────────────────────────────────────
+
+    private void handleRemove(CommandSender sender, String[] args) {
+        String perm = "dzeconomy." + commandName + ".remove";
+        if (!sender.hasPermission(perm)) {
+            MessagesUtil.sendMessage(sender, "no-permission");
+            return;
+        }
+
+        if (args.length < 2) {
+            MessagesUtil.sendMessage(sender, "usage-" + commandName + "-remove");
+            return;
+        }
+
+        String targetName = args[0];
+        @SuppressWarnings("deprecation")
+        org.bukkit.OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+        CurrencyManager cm = plugin.getCurrencyManager();
+        if (target == null || (!target.hasPlayedBefore() && !target.isOnline() && !cm.playerDataExists(target.getUniqueId()))) {
+            MessagesUtil.sendMessage(sender, "player-not-found", "%player%", targetName);
+            return;
+        }
+
+        double amount;
+        try {
+            amount = Double.parseDouble(args[1]);
+        } catch (NumberFormatException e) {
+            MessagesUtil.sendMessage(sender, "invalid-amount", "%input%", args[1]);
+            return;
+        }
+
+        if (Double.isNaN(amount) || Double.isInfinite(amount) || amount <= 0) {
+            MessagesUtil.sendMessage(sender, "amount-must-be-positive");
+            return;
+        }
+
+        boolean success = cm.removeBalance(target.getUniqueId(), currencyType, amount);
+
+        if (success) {
+            double newBalance = cm.getBalance(target.getUniqueId(), currencyType);
+            if (!target.isOnline()) {
+                cm.unloadPlayerData(target.getUniqueId());
+            }
+            MessagesUtil.sendMessage(sender, commandName + "-remove-success",
+                    "%player%", target.getName() != null ? target.getName() : targetName,
+                    "%amount%", String.format("%,.2f", amount),
+                    "%balance%", String.format("%,.2f", newBalance),
+                    "%currency%", commandName);
+
+            if (target.isOnline() && target instanceof Player) {
+                MessagesUtil.sendMessage((Player) target, commandName + "-removed",
+                        "%player%", sender.getName(),
+                        "%amount%", String.format("%,.2f", amount),
+                        "%balance%", String.format("%,.2f", newBalance),
+                        "%currency%", commandName);
+            }
+        } else {
+            MessagesUtil.sendMessage(sender, commandName + "-remove-failed",
+                    "%player%", target.getName() != null ? target.getName() : targetName,
+                    "%amount%", String.format("%,.2f", amount),
+                    "%currency%", commandName);
+        }
+    }
+
+    // ─── Admin: Set ───────────────────────────────────────────────────────────
+
+    private void handleSet(CommandSender sender, String[] args) {
+        String perm = "dzeconomy." + commandName + ".set";
+        if (!sender.hasPermission(perm)) {
+            MessagesUtil.sendMessage(sender, "no-permission");
+            return;
+        }
+
+        if (args.length < 2) {
+            MessagesUtil.sendMessage(sender, "usage-" + commandName + "-set");
+            return;
+        }
+
+        String targetName = args[0];
+        @SuppressWarnings("deprecation")
+        org.bukkit.OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+        CurrencyManager cm = plugin.getCurrencyManager();
+        if (target == null || (!target.hasPlayedBefore() && !target.isOnline() && !cm.playerDataExists(target.getUniqueId()))) {
+            MessagesUtil.sendMessage(sender, "player-not-found", "%player%", targetName);
+            return;
+        }
+
+        double amount;
+        try {
+            amount = Double.parseDouble(args[1]);
+        } catch (NumberFormatException e) {
+            MessagesUtil.sendMessage(sender, "invalid-amount", "%input%", args[1]);
+            return;
+        }
+
+        if (Double.isNaN(amount) || Double.isInfinite(amount) || amount < 0) {
+            MessagesUtil.sendMessage(sender, "amount-must-be-positive");
+            return;
+        }
+
+        boolean success = cm.setBalance(target.getUniqueId(), currencyType, amount);
+
+        if (success) {
+            double newBalance = cm.getBalance(target.getUniqueId(), currencyType);
+            if (!target.isOnline()) {
+                cm.unloadPlayerData(target.getUniqueId());
+            }
+            MessagesUtil.sendMessage(sender, commandName + "-set-success",
+                    "%player%", target.getName() != null ? target.getName() : targetName,
+                    "%amount%", String.format("%,.2f", amount),
+                    "%balance%", String.format("%,.2f", newBalance),
+                    "%currency%", commandName);
+
+            if (target.isOnline() && target instanceof Player) {
+                MessagesUtil.sendMessage((Player) target, commandName + "-set",
+                        "%player%", sender.getName(),
+                        "%amount%", String.format("%,.2f", amount),
+                        "%balance%", String.format("%,.2f", newBalance),
+                        "%currency%", commandName);
+            }
+        } else {
+            MessagesUtil.sendMessage(sender, commandName + "-set-failed",
+                    "%player%", target.getName() != null ? target.getName() : targetName,
+                    "%amount%", String.format("%,.2f", amount),
+                    "%currency%", commandName);
+        }
+    }
+
+    // ─── Top ──────────────────────────────────────────────────────────────────
+
+    private void handleTop(CommandSender sender, String[] args) {
+        String perm = "dzeconomy." + commandName + ".top";
+        if (!sender.hasPermission(perm)) {
+            MessagesUtil.sendMessage(sender, "no-permission");
+            return;
+        }
+
+        int pageRaw = 1;
+        if (args.length >= 1) {
+            try {
+                pageRaw = Integer.parseInt(args[0]);
+            } catch (NumberFormatException e) {
+                MessagesUtil.sendMessage(sender, "invalid-page", "%input%", args[0]);
+                return;
+            }
+        }
+
+        final int page = Math.max(pageRaw, 1);
+        int perPage = 10;
         
-        sender.sendMessage(helpMessage);
+        CurrencyManager cm = plugin.getCurrencyManager();
+        
+        cm.getBalanceTopAsync(currencyType, page * perPage).thenAccept(top -> {
+            List<Map.Entry<String, Double>> resolvedTop = new ArrayList<>();
+            int start = (page - 1) * perPage;
+            if (!top.isEmpty()) {
+                for (int i = start; i < Math.min(top.size(), start + perPage); i++) {
+                    Map.Entry<UUID, Double> entry = top.get(i);
+                    String name = Bukkit.getOfflinePlayer(entry.getKey()).getName();
+                    if (name == null) name = entry.getKey().toString().substring(0, 8) + "...";
+                    resolvedTop.add(new java.util.AbstractMap.SimpleEntry<>(name, entry.getValue()));
+                }
+            }
+
+            online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTask(plugin, () -> {
+                String separator = MessagesUtil.colorize("&8&l&m─────────────────────────────────");
+                String currencyDisplayName = commandName.substring(0, 1).toUpperCase() + commandName.substring(1);
+
+                sender.sendMessage(separator);
+                sender.sendMessage(MessagesUtil.colorize("&6&l  " + currencyDisplayName + " Top &8▸ &7Page " + page));
+
+                if (top.isEmpty()) {
+                    sender.sendMessage(MessagesUtil.colorize("  &7No data available."));
+                } else {
+                    int rank = start + 1;
+                    for (Map.Entry<String, Double> entry : resolvedTop) {
+                        String rankColor = rank == 1 ? "&6" : rank == 2 ? "&7" : rank == 3 ? "&c" : "&e";
+                        sender.sendMessage(MessagesUtil.colorize("  " + rankColor + rank + ". &8▸ &7" + entry.getKey() + " &8- &a" + String.format("%,.2f", entry.getValue())));
+                        rank++;
+                    }
+                }
+
+                sender.sendMessage(separator);
+            });
+        });
     }
-    
-    /**
-     * Send a message with placeholders
-     */
-    protected void sendMessage(CommandSender sender, String path, Map<String, String> placeholders) {
-        String message = messageUtil.getMessage(path, placeholders);
-        sender.sendMessage(message);
+
+    // ─── Help ─────────────────────────────────────────────────────────────────
+
+    private void sendHelp(CommandSender sender) {
+        String separator = MessagesUtil.colorize("&8&l&m─────────────────────────────────");
+        String currencyDisplayName = commandName.substring(0, 1).toUpperCase() + commandName.substring(1);
+
+        sender.sendMessage(separator);
+        sender.sendMessage(MessagesUtil.colorize("&6&l  " + currencyDisplayName + " Commands"));
+        sender.sendMessage(MessagesUtil.colorize(""));
+
+        if (sender.hasPermission("dzeconomy." + commandName + ".balance")) {
+            sender.sendMessage(MessagesUtil.colorize("  &8▸ &e/" + commandName + " balance [player] &8- &7Check balance"));
+        }
+        if (sender.hasPermission("dzeconomy." + commandName + ".send")) {
+            sender.sendMessage(MessagesUtil.colorize("  &8▸ &e/" + commandName + " send <player> <amount> &8- &7Send " + commandName));
+        }
+        if (sender.hasPermission("dzeconomy." + commandName + ".request")) {
+            sender.sendMessage(MessagesUtil.colorize("  &8▸ &e/" + commandName + " request <player> <amount> &8- &7Request " + commandName));
+        }
+        if (sender.hasPermission("dzeconomy." + commandName + ".accept")) {
+            sender.sendMessage(MessagesUtil.colorize("  &8▸ &e/" + commandName + " accept <player> &8- &7Accept request"));
+        }
+        if (sender.hasPermission("dzeconomy." + commandName + ".deny")) {
+            sender.sendMessage(MessagesUtil.colorize("  &8▸ &e/" + commandName + " deny <player> &8- &7Deny request"));
+        }
+        if (sender.hasPermission("dzeconomy." + commandName + ".top")) {
+            sender.sendMessage(MessagesUtil.colorize("  &8▸ &e/" + commandName + " top [page] &8- &7Balance leaderboard"));
+        }
+        if (sender.hasPermission("dzeconomy." + commandName + ".add")) {
+            sender.sendMessage(MessagesUtil.colorize("  &8▸ &e/" + commandName + " add <player> <amount> &8- &7Add " + commandName));
+        }
+        if (sender.hasPermission("dzeconomy." + commandName + ".remove")) {
+            sender.sendMessage(MessagesUtil.colorize("  &8▸ &e/" + commandName + " remove <player> <amount> &8- &7Remove " + commandName));
+        }
+        if (sender.hasPermission("dzeconomy." + commandName + ".set")) {
+            sender.sendMessage(MessagesUtil.colorize("  &8▸ &e/" + commandName + " set <player> <amount> &8- &7Set " + commandName));
+        }
+
+        sender.sendMessage(separator);
     }
-    
+
+    // ─── Utility ──────────────────────────────────────────────────────────────
+
+    private String[] shiftArgs(String[] args) {
+        if (args.length <= 1) return new String[0];
+        String[] shifted = new String[args.length - 1];
+        System.arraycopy(args, 1, shifted, 0, shifted.length);
+        return shifted;
+    }
+
+    // ─── Tab Completion ───────────────────────────────────────────────────────
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
-        
+
         if (args.length == 1) {
-            completions.add("balance");
-            completions.add("send");
-            completions.add("request");
-            completions.add("accept");
-            completions.add("deny");
-            completions.add("help");
-            
-            if (sender.hasPermission("dzeconomy.admin") || sender.isOp()) {
-                completions.add("add");
+            List<String> subs = new ArrayList<>();
+            if (sender.hasPermission("dzeconomy." + commandName + ".balance")) subs.add("balance");
+            if (sender.hasPermission("dzeconomy." + commandName + ".send")) subs.add("send");
+            if (sender.hasPermission("dzeconomy." + commandName + ".request")) subs.add("request");
+            if (sender.hasPermission("dzeconomy." + commandName + ".accept")) subs.add("accept");
+            if (sender.hasPermission("dzeconomy." + commandName + ".deny")) subs.add("deny");
+            if (sender.hasPermission("dzeconomy." + commandName + ".add")) subs.add("add");
+            if (sender.hasPermission("dzeconomy." + commandName + ".remove")) subs.add("remove");
+            if (sender.hasPermission("dzeconomy." + commandName + ".set")) subs.add("set");
+            if (sender.hasPermission("dzeconomy." + commandName + ".top")) subs.add("top");
+
+            String input = args[0].toLowerCase();
+            for (String sub : subs) {
+                if (sub.startsWith(input)) {
+                    completions.add(sub);
+                }
             }
-        } else if (args.length == 2 && (args[0].equalsIgnoreCase("send") || 
-                args[0].equalsIgnoreCase("request") || args[0].equalsIgnoreCase("add") ||
-                args[0].equalsIgnoreCase("balance"))) {
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                completions.add(player.getName());
+        } else if (args.length == 2) {
+            String sub = args[0].toLowerCase();
+            switch (sub) {
+                case "balance":
+                case "bal":
+                case "send":
+                case "pay":
+                case "give":
+                case "request":
+                case "req":
+                case "accept":
+                case "deny":
+                case "reject":
+                case "add":
+                case "remove":
+                case "take":
+                case "set":
+                    boolean hasPerm = false;
+                    switch (sub) {
+                        case "balance": case "bal":
+                            hasPerm = sender.hasPermission("dzeconomy." + commandName + ".balance.others");
+                            break;
+                        case "send": case "pay": case "give":
+                            hasPerm = sender.hasPermission("dzeconomy." + commandName + ".send");
+                            break;
+                        case "request": case "req":
+                            hasPerm = sender.hasPermission("dzeconomy." + commandName + ".request");
+                            break;
+                        case "accept":
+                            hasPerm = sender.hasPermission("dzeconomy." + commandName + ".accept");
+                            break;
+                        case "deny": case "reject":
+                            hasPerm = sender.hasPermission("dzeconomy." + commandName + ".deny");
+                            break;
+                        case "add":
+                            hasPerm = sender.hasPermission("dzeconomy." + commandName + ".add");
+                            break;
+                        case "remove": case "take":
+                            hasPerm = sender.hasPermission("dzeconomy." + commandName + ".remove");
+                            break;
+                        case "set":
+                            hasPerm = sender.hasPermission("dzeconomy." + commandName + ".set");
+                            break;
+                    }
+                    if (hasPerm) {
+                        for (Player p : Bukkit.getOnlinePlayers()) {
+                            if (sender instanceof Player && !((Player) sender).canSee(p)) {
+                                continue;
+                            }
+                            if (p.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
+                                completions.add(p.getName());
+                            }
+                        }
+                    }
+                    break;
+                case "top":
+                case "baltop":
+                    if (sender.hasPermission("dzeconomy." + commandName + ".top")) {
+                        completions.add("1");
+                        completions.add("2");
+                        completions.add("3");
+                    }
+                    break;
             }
-        } else if (args.length == 3 && (args[0].equalsIgnoreCase("send") || 
-                args[0].equalsIgnoreCase("request") || args[0].equalsIgnoreCase("add"))) {
-            completions.add("100");
-            completions.add("1000");
-            completions.add("10000");
+        } else if (args.length == 3) {
+            String sub = args[0].toLowerCase();
+            boolean hasPerm = false;
+            switch (sub) {
+                case "send":
+                case "pay":
+                case "give":
+                    hasPerm = sender.hasPermission("dzeconomy." + commandName + ".send");
+                    break;
+                case "request":
+                case "req":
+                    hasPerm = sender.hasPermission("dzeconomy." + commandName + ".request");
+                    break;
+                case "add":
+                    hasPerm = sender.hasPermission("dzeconomy." + commandName + ".add");
+                    break;
+                case "remove":
+                case "take":
+                    hasPerm = sender.hasPermission("dzeconomy." + commandName + ".remove");
+                    break;
+                case "set":
+                    hasPerm = sender.hasPermission("dzeconomy." + commandName + ".set");
+                    break;
+            }
+            if (hasPerm) {
+                completions.add("100");
+                completions.add("500");
+                completions.add("1000");
+            }
         }
-        
+
         return completions;
     }
 }

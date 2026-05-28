@@ -1,93 +1,161 @@
 name: DZEconomy
-version: '1.2.0'
+version: '2.0.0'
 main: online.demonzdevelopment.dzeconomy.DZEconomy
-api-version: '1.21'
+api-version: '1.20'
+description: A powerful multi-currency economy plugin with ranks, combat tagging, and more.
 author: DemonZ Development
-description: Professional multi-currency economy plugin
-website: https://demonzdevelopment.online
-softdepend: [PlaceholderAPI, LuckPerms]
+website: https://wiki.demonzdevelopment.online/dzeconomy
+
+depend: []
+softdepend:
+  - PlaceholderAPI
+  - LuckPerms
 
 commands:
   money:
-    description: Money currency commands
-    usage: /<command> [balance|send|request|accept|deny|add|help]
+    description: Manage your money balance
+    usage: /<command> [balance|send|request|accept|deny|add|remove|set|top]
     aliases: [bal, balance]
   mobcoin:
-    description: MobCoin currency commands
-    usage: /<command> [balance|send|request|accept|deny|add|help]
-    aliases: [mc, mobcoins]
+    description: Manage your MobCoin balance
+    usage: /<command> [balance|send|request|accept|deny|add|remove|set|top]
+    aliases: [mobcoins, mc]
   gem:
-    description: Gem currency commands
-    usage: /<command> [balance|send|request|accept|deny|add|help]
+    description: Manage your Gem balance
+    usage: /<command> [balance|send|request|accept|deny|add|remove|set|top]
     aliases: [gems]
   economy:
-    description: Economy management commands
-    usage: /<command> [convert|reload|version|migrate|status|info|backup|enable|disable]
-    aliases: [eco, dzeco, dzeconomy]
+    description: Admin economy commands
+    usage: /<command> [info|reload|version|convert|migrate|status|baltop|payall|credits]
+    aliases: [econ, dzeconomy, dze]
 
 permissions:
-  dzeconomy.*:
-    description: All DZEconomy permissions
-    children:
-      dzeconomy.money.*: true
-      dzeconomy.mobcoin.*: true
-      dzeconomy.gem.*: true
-      dzeconomy.economy.*: true
-      dzeconomy.admin.*: true
-  
-  dzeconomy.money.*:
-    description: All money permissions
-    children:
-      dzeconomy.money.balance: true
-      dzeconomy.money.balance.others: true
-      dzeconomy.money.send: true
-      dzeconomy.money.request: true
-      dzeconomy.money.accept: true
-      dzeconomy.money.deny: true
-      dzeconomy.money.help: true
-  
-  dzeconomy.mobcoin.*:
-    description: All mobcoin permissions
-    children:
-      dzeconomy.mobcoin.balance: true
-      dzeconomy.mobcoin.balance.others: true
-      dzeconomy.mobcoin.send: true
-      dzeconomy.mobcoin.request: true
-      dzeconomy.mobcoin.accept: true
-      dzeconomy.mobcoin.deny: true
-      dzeconomy.mobcoin.help: true
-  
-  dzeconomy.gem.*:
-    description: All gem permissions
-    children:
-      dzeconomy.gem.balance: true
-      dzeconomy.gem.balance.others: true
-      dzeconomy.gem.send: true
-      dzeconomy.gem.request: true
-      dzeconomy.gem.accept: true
-      dzeconomy.gem.deny: true
-      dzeconomy.gem.help: true
-  
-  dzeconomy.economy.*:
-    description: All economy permissions
-    children:
-      dzeconomy.economy.convert: true
-      dzeconomy.economy.version: true
-  
-  dzeconomy.admin.*:
-    description: All admin permissions
-    children:
-      dzeconomy.admin.money.add: true
-      dzeconomy.admin.mobcoin.add: true
-      dzeconomy.admin.gem.add: true
-      dzeconomy.admin.reload: true
-      dzeconomy.admin.update: true
-      dzeconomy.admin: true
-  
-  dzeconomy.admin.update:
-    description: Permission to update the plugin
-    default: op
-  
-  dzeconomy.default:
-    description: Default rank permission
+  dzeconomy.money.balance:
+    description: Check your own money balance
     default: true
+  dzeconomy.money.balance.others:
+    description: Check other players' money balance
+    default: op
+  dzeconomy.money.send:
+    description: Send money to other players
+    default: true
+  dzeconomy.money.request:
+    description: Request money from other players
+    default: true
+  dzeconomy.money.accept:
+    description: Accept money requests
+    default: true
+  dzeconomy.money.deny:
+    description: Deny money requests
+    default: true
+  dzeconomy.money.top:
+    description: View money leaderboard
+    default: true
+  dzeconomy.money.add:
+    description: Add money to a player
+    default: op
+  dzeconomy.money.remove:
+    description: Remove money from a player
+    default: op
+  dzeconomy.money.set:
+    description: Set a player's money balance
+    default: op
+  dzeconomy.mobcoin.balance:
+    description: Check your own MobCoin balance
+    default: true
+  dzeconomy.mobcoin.balance.others:
+    description: Check other players' MobCoin balance
+    default: op
+  dzeconomy.mobcoin.send:
+    description: Send MobCoins to other players
+    default: true
+  dzeconomy.mobcoin.request:
+    description: Request MobCoins from other players
+    default: true
+  dzeconomy.mobcoin.accept:
+    description: Accept MobCoin requests
+    default: true
+  dzeconomy.mobcoin.deny:
+    description: Deny MobCoin requests
+    default: true
+  dzeconomy.mobcoin.top:
+    description: View MobCoin leaderboard
+    default: true
+  dzeconomy.mobcoin.add:
+    description: Add MobCoins to a player
+    default: op
+  dzeconomy.mobcoin.remove:
+    description: Remove MobCoins from a player
+    default: op
+  dzeconomy.mobcoin.set:
+    description: Set a player's MobCoin balance
+    default: op
+  dzeconomy.gem.balance:
+    description: Check your own Gem balance
+    default: true
+  dzeconomy.gem.balance.others:
+    description: Check other players' Gem balance
+    default: op
+  dzeconomy.gem.send:
+    description: Send Gems to other players
+    default: true
+  dzeconomy.gem.request:
+    description: Request Gems from other players
+    default: true
+  dzeconomy.gem.accept:
+    description: Accept Gem requests
+    default: true
+  dzeconomy.gem.deny:
+    description: Deny Gem requests
+    default: true
+  dzeconomy.gem.top:
+    description: View Gem leaderboard
+    default: true
+  dzeconomy.gem.add:
+    description: Add Gems to a player
+    default: op
+  dzeconomy.gem.remove:
+    description: Remove Gems from a player
+    default: op
+  dzeconomy.gem.set:
+    description: Set a player's Gem balance
+    default: op
+  dzeconomy.economy.info:
+    description: View plugin info
+    default: true
+  dzeconomy.admin:
+    description: Access all admin commands
+    default: op
+    children:
+      dzeconomy.admin.reload: true
+      dzeconomy.admin.convert: true
+      dzeconomy.admin.migrate: true
+      dzeconomy.admin.status: true
+      dzeconomy.admin.baltop: true
+      dzeconomy.admin.payall: true
+      dzeconomy.admin.update: true
+      dzeconomy.admin.backup: true
+  dzeconomy.admin.reload:
+    description: Reload plugin configuration
+    default: op
+  dzeconomy.admin.convert:
+    description: Convert currencies between players
+    default: op
+  dzeconomy.admin.migrate:
+    description: Migrate storage backends
+    default: op
+  dzeconomy.admin.status:
+    description: View plugin status
+    default: op
+  dzeconomy.admin.baltop:
+    description: View global balance leaderboard
+    default: op
+  dzeconomy.admin.payall:
+    description: Pay all online players
+    default: op
+  dzeconomy.admin.update:
+    description: Receive update notifications
+    default: op
+  dzeconomy.admin.backup:
+    description: Create data backup
+    default: op

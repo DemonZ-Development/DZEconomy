@@ -1,116 +1,497 @@
-# ============================================
-#        DZEconomy Mob Kill Rewards
-# ============================================
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                    DZEconomy v2.0.0                        ║
+# ║                 Mob Rewards Configuration                  ║
+# ║                                                            ║
+# ║   Wiki: https://wiki.demonzdevelopment.online/dzeconomy/mob-rewards     ║
+# ║   Support: https://discord.demonzdevelopment.online                      ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# ┌──────────────────────────────────────────────────────────────┐
+# │  Configure rewards for killing mobs. Rewards are given in   │
+# │  MobCoins by default, but you can also award Money or Gems. │
+# │                                                              │
+# │  Mob Reward Properties:                                      │
+# │    mobcoin        – MobCoins awarded (0 = none).            │
+# │    money          – Money awarded (0 = none).               │
+# │    gem            – Gems awarded (0 = none).                │
+# │    chance         – Drop chance (0.0 – 1.0).               │
+# │                     1.0 = always drops, 0.5 = 50% chance.  │
+# │    min-amount     – Minimum reward (for random range).      │
+# │                     If omitted, the flat amount is used.    │
+# │    max-amount     – Maximum reward (for random range).      │
+# │                     If omitted, the flat amount is used.    │
+# │    message        – Custom reward message override.         │
+# │                     Leave empty for default message.        │
+# │                     Placeholders: {amount}, {currency},     │
+# │                     {mob}                                   │
+# │                                                              │
+# │  Categories:                                                 │
+# │    neutral  – Passive mobs (cows, sheep, pigs, etc.)       │
+# │    easy     – Easy hostile mobs (zombies, skeletons, etc.)  │
+# │    hard     – Hard hostile mobs (creepers, blazes, etc.)    │
+# │    boss     – Boss mobs (ender dragon, wither, etc.)        │
+# │    custom   – Custom mob entries (mythic mobs, etc.)        │
+# │                                                              │
+# │  Global settings for mob rewards are in config.yml under    │
+# │  the mob-rewards section.                                   │
+# └──────────────────────────────────────────────────────────────┘
 
-global:
-  # Enable mob kill rewards
-  enabled: true
-  # Only reward if player killed the mob (not environment)
-  require-player-kill: true
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                NEUTRAL MOBS                                 ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Passive and neutral mobs that don't typically attack players.
+# These should have low rewards since they're easy to kill and
+# often farmed in large quantities.
 
-# Neutral mobs (passive animals)
 neutral:
-  enabled: true
-  reward: 1.0
-  mobs:
-    - PIG
-    - COW
-    - SHEEP
-    - CHICKEN
-    - RABBIT
-    - HORSE
-    - DONKEY
-    - MULE
-    - CAT
-    - PARROT
-    - FOX
-    - TURTLE
-    - BEE
-    - GOAT
-    - AXOLOTL
-    - SQUID
-    - GLOW_SQUID
-    - DOLPHIN
-    - WOLF
-    - OCELOT
-    - PANDA
-    - POLAR_BEAR
-    - LLAMA
-    - TRADER_LLAMA
-    - WANDERING_TRADER
-    - VILLAGER
-    - IRON_GOLEM
-    - SNOW_GOLEM
-    - MUSHROOM_COW
-    - STRIDER
-    - FROG
-    - TADPOLE
-    - ALLAY
-    - CAMEL
-    - SNIFFER
+  # ── Chickens ────────────────────────────────────────────────
+  CHICKEN:
+    mobcoin: 1
+    money: 0
+    gem: 0
+    chance: 0.5
+    message: ""
 
-# Easy hostile mobs
+  # ── Cows ────────────────────────────────────────────────────
+  COW:
+    mobcoin: 1
+    money: 0
+    gem: 0
+    chance: 0.5
+    message: ""
+
+  # ── Pigs ────────────────────────────────────────────────────
+  PIG:
+    mobcoin: 1
+    money: 0
+    gem: 0
+    chance: 0.5
+    message: ""
+
+  # ── Sheep ───────────────────────────────────────────────────
+  SHEEP:
+    mobcoin: 1
+    money: 0
+    gem: 0
+    chance: 0.5
+    message: ""
+
+  # ── Rabbits ─────────────────────────────────────────────────
+  RABBIT:
+    mobcoin: 1
+    money: 0
+    gem: 0
+    chance: 0.3
+    message: ""
+
+  # ── Villagers ───────────────────────────────────────────────
+  # No rewards for villagers — don't encourage killing them!
+  VILLAGER:
+    mobcoin: 0
+    money: 0
+    gem: 0
+    chance: 0.0
+    message: ""
+
+  # ── Iron Golems ─────────────────────────────────────────────
+  IRON_GOLEM:
+    mobcoin: 3
+    money: 5.0
+    gem: 0
+    chance: 0.4
+    message: ""
+
+  # ── Snow Golems ─────────────────────────────────────────────
+  SNOWMAN:
+    mobcoin: 1
+    money: 0
+    gem: 0
+    chance: 0.3
+    message: ""
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                  EASY HOSTILE MOBS                          ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Standard hostile mobs that are relatively easy to kill.
+# Moderate rewards to encourage combat without being exploitable.
+
 easy:
-  enabled: true
-  reward: 2.0
-  mobs:
-    - ZOMBIE
-    - SKELETON
-    - SPIDER
-    - CAVE_SPIDER
-    - HUSK
-    - STRAY
-    - DROWNED
-    - ZOMBIE_VILLAGER
-    - SILVERFISH
-    - SLIME
-    - MAGMA_CUBE
-    - ENDERMITE
-    - VEX
-    - BAT
-    - TROPICAL_FISH
-    - COD
-    - SALMON
-    - PUFFERFISH
+  # ── Zombies ─────────────────────────────────────────────────
+  ZOMBIE:
+    mobcoin: 2
+    money: 2.0
+    gem: 0
+    chance: 0.7
+    message: ""
 
-# Hard hostile mobs
+  # ── Skeletons ───────────────────────────────────────────────
+  SKELETON:
+    mobcoin: 2
+    money: 2.0
+    gem: 0
+    chance: 0.7
+    message: ""
+
+  # ── Spiders ─────────────────────────────────────────────────
+  SPIDER:
+    mobcoin: 2
+    money: 2.0
+    gem: 0
+    chance: 0.6
+    message: ""
+
+  # ── Cave Spiders ────────────────────────────────────────────
+  CAVE_SPIDER:
+    mobcoin: 3
+    money: 3.0
+    gem: 0
+    chance: 0.6
+    message: ""
+
+  # ── Husks ───────────────────────────────────────────────────
+  HUSK:
+    mobcoin: 2
+    money: 2.0
+    gem: 0
+    chance: 0.7
+    message: ""
+
+  # ── Strays ──────────────────────────────────────────────────
+  STRAY:
+    mobcoin: 2
+    money: 2.5
+    gem: 0
+    chance: 0.7
+    message: ""
+
+  # ── Drowned ─────────────────────────────────────────────────
+  DROWNED:
+    mobcoin: 3
+    money: 3.0
+    gem: 0
+    chance: 0.6
+    message: ""
+
+  # ── Slimes ──────────────────────────────────────────────────
+  SLIME:
+    mobcoin: 2
+    money: 1.0
+    gem: 0
+    chance: 0.5
+    message: ""
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                  HARD HOSTILE MOBS                          ║
+# ╚══════════════════════════════════════════════════════════════╝
+# More dangerous mobs that require better gear and strategy.
+# Higher rewards reflect the increased difficulty.
+
 hard:
-  enabled: true
-  reward: 4.0
-  mobs:
-    - CREEPER
-    - WITCH
-    - ENDERMAN
-    - BLAZE
-    - GHAST
-    - PHANTOM
-    - SHULKER
-    - PIGLIN
-    - PIGLIN_BRUTE
-    - HOGLIN
-    - ZOGLIN
-    - ZOMBIFIED_PIGLIN
-    - VINDICATOR
-    - EVOKER
-    - PILLAGER
-    - RAVAGER
-    - GUARDIAN
-    - ELDER_GUARDIAN
-    - WITHER_SKELETON
-    - BOGGED
+  # ── Creepers ────────────────────────────────────────────────
+  CREEPER:
+    mobcoin: 5
+    money: 5.0
+    gem: 0
+    chance: 0.5
+    message: "&a+{amount} {currency} &7(boom goes the Creeper!)"
 
-# Boss mobs (with rank-based bonus)
+  # ── Endermen ────────────────────────────────────────────────
+  ENDERMAN:
+    mobcoin: 5
+    money: 5.0
+    gem: 0
+    chance: 0.4
+    message: ""
+
+  # ── Blazes ──────────────────────────────────────────────────
+  BLAZE:
+    mobcoin: 8
+    money: 8.0
+    gem: 0
+    chance: 0.6
+    message: ""
+
+  # ── Ghasts ──────────────────────────────────────────────────
+  GHAST:
+    mobcoin: 10
+    money: 10.0
+    gem: 0
+    chance: 0.5
+    message: ""
+
+  # ── Witches ─────────────────────────────────────────────────
+  WITCH:
+    mobcoin: 5
+    money: 5.0
+    gem: 0
+    chance: 0.5
+    message: ""
+
+  # ── Guardians ───────────────────────────────────────────────
+  GUARDIAN:
+    mobcoin: 4
+    money: 4.0
+    gem: 0
+    chance: 0.5
+    message: ""
+
+  # ── Elder Guardians ─────────────────────────────────────────
+  ELDER_GUARDIAN:
+    mobcoin: 15
+    money: 15.0
+    gem: 1
+    chance: 1.0
+    message: "&a+{amount} {currency} &7(Rare Elder Guardian kill!)"
+
+  # ── Evokers ─────────────────────────────────────────────────
+  EVOKER:
+    mobcoin: 10
+    money: 10.0
+    gem: 0
+    chance: 0.8
+    message: ""
+
+  # ── Vindicators ─────────────────────────────────────────────
+  VINDICATOR:
+    mobcoin: 6
+    money: 6.0
+    gem: 0
+    chance: 0.7
+    message: ""
+
+  # ── Pillagers ───────────────────────────────────────────────
+  PILLAGER:
+    mobcoin: 4
+    money: 4.0
+    gem: 0
+    chance: 0.6
+    message: ""
+
+  # ── Ravagers ────────────────────────────────────────────────
+  RAVAGER:
+    mobcoin: 15
+    money: 15.0
+    gem: 0
+    chance: 0.8
+    message: ""
+
+  # ── Hoglins ─────────────────────────────────────────────────
+  HOGLIN:
+    mobcoin: 5
+    money: 5.0
+    gem: 0
+    chance: 0.6
+    message: ""
+
+  # ── Piglins ─────────────────────────────────────────────────
+  PIGLIN:
+    mobcoin: 4
+    money: 4.0
+    gem: 0
+    chance: 0.5
+    message: ""
+
+  # ── Piglin Brutes ───────────────────────────────────────────
+  PIGLIN_BRUTE:
+    mobcoin: 8
+    money: 8.0
+    gem: 0
+    chance: 0.7
+    message: ""
+
+  # ── Wardens ─────────────────────────────────────────────────
+  WARDEN:
+    mobcoin: 25
+    money: 25.0
+    gem: 2
+    chance: 1.0
+    message: "&6+{amount} {currency} &7(You defeated the Warden?!)"
+
+  # ── Breezes ─────────────────────────────────────────────────
+  BREEZE:
+    mobcoin: 8
+    money: 8.0
+    gem: 0
+    chance: 0.6
+    message: ""
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                     BOSS MOBS                               ║
+# ╚══════════════════════════════════════════════════════════════╝
+# End-game boss mobs. These should have very high rewards since
+# they require significant preparation and skill to defeat.
+# Gems are included as rare rewards for boss kills.
+
 boss:
+  # ── Ender Dragon ────────────────────────────────────────────
+  # The original boss. First-kill rewards are usually higher
+  # because there's only one dragon per end cycle.
+  ENDER_DRAGON:
+    mobcoin:
+      min-amount: 50
+      max-amount: 100
+    money:
+      min-amount: 100.0
+      max-amount: 250.0
+    gem:
+      min-amount: 5
+      max-amount: 10
+    chance: 1.0
+    message: "&6+{amount} {currency} &7(🐉 Ender Dragon defeated!)"
+
+  # ── Wither ──────────────────────────────────────────────────
+  WITHER:
+    mobcoin:
+      min-amount: 30
+      max-amount: 75
+    money:
+      min-amount: 75.0
+      max-amount: 150.0
+    gem:
+      min-amount: 3
+      max-amount: 7
+    chance: 1.0
+    message: "&6+{amount} {currency} &7(💀 Wither destroyed!)"
+
+  # ── Wither Storm ────────────────────────────────────────────
+  # (For servers using custom Wither Storm plugins/mythic mobs)
+  WITHER_STORM:
+    mobcoin:
+      min-amount: 100
+      max-amount: 250
+    money:
+      min-amount: 250.0
+      max-amount: 500.0
+    gem:
+      min-amount: 10
+      max-amount: 25
+    chance: 1.0
+    message: "&d+{amount} {currency} &7(⚡ Legendary Wither Storm defeated!)"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                   CUSTOM MOBS                               ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Add entries for custom mobs from MythicMobs, InfernalMobs,
+# or other mob plugins. The key should match the mob's entity
+# type name or custom name (depending on your setup).
+#
+# ┌────────────────────────────────────────────────────────────┐
+# │  For MythicMobs integration, use the mob's internal name   │
+# │  as the key. DZEconomy will detect MythicMobs kills and   │
+# │  match against these entries.                              │
+# └────────────────────────────────────────────────────────────┘
+
+custom:
+  # ── Example: MythicMobs Boss ────────────────────────────────
+  # MYTHIC_KING_SLIME:
+  #   mobcoin: 50
+  #   money: 100.0
+  #   gem: 5
+  #   chance: 1.0
+  #   message: "&d+{amount} {currency} &7(👑 King Slime defeated!)"
+
+  # ── Example: Infernal Mob ───────────────────────────────────
+  # INFERNAL_ZOMBIE:
+  #   mobcoin: 10
+  #   money: 15.0
+  #   gem: 1
+  #   chance: 0.8
+  #   message: "&c+{amount} {currency} &7(🔥 Infernal Zombie slain!)"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                 GLOBAL REWARD MULTIPLIERS                   ║
+# ╚══════════════════════════════════════════════════════════════╝
+# These multipliers are applied to ALL mob rewards after
+# rank multipliers. They stack on top of rank bonuses.
+#
+# ┌────────────────────────────────────────────────────────────┐
+# │  Stacking order:                                           │
+# │  Base Reward × Rank Multiplier × Global Multiplier         │
+# └────────────────────────────────────────────────────────────┘
+
+global-multipliers:
+  mobcoin: 1.0
+  money: 1.0
+  gem: 1.0
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                  KILL STREAK BONUSES                        ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Bonus multipliers applied when a player kills multiple mobs
+# within a short time window. This encourages active gameplay
+# and rewards skilled players.
+#
+# ┌────────────────────────────────────────────────────────────┐
+# │  kills   – Number of kills within the window to trigger.   │
+# │  multiplier – Reward multiplier for that streak tier.      │
+# │  message – Message shown when the streak is reached.       │
+# │            Placeholders: {kills}, {multiplier}             │
+# └────────────────────────────────────────────────────────────┘
+
+kill-streaks:
+  # Whether kill streak bonuses are enabled.
   enabled: true
-  
-  ender-dragon:
-    enabled: true
-    reward: 50.0
-  
-  wither:
-    enabled: true
-    reward: 50.0
-  
-  warden:
-    enabled: true
-    reward: 50.0
+  # Time window (in seconds) between kills to count as a streak.
+  window: 10
+  # Streak tiers (evaluated from top to bottom; first match wins).
+  tiers:
+    10:
+      multiplier: 2.0
+      message: "&6🔥 Kill Streak x{kills}! &7(2x rewards for {kills} kills!)"
+    5:
+      multiplier: 1.5
+      message: "&e🔥 Kill Streak x{kills}! &7(1.5x rewards!)"
+    3:
+      multiplier: 1.25
+      message: "&a🔥 Kill Streak x{kills}! &7(1.25x rewards!)"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                 SPECIAL EVENT BONUSES                       ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Time-based multipliers that activate during specific periods.
+# These can be used for double-reward weekends, holiday events, etc.
+# The plugin checks these on each mob kill and applies the
+# highest matching event multiplier.
+
+events:
+  # Whether event-based multipliers are enabled.
+  enabled: false
+
+  # ── Weekend Bonus ───────────────────────────────────────────
+  # Double rewards on Saturdays and Sundays.
+  weekend:
+    enabled: false
+    # Days of the week (MONDAY, TUESDAY, ..., SUNDAY).
+    days:
+      - SATURDAY
+      - SUNDAY
+    multiplier: 2.0
+    # Start time (24h format, server timezone). Empty = all day.
+    start-time: ""
+    # End time (24h format, server timezone). Empty = all day.
+    end-time: ""
+
+  # ── Night Bonus ─────────────────────────────────────────────
+  # Extra rewards during nighttime (in-game time).
+  night:
+    enabled: false
+    # Multiplier applied during night.
+    multiplier: 1.5
+    # In-game tick range for "night".
+    # Minecraft night: 13000 – 23000 ticks.
+    start-tick: 13000
+    end-tick: 23000
+
+  # ── Custom Events ───────────────────────────────────────────
+  # Add your own timed events below. These can be activated
+  # manually via /economy event start <name> or scheduled.
+  #
+  # custom-events:
+  #   halloween:
+  #     multiplier: 3.0
+  #     currency: mobcoin
+  #     message: "&6🎃 Halloween Special! &73x MobCoin rewards!"
+  #   christmas:
+  #     multiplier: 2.5
+  #     currency: money
+  #     message: "&c🎄 Christmas Bonus! &72.5x Money rewards!"

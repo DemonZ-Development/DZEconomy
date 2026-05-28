@@ -1,0 +1,68 @@
+name: ✨ Feature Request
+description: Suggest a new feature or improvement for DZEconomy
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a feature! Please fill out the form below.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of the feature you'd like.
+      placeholder: Describe your idea...
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem It Solves
+      description: What problem does this feature solve? Is it related to a frustration?
+      placeholder: I'm always frustrated when...
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How do you think this should work?
+      placeholder: Describe your ideal implementation...
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or workarounds?
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Currency System
+        - Commands
+        - Ranks / Multipliers
+        - Combat Tag
+        - PvP Loot
+        - Mob Rewards
+        - Storage / Database
+        - API
+        - Configuration
+        - Messages / Formatting
+        - Performance
+        - Folia Support
+        - Integration (PlaceholderAPI, LuckPerms, etc.)
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched for existing feature requests before creating this one
+          required: true

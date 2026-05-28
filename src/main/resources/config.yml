@@ -1,171 +1,494 @@
-# ============================================
-#           DZEconomy Configuration
-#           By DemonZ Development
-# ============================================
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                    DZEconomy v2.0.0                        ║
+# ║           Multi-Currency Economy Plugin                    ║
+# ║                                                            ║
+# ║   Wiki: https://wiki.demonzdevelopment.online/dzeconomy                 ║
+# ║   Support: https://discord.demonzdevelopment.online                      ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# ┌──────────────────────────────────────────────────────────────┐
+# │  DO NOT change config-version manually!                     │
+# │  It is used internally to handle configuration migrations.  │
+# └──────────────────────────────────────────────────────────────┘
 
-# Combat Tagging System
-combat-tagging:
-  # Enable combat tagging system
-  enabled: true
-  # Combat duration in seconds (time to stay in combat after last hit)
-  duration: 30
-  # Block request GUI from opening when player is in combat
-  block-request-gui-in-combat: true
-  # List of dangerous mobs that trigger combat tagging
-  # Players will be tagged in combat when fighting these mobs
-  dangerous-mobs:
-    - WITHER
-    - ENDER_DRAGON
-    - WARDEN
-    - CREEPER
-    - PHANTOM
-    - RAVAGER
-    - PIGLIN_BRUTE
-    - EVOKER
-    - VEX
-    - BLAZE
-    - GHAST
-    - ELDER_GUARDIAN
-    - SHULKER
-    - VINDICATOR
+config-version: 2
 
-# Update checker
-update-checker:
-  enabled: true
-  # Notify admins on join about updates
-  notify-on-join: true
-  # Runtime update checking (periodic checks while server is running)
-  runtime-check-enabled: true
-  # Check interval in hours
-  runtime-check-interval: 1
-
-# Updater settings
-updater:
-  # Enable automatic updates
-  enabled: true
-  # Auto-update on server start (downloads to update folder)
-  autoOnStart: false
-  # Auto-update during runtime checks (downloads to update folder)
-  runtime-auto-update: false
-  # Attempt hot-reload instead of requiring restart (experimental, may fail)
-  attempt-hot-reload: false
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                      STORAGE                                ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# Configure how and where player data is stored.
+# Supported types: SQLITE, MYSQL
+#
+# ┌────────────────────────────────────────────────────────────┐
+# │  WARNING: Changing storage type requires a migration!      │
+# │  Use /economy migrate to move data between backends.       │
+# └────────────────────────────────────────────────────────────┘
 
 storage:
-  # Storage type: FLATFILE, SQLITE, MYSQL
-  type: FLATFILE
-  
-  # Auto-save interval in minutes
-  auto-save-interval: 5
-  
-  # Backup settings
-  backup:
-    enabled: true
-    # Backup interval in minutes (1440 = 24 hours)
-    interval: 1440
-    # Number of backups to keep
-    keep-backups: 7
-  
-  # MySQL settings (only used if type is MYSQL)
+  # The storage backend to use.
+  # Options: SQLITE, MYSQL
+  type: SQLITE
+
+  # ── MySQL Settings ──────────────────────────────────────────
+  # Only used when type is set to MYSQL.
   mysql:
-    host: "localhost"
+    host: localhost
     port: 3306
-    database: "dzeconomy"
-    username: "root"
-    password: "password"
-    # Connection pool settings
-    pool:
-      maximum-pool-size: 10
-      minimum-idle: 2
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
+    database: dzeconomy
+    username: root
+    password: changeme
+    # Additional connection parameters appended to the JDBC URL.
+    # Default enables SSL-free local connections & UTF-8 encoding.
+    parameters: "?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=UTF-8"
+    # Connection pool size (HikariCP).
+    pool-size: 10
+    # Maximum time (in seconds) to wait for a connection from the pool.
+    connection-timeout: 30
+
+  # ── SQLite Settings ─────────────────────────────────────────
+  # Only used when type is set to SQLITE.
+  sqlite:
+    # File name inside the plugin's data folder.
+    file: data.db
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                     AUTO-SAVE                               ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# How often (in seconds) all cached player data is written to disk.
+# Lower values are safer but may impact performance on large servers.
+# Set to -1 to disable periodic auto-save (data saves on shutdown only).
+
+auto-save:
+  # Interval in seconds. Minimum recommended: 60
+  interval: 300
+  # Whether to save on every transaction (guarantees no data loss on crash).
+  # WARNING: Can significantly reduce performance on busy servers.
+  save-on-transaction: false
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                     CURRENCIES                              ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# Configure each of the three built-in currencies.
+# ┌────────────────────────────────────────────────────────────┐
+# │  Each currency has the following properties:               │
+# │                                                            │
+# │  enabled        – Whether this currency is active.         │
+# │                    Disabled currencies hide commands & GUI. │
+# │  singular       – Singular name (e.g. "Dollar").           │
+# │  plural         – Plural name (e.g. "Dollars").            │
+# │  symbol         – Display symbol (e.g. "$").               │
+# │  decimal-places – Number of decimal places shown.          │
+# │                    0 = whole numbers only.                  │
+# │  starting-balance – Balance given to new players.          │
+# │  max-balance    – Maximum allowed balance (-1 = unlimited). │
+# │  min-transaction – Minimum amount for any transaction.     │
+# │  display-format – Format string for balance display.       │
+# │                    Placeholders: {symbol}, {amount},        │
+# │                    {currency_singular}, {currency_plural}   │
+# └────────────────────────────────────────────────────────────┘
 
 currencies:
+  # ── Money (Primary Currency) ────────────────────────────────
   money:
     enabled: true
+    singular: "Dollar"
+    plural: "Dollars"
     symbol: "$"
-    display-name: "&aMoney"
-    starting-balance: 50000.00
     decimal-places: 2
-  
+    starting-balance: 500.00
+    max-balance: -1
+    min-transaction: 0.01
+    display-format: "{symbol}{amount}"
+
+  # ── MobCoins (Secondary Currency) ───────────────────────────
   mobcoin:
     enabled: true
-    symbol: "MC"
-    display-name: "&6MobCoin"
-    starting-balance: 500.00
-    decimal-places: 2
-  
+    singular: "MobCoin"
+    plural: "MobCoins"
+    symbol: "⛃"
+    decimal-places: 0
+    starting-balance: 0
+    max-balance: -1
+    min-transaction: 1
+    display-format: "{symbol}{amount}"
+
+  # ── Gems (Premium Currency) ─────────────────────────────────
   gem:
     enabled: true
+    singular: "Gem"
+    plural: "Gems"
     symbol: "◆"
-    display-name: "&b&lGem"
-    starting-balance: 5.00
-    decimal-places: 2
+    decimal-places: 0
+    starting-balance: 0
+    max-balance: -1
+    min-transaction: 1
+    display-format: "{symbol}{amount}"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                    TRANSFER SETTINGS                        ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# Controls and limits that apply to player-to-player transfers
+# (the /money send, /mobcoin send, /gem send commands).
+
+transfer:
+  # Maximum amount that can be sent in a single transaction.
+  # Set to -1 for no limit.
+  max-transaction: -1
+
+  # ── Daily Limits ────────────────────────────────────────────
+  # Limits reset every day at midnight (server time).
+  daily-limit:
+    # Whether daily transfer limits are enabled.
+    enabled: false
+    # Per-currency daily limits. Set to -1 for no limit on that currency.
+    money: -1
+    mobcoin: -1
+    gem: -1
+
+  # ── Cooldowns ───────────────────────────────────────────────
+  # Time (in seconds) a player must wait between transfers.
+  cooldowns:
+    # Whether transfer cooldowns are enabled.
+    enabled: false
+    # Per-currency cooldown in seconds.
+    money: 5
+    mobcoin: 5
+    gem: 10
+
+  # ── Combat Tag Blocking ────────────────────────────────────
+  # Whether players who are combat-tagged can send currency.
+  block-during-combat: true
+
+  # ── Self-Transfer ───────────────────────────────────────────
+  # Whether players are allowed to transfer currency to themselves.
+  # (Usually pointless, so defaults to false.)
+  allow-self-transfer: false
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                  CONVERSION RATES                           ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# Exchange rates between currencies for the /economy convert command.
+# The format is: source_currency -> target_currency = rate
+# Rate means: 1 unit of source = rate units of target
+#
+# ┌────────────────────────────────────────────────────────────┐
+# │  Example: If money->mobcoin rate is 10.0, then            │
+# │  $100 Money = 10 MobCoins                                 │
+# └────────────────────────────────────────────────────────────┘
 
 conversion:
-  enabled: true
-  # Exchange rates (1 Gem = 100 MobCoins = 10,000 Money)
+  # Whether currency conversion is enabled for players.
+  # If false, only admins with dzeconomy.admin.convert can convert.
+  player-convert: false
+
+  # Conversion fee (percentage deducted from the result).
+  # Set to 0 for no fee. Range: 0.0 – 100.0
+  fee-percent: 5.0
+
   rates:
-    gem-to-mobcoin: 100.0
-    gem-to-money: 10000.0
-    mobcoin-to-money: 100.0
+    money-to-mobcoin: 10.0
+    money-to-gem: 100.0
+    mobcoin-to-money: 0.1
+    mobcoin-to-gem: 10.0
+    gem-to-money: 0.01
+    gem-to-mobcoin: 0.1
 
-display:
-  # Use short form notation (1K, 1M, 1B, etc.)
-  use-short-form: true
-  # Use commas in full numbers (10,000 vs 10000)
-  use-commas: true
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                      PVP SETTINGS                           ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# When a player is killed by another player, a percentage of the
+# victim's balance can be dropped to the killer.
+#
+# ┌────────────────────────────────────────────────────────────┐
+# │  loss-percent is the percentage of the VICTIM's balance    │
+# │  that is transferred to the killer.                        │
+# │  Set a currency to 0 to disable PVP loss for that currency. │
+# └────────────────────────────────────────────────────────────┘
 
-pvp-economy:
-  # Enable PVP currency transfers on player kill
+pvp:
+  # Whether PVP currency loss is enabled.
   enabled: true
-  transfer-money: true
-  transfer-mobcoins: true
-  transfer-gems: true
-  # Broadcast large transfers to all players
+
+  # Percentage of balance lost on PVP death (per currency).
+  loss-percent:
+    money: 5.0
+    mobcoin: 2.0
+    gem: 0.0
+
+  # Minimum balance a player retains after PVP death.
+  # The victim will never drop below this amount.
+  minimum-balance:
+    money: 100.0
+    mobcoin: 0
+    gem: 0
+
+  # ── Broadcast ───────────────────────────────────────────────
+  # Broadcast a message when a PVP kill results in a currency drop
+  # that exceeds the threshold for any currency.
   broadcast:
     enabled: true
-    # Minimum money value to broadcast (based on money)
-    threshold: 100000.0
+    # Only broadcast if the total value dropped exceeds this threshold.
+    # Value is calculated in the primary currency (Money).
+    threshold: 1000.0
 
-gui:
-  request:
-    # Enable GUI for currency requests
-    enabled: true
-    # If true, don't force-open GUI if player has inventory open
-    respect-open-inventories: true
-    # GUI update interval in ticks (20 = 1 second)
-    update-interval: 20
-    # Sound effects
-    sounds:
-      open: "BLOCK_NOTE_BLOCK_PLING"
-      accept: "ENTITY_PLAYER_LEVELUP"
-      deny: "BLOCK_ANVIL_LAND"
-      timeout: "ENTITY_VILLAGER_NO"
+  # ── World Blacklist ─────────────────────────────────────────
+  # PVP currency loss will NOT occur in these worlds.
+  world-blacklist:
+    - spawn
+    - creative
 
-integrations:
-  placeholderapi:
-    enabled: true
-    # Default format: "short" or "full"
-    default-format: "short"
-  
-  luckperms:
-    enabled: true
-    # Fallback rank if player has no matching rank
-    fallback-rank: "default"
-    # Cache player ranks for this many seconds
-    cache-duration: 300
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                   COMBAT TAG                                ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# Combat tagging prevents players from performing economy actions
+# while in combat. A player is "tagged" when they attack or are
+# attacked by another player.
 
-limits:
-  # Request timeout in seconds
-  request-timeout: 120
-  # Maximum transaction amount (prevents overflow)
-  max-transaction: 1000000000000.0
-
-daily-reset:
-  # Time to reset daily limits (HH:mm format, server time)
-  time: "00:00"
-
-welcome-message:
+combat-tag:
+  # Whether combat tagging is enabled.
   enabled: true
-  new-player: true
+
+  # Duration (in seconds) a player remains combat-tagged after
+  # the last hit.
+  duration: 15
+
+  # ── Blocked Actions ─────────────────────────────────────────
+  # Economy actions that are blocked while combat-tagged.
+  blocked-actions:
+    - send
+    - request
+    - accept
+
+  # ── PVE Combat ──────────────────────────────────────────────
+  # Whether combat tagging also applies to mob attacks.
+  include-pve: false
+
+  # ── Action Bar ──────────────────────────────────────────────
+  # Show a combat tag indicator on the action bar.
+  action-bar:
+    enabled: true
+    # Display format. Placeholders: {time}
+    format: "&c&l⚔ &eCombat Tag &7- &c{time}s remaining"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                    MOB REWARDS                              ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# When players kill mobs, they can earn MobCoins (and optionally
+# other currencies). Detailed mob reward configuration is located
+# in mob-rewards.yml.
+#
+# ┌────────────────────────────────────────────────────────────┐
+# │  See mob-rewards.yml for full mob reward configuration.    │
+# └────────────────────────────────────────────────────────────┘
+
+mob-rewards:
+  # Whether mob rewards are enabled globally.
+  enabled: true
+
+  # ── World Settings ──────────────────────────────────────────
+  # Only give rewards in these worlds. Empty list = all worlds.
+  world-whitelist: []
+
+  # ── World Blacklist ─────────────────────────────────────────
+  # Never give rewards in these worlds.
+  world-blacklist:
+    - spawn
+    - creative
+
+  # ── Spawner Mobs ────────────────────────────────────────────
+  # Whether mobs spawned from spawners can give rewards.
+  # Disabling this prevents spawner-farming exploits.
+  allow-spawner-mobs: false
+
+  # ── Spawn Egg Mobs ──────────────────────────────────────────
+  # Whether mobs spawned from spawn eggs can give rewards.
+  allow-spawn-egg-mobs: false
+
+  # ── Reward Message ──────────────────────────────────────────
+  # Message sent to the player when they earn a mob reward.
+  # Placeholders: {amount}, {currency}, {mob}
+  reward-message: "&a+{amount} {currency} &7(from killing {mob})"
+
+  # ── Multiplier Permission ───────────────────────────────────
+  # Players with the permission node below receive a multiplier
+  # on all mob rewards. Set to 1.0 for no bonus.
+  # Permission: dzeconomy.mobreward.multiplier
+  default-multiplier: 1.0
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                   REQUEST SETTINGS                          ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# Configure the payment request system.
+# Players can request currency from others, who can then accept
+# or deny the request.
+
+request:
+  # Whether the request system is enabled.
+  enabled: true
+
+  # How long (in seconds) before a pending request expires.
+  timeout: 120
+
+  # Maximum number of pending requests a player can have at once.
+  max-pending: 5
+
+  # Whether a request auto-accepts if the sender has the
+  # "dzeconomy.request.autoaccept" permission.
+  # (Useful for admin/NPC payments.)
+  auto-accept-permission: false
+
+  # ── Notification ────────────────────────────────────────────
+  # How to notify players about incoming requests.
+  notification:
+    # Options: MESSAGE, ACTION_BAR, TITLE, BOSS_BAR
+    type: MESSAGE
+    # Play a sound when a request is received.
+    # Format: SOUND_NAME:VOLUME:PITCH
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP:1.0:1.0"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                    BALTOP SETTINGS                          ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# Configure the balance leaderboard (baltop) system.
+
+baltop:
+  # Whether baltop is enabled.
+  enabled: true
+
+  # Number of players shown per page.
+  entries-per-page: 10
+
+  # How often (in seconds) the baltop cache is refreshed.
+  # Lower values give more up-to-date rankings but use more resources.
+  refresh-interval: 300
+
+  # Whether to include offline players in the leaderboard.
+  include-offline: true
+
+  # ── Formatting ──────────────────────────────────────────────
+  # Format for each entry. Placeholders:
+  #   {rank}  – Player's position (1, 2, 3, ...)
+  #   {name}  – Player's name
+  #   {amount} – Formatted balance
+  #   {currency} – Currency display name
+  entry-format: "&e#{rank} &7- &f{name} &8» &a{amount} {currency}"
+
+  # ── Header ──────────────────────────────────────────────────
+  header: "&8&m────────────────────────────────────&r\n&6&l  Top {currency} Balances\n&8&m────────────────────────────────────&r"
+
+  # ── Footer ──────────────────────────────────────────────────
+  footer: "&8&m────────────────────────────────────&r\n&7Page &f{page}&7/&f{pages} &8| &7Use &f/{command} top {next_page} &7for next page"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                    PAYALL SETTINGS                          ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# Configure the /economy payall command, which distributes
+# currency to all online players.
+
+payall:
+  # Whether payall is enabled.
+  enabled: true
+
+  # ── Rate Limiting ───────────────────────────────────────────
+  # Minimum time (in seconds) between payall commands.
+  cooldown: 60
+
+  # ── Broadcast ───────────────────────────────────────────────
+  # Broadcast a message to all online players when payall is used.
+  broadcast: true
+
+  # ── Console ─────────────────────────────────────────────────
+  # Whether the console can execute payall.
+  allow-console: true
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                    UPDATE SETTINGS                          ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# Configure automatic update checking via the Modrinth API.
+
+updates:
+  # Whether to check for updates on startup and periodically.
+  check-enabled: true
+
+  # How often (in seconds) to check for updates.
+  # Minimum: 3600 (1 hour). Recommended: 21600 (6 hours).
+  check-interval: 21600
+
+  # ── Notification ────────────────────────────────────────────
+  # How to notify admins about available updates.
+  notify:
+    # Notify admins on join when an update is available.
+    on-join: true
+    # Permission required to receive update notifications.
+    permission: "dzeconomy.admin.update"
+    # Console log when an update is found.
+    console-log: true
+
+  # ── Modrinth ────────────────────────────────────────────────
+  # The Modrinth project ID for DZEconomy.
+  # Only change this if you are using a forked version.
+  modrinth-project-id: "dzeconomy"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                     RANK SETTINGS                           ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# Ranks provide multipliers and perks based on a player's group.
+# Detailed rank configuration is located in ranks.yml.
+#
+# ┌────────────────────────────────────────────────────────────┐
+# │  See ranks.yml for full rank configuration.                │
+# └────────────────────────────────────────────────────────────┘
+
+ranks:
+  # Whether the rank system is enabled.
+  # Requires LuckPerms (soft-depend) for group detection.
+  enabled: true
+
+  # How rank multipliers stack with other multipliers.
+  # Options: MULTIPLY, ADD, HIGHEST
+  #   MULTIPLY – All multipliers multiply together (1.5 × 1.2 = 1.8)
+  #   ADD      – All multipliers add together (0.5 + 0.2 = 1.7)
+  #   HIGHEST  – Only the highest multiplier is used
+  multiplier-stacking: MULTIPLY
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                    MISC SETTINGS                            ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+misc:
+  # ── Number Formatting ───────────────────────────────────────
+  # Format for displaying large numbers.
+  # Options: FULL, COMPACT, LOCALE
+  #   FULL    – Always show full number (1,000,000.00)
+  #   COMPACT – Abbreviate large numbers (1.0M, 1.0K)
+  #   LOCALE  – Use the server's locale formatting
+  number-format: FULL
+
+  # ── Debug Mode ──────────────────────────────────────────────
+  # Enable verbose console logging for troubleshooting.
+  # WARNING: Generates a LOT of log output. Only enable when needed.
+  debug: false
+
+  # ── Transaction Logging ─────────────────────────────────────
+  # Log all transactions to a file for auditing purposes.
+  transaction-log:
+    enabled: false
+    # File name inside the plugin's data folder.
+    file: transactions.log
+    # Maximum log file size in MB before rotation.
+    max-size: 10
+    # Number of rotated log files to keep.
+    max-files: 5

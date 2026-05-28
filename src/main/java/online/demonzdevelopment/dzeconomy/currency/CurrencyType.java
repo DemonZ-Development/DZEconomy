@@ -1,69 +1,57 @@
 package online.demonzdevelopment.dzeconomy.currency;
 
-/**
- * Enum representing the three currency types in DZEconomy
- */
+import org.jetbrains.annotations.Nullable;
+
 public enum CurrencyType {
-    MONEY("money", "Money", "&aMoney", "$"),
-    MOBCOIN("mobcoin", "MobCoin", "&6MobCoin", "MC"),
-    GEM("gem", "Gem", "&b&lGem", "◆");
+    MONEY("money", "Money", "$", 0.0, 'a'),
+    MOBCOIN("mobcoin", "MobCoin", "\u2605", 0.0, 'e'),
+    GEM("gem", "Gem", "\u2666", 0.0, 'b');
     
     private final String id;
-    private final String name;
     private final String displayName;
     private final String defaultSymbol;
+    private final double defaultBalance;
+    private final char colorCode;
     
-    CurrencyType(String id, String name, String displayName, String defaultSymbol) {
+    CurrencyType(String id, String displayName, String defaultSymbol, double defaultBalance, char colorCode) {
         this.id = id;
-        this.name = name;
         this.displayName = displayName;
         this.defaultSymbol = defaultSymbol;
+        this.defaultBalance = defaultBalance;
+        this.colorCode = colorCode;
     }
     
-    public String getId() {
-        return id;
-    }
+    public String getId() { return id; }
+    public String getDisplayName() { return displayName; }
+    public String getDefaultSymbol() { return defaultSymbol; }
+    public double getDefaultBalance() { return defaultBalance; }
+    public char getColorCode() { return colorCode; }
     
-    public String getName() {
-        return name;
-    }
-    
-    public String getDisplayName() {
-        return displayName;
-    }
-    
-    public String getDefaultSymbol() {
-        return defaultSymbol;
-    }
-    
-    /**
-     * Get currency type from string (case-insensitive)
-     */
-    public static CurrencyType fromString(String str) {
-        if (str == null) return null;
-        
-        for (CurrencyType type : values()) {
-            if (type.id.equalsIgnoreCase(str) || type.name.equalsIgnoreCase(str)) {
-                return type;
-            }
-        }
-        
-        return null;
-    }
-    
-    /**
-     * Get currency display color
-     */
     public String getColor() {
-        switch (this) {
-            case MONEY:
-                return "&a";
-            case MOBCOIN:
-                return "&6";
-            case GEM:
-                return "&b";
+        return "\u00a7" + colorCode;
+    }
+    
+    public String getColoredDisplayName() {
+        return getColor() + displayName;
+    }
+    
+    @Nullable
+    public static CurrencyType fromString(String name) {
+        if (name == null) return null;
+        String lower = name.toLowerCase().replace(" ", "").replace("-", "").replace("_", "");
+        // Support plurals and common aliases
+        switch (lower) {
+            case "money": case "cash": case "dollars": case "balance":
+                return MONEY;
+            case "mobcoin": case "mobcoins":
+                return MOBCOIN;
+            case "gem": case "gems":
+                return GEM;
             default:
-                return "&f";
+                for (CurrencyType type : values()) {
+                    if (type.id.equalsIgnoreCase(lower)) return type;
+                }
+                return null;
         }
     }
 }

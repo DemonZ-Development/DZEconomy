@@ -1,167 +1,470 @@
-# ============================================
-#          DZEconomy Messages
-# ============================================
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                    DZEconomy v2.0.0                        ║
+# ║              Messages & Language Configuration              ║
+# ║                                                            ║
+# ║   Wiki: https://wiki.demonzdevelopment.online/dzeconomy                 ║
+# ║   Support: https://discord.demonzdevelopment.online                      ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# ┌──────────────────────────────────────────────────────────────┐
+# │  Color Codes:                                               │
+# │    &0 Black    &1 Dark Blue   &2 Dark Green  &3 Dark Aqua   │
+# │    &4 Dark Red &5 Purple      &6 Gold        &7 Gray        │
+# │    &8 Dark Gray&9 Blue        &a Green       &b Aqua        │
+# │    &c Red      &d Light Purple&e Yellow      &f White       │
+# │                                                              │
+# │  Formatting:                                                 │
+# │    &k Obfuscated  &l Bold  &m Strikethrough                 │
+# │    &n Underline   &o Italic  &r Reset                        │
+# │                                                              │
+# │  Hex Colors (1.16+): &#RRGGBB                               │
+# │  Gradient (MiniMessage): <gradient:#ff0000:#0000ff>text</>  │
+# │                                                              │
+# │  Placeholders are enclosed in {curly braces}.               │
+# │  Do NOT remove placeholders unless you want them unused.    │
+# └──────────────────────────────────────────────────────────────┘
+
+# ── Global Prefix ──────────────────────────────────────────────
+# Applied before every message (unless the message starts with
+# "noprefix:" which strips the prefix).
+prefix: "&8[&6DZEconomy&8] &r"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                   BALANCE MESSAGES                          ║
+# ╚══════════════════════════════════════════════════════════════╝
 # Placeholders:
-# {prefix} - Plugin prefix
-# {player} - Player name
-# {currency} - Currency name
-# {symbol} - Currency symbol
-# {amount} - Amount
-# {balance} - Balance
-# {tax} - Tax amount
-# {total} - Total amount
-# {cooldown} - Cooldown time
-# {limit} - Limit amount
-# {color} - Currency color
-
-prefix: "&8[&6DZ&eEconomy&8]&r"
-
-general:
-  no-permission: "{prefix} &cYou don't have permission to do that!"
-  player-not-found: "{prefix} &cPlayer '&e{player}&c' not found!"
-  player-offline: "{prefix} &c{player} is not online!"
-  insufficient-funds: "{prefix} &cInsufficient {currency}! You have &e{symbol}{balance} &cbut need &e{symbol}{amount}"
-  insufficient-funds-tax: "{prefix} &cInsufficient funds for tax! You need &e{symbol}{amount} &c+ &e{symbol}{tax} &c= &e{symbol}{total}"
-  cooldown-active: "{prefix} &cPlease wait &e{cooldown}s &cbefore using this again!"
-  daily-limit-reached: "{prefix} &cDaily limit reached! You can {action} &e{limit} &ctimes per day"
-  invalid-amount: "{prefix} &cInvalid amount! Must be greater than 0"
-  invalid-currency: "{prefix} &cInvalid currency! Use: &emoney&c, &emobcoin&c, or &egem"
-  cannot-afford-self: "{prefix} &cYou cannot send currency to yourself!"
-  max-transaction-exceeded: "{prefix} &cTransaction amount exceeds maximum limit!"
-
-# Combat System Messages
-combat:
-  # Set to true to notify players when tagged in combat
-  notify-on-tag: false
-  # Messages
-  tagged-pvp: "{prefix} &c⚔ You are now in combat with &e{player}&c!"
-  tagged-pve: "{prefix} &c⚔ You are now in combat!"
-  target-in-combat: "{prefix} &c{player} is currently in combat! Request GUI blocked, but they can still accept via command."
-  exit-combat: "{prefix} &aYou are no longer in combat!"
+#   {amount}    – Formatted balance amount
+#   {currency}  – Currency display name (plural)
+#   {symbol}    – Currency symbol
+#   {name}      – Target player's name (for others)
 
 balance:
-  own: "{prefix} &7Your {currency} balance: {color}{symbol}{amount}"
-  other: "{prefix} &7{player}'s {currency}: {color}{symbol}{amount}"
+  # Shown when a player checks their own balance.
+  self: "&aYour {currency} balance&7: &e{symbol}{amount}"
+  # Shown when checking another player's balance.
+  others: "&a{name}'s {currency} balance&7: &e{symbol}{amount}"
+  # Shown when a disabled currency's balance is checked.
+  currency-disabled: "&cThe {currency} currency is currently disabled."
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                  SEND / RECEIVE MESSAGES                    ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Placeholders:
+#   {amount}    – Transaction amount
+#   {currency}  – Currency display name
+#   {symbol}    – Currency symbol
+#   {sender}    – Sender's name
+#   {receiver}  – Receiver's name
+#   {balance}   – Player's new balance after transaction
 
 send:
-  success-sender: "{prefix} &aSuccessfully sent &e{symbol}{amount} {currency} &ato &e{player}&a! &7Tax: &e{symbol}{tax}"
-  success-receiver: "{prefix} &aReceived &e{symbol}{amount} {currency} &afrom &e{player}&a!"
-  balance-update: "{prefix} &7New balance: {color}{symbol}{balance}"
+  # Shown to the sender after a successful transfer.
+  sender: "&aYou sent &e{symbol}{amount} {currency} &ato &f{receiver}&7. &8(New balance: {symbol}{balance})"
+  # Shown to the receiver when they receive currency.
+  receiver: "&aYou received &e{symbol}{amount} {currency} &afrom &f{sender}&7. &8(New balance: {symbol}{balance})"
+  # Confirmation message (if confirmation mode is enabled).
+  confirm: "&eType &a/{command} send {receiver} {amount} &eagain within 10 seconds to confirm."
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                 REQUEST MESSAGES                            ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Placeholders:
+#   {amount}    – Requested amount
+#   {currency}  – Currency display name
+#   {symbol}    – Currency symbol
+#   {sender}    – Requester's name
+#   {target}    – Target's name
+#   {timeout}   – Request timeout in seconds
+#   {id}        – Unique request ID
 
 request:
-  sent: "{prefix} &aRequest sent to &e{player} &afor &e{symbol}{amount} {currency}&a!"
-  received-chat: |
-    {prefix} &e{player} &7has requested &a{symbol}{amount} {currency} &7from you!
-    {prefix} &7Type &a/money accept &7or &c/money deny &7(&e120s&7)
-  accepted-accepter: "{prefix} &aRequest accepted! Sent &e{symbol}{amount}&a. &7Tax: &e{symbol}{tax}"
-  accepted-requester: "{prefix} &a{player} &aaccepted your request! Received &e{symbol}{amount}&a!"
-  denied-denier: "{prefix} &cRequest denied!"
-  denied-requester: "{prefix} &c{player} &cdenied your request!"
-  expired: "{prefix} &cRequest expired!"
-  expired-other: "{prefix} &cYour request to &e{player} &chas expired!"
-  no-pending: "{prefix} &cYou have no pending requests!"
-  already-pending: "{prefix} &cYou already have a pending request with this player!"
-  cannot-request-self: "{prefix} &cYou cannot request currency from yourself!"
+  # Shown to the sender when a request is sent.
+  sent: "&aRequest sent to &f{target} &afor &e{symbol}{amount} {currency}&7. &8(Expires in {timeout}s)"
+  # Shown to the target when they receive a request.
+  received: "&f{sender} &ais requesting &e{symbol}{amount} {currency}&a. &7Use &a/{command} accept {id} &7or &c/{command} deny {id}"
+  # Shown to the sender when their request is accepted.
+  accepted-sender: "&a{target} &aaccepted your request for &e{symbol}{amount} {currency}&7."
+  # Shown to the target when they accept a request.
+  accepted-target: "&aYou accepted &f{sender}'s &arequest for &e{symbol}{amount} {currency}&7."
+  # Shown to the sender when their request is denied.
+  denied-sender: "&c{target} &cdenied your request for &e{symbol}{amount} {currency}&7."
+  # Shown to the target when they deny a request.
+  denied-target: "&cYou denied &f{sender}'s &crequest for &e{symbol}{amount} {currency}&7."
+  # Shown when a request expires.
+  expired: "&cYour request for &e{symbol}{amount} {currency} &cto &f{target} &chas expired."
+  # Shown when the target sees an expired request.
+  expired-target: "&cThe request from &f{sender} &chas expired."
+  # Shown when a player has too many pending requests.
+  max-pending: "&cYou have too many pending requests! Wait for some to expire or be resolved."
+  # Shown when trying to accept/deny a request that doesn't exist or has expired.
+  not-found: "&cRequest not found. It may have expired or been resolved."
+  # Shown when trying to accept your own request.
+  cannot-accept-own: "&cYou cannot accept your own request!"
+  # Shown when a request is cancelled because a player quit.
+  cancelled-quit: "&cThe payment request involving &f{player} &chas been cancelled because they disconnected."
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                  ADMIN MESSAGES                             ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Placeholders:
+#   {amount}    – Amount involved
+#   {currency}  – Currency display name
+#   {symbol}    – Currency symbol
+#   {name}      – Target player's name
+#   {balance}   – Player's new balance after operation
 
 admin:
-  add-success: "{prefix} &aAdded &e{symbol}{amount} {currency} &ato &e{player}&a. New balance: &e{symbol}{balance}"
-  add-notify: "{prefix} &aAn admin added &e{symbol}{amount} {currency} &ato your account!"
-  reload-success: "{prefix} &aConfiguration reloaded successfully!"
-  update-checking: "{prefix} &eChecking for updates..."
-  update-found: "{prefix} &e&lUPDATE AVAILABLE! &av{version}"
-  update-downloading: "{prefix} &eDownloading update..."
-  update-success: "{prefix} &a&l✓ Update downloaded! Restart to apply."
-  update-failed: "{prefix} &cUpdate failed: {error}"
-  update-latest: "{prefix} &aYou are on the latest version!"
+  add:
+    # Shown to the admin when they add currency.
+    sender: "&aAdded &e{symbol}{amount} {currency} &ato &f{name}'s &abalance."
+    # Shown to the player who received currency.
+    target: "&aAn admin added &e{symbol}{amount} {currency} &ato your balance. &8(New balance: {symbol}{balance})"
+  remove:
+    # Shown to the admin when they remove currency.
+    sender: "&cRemoved &e{symbol}{amount} {currency} &cfrom &f{name}'s &cbalance."
+    # Shown to the player who lost currency.
+    target: "&cAn admin removed &e{symbol}{amount} {currency} &cfrom your balance. &8(New balance: {symbol}{balance})"
+  set:
+    # Shown to the admin when they set a player's balance.
+    sender: "&aSet &f{name}'s &a{currency} balance to &e{symbol}{amount}&7."
+    # Shown to the player whose balance was set.
+    target: "&aAn admin set your {currency} balance to &e{symbol}{amount}&7."
 
-conversion:
-  success: "{prefix} &aConverted &e{symbol1}{amount1} {currency1} &ato &e{symbol2}{amount2} {currency2}&a! &7Tax: &e{symbol1}{tax}"
-  same-currency: "{prefix} &cCannot convert a currency to itself!"
-  disabled: "{prefix} &cCurrency conversion is currently disabled!"
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                   ERROR MESSAGES                            ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Placeholders:
+#   {amount}       – The invalid/insufficient amount
+#   {currency}     – Currency display name
+#   {symbol}       – Currency symbol
+#   {name}         – Target player's name
+#   {cooldown}     – Remaining cooldown time
+#   {limit}        – The daily limit
+#   {remaining}    – Remaining daily allowance
+#   {min}          – Minimum transaction amount
+#   {max}          – Maximum transaction amount
+#   {time}         – Combat tag remaining time
+#   {permission}   – Required permission node
+
+error:
+  # General no-permission message.
+  no-permission: "&cYou don't have permission to do that! &7({permission})"
+  # Player not found in the database.
+  player-not-found: "&cPlayer &f{name} &cnot found. Have they joined the server before?"
+  # Sender has insufficient funds.
+  insufficient-funds: "&cYou don't have enough {currency}! &7(Balance: {symbol}{amount})"
+  # Invalid amount (negative, zero, or non-numeric).
+  invalid-amount: "&cInvalid amount! Must be a positive number."
+  # Amount below minimum transaction threshold.
+  below-minimum: "&cAmount must be at least &e{symbol}{min} {currency}&c."
+  # Amount exceeds maximum transaction limit.
+  above-maximum: "&cAmount exceeds the maximum transaction limit of &e{symbol}{max} {currency}&c."
+  # Daily transfer limit reached.
+  daily-limit-reached: "&cYou've reached your daily {currency} transfer limit! &7(Limit: {symbol}{limit}, Remaining: {symbol}{remaining})"
+  # Transfer cooldown active.
+  cooldown: "&cPlease wait &e{cooldown}s &cbefore transferring {currency} again."
+  # Player is combat tagged.
+  combat-tagged: "&cYou can't do that while combat-tagged! &7({time}s remaining)"
+  # Self-transfer attempt.
+  cannot-send-self: "&cYou can't send {currency} to yourself!"
+  # Currency is disabled.
+  currency-disabled: "&cThe {currency} currency is currently disabled."
+  # Console cannot use this command.
+  console-only-player: "&cThis command can only be used by players."
+  # Command usage error.
+  usage: "&cUsage: {usage}"
+  # Unknown sub-command.
+  unknown-subcommand: "&cUnknown sub-command. Use &e/{command} help &cfor a list of commands."
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║               ECONOMY COMMAND MESSAGES                      ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+economy:
+  # ── Reload ──────────────────────────────────────────────────
+  reload:
+    success: "&aConfiguration reloaded successfully!"
+    failed: "&cFailed to reload configuration! Check the console for errors."
+
+  # ── Version ─────────────────────────────────────────────────
+  version: "&6DZEconomy &7v&e{version} &7by &6DemonZ Development"
+
+  # ── Info ────────────────────────────────────────────────────
+  # Placeholders: {version}, {storage}, {currencies}, {players}, {uptime}
+  info:
+    - "&8&m────────────────────────────────────"
+    - "&6&l  DZEconomy &7v&e{version}"
+    - "&8&m────────────────────────────────────"
+    - "&7  Storage: &f{storage}"
+    - "&7  Currencies: &f{currencies}"
+    - "&7  Tracked Players: &f{players}"
+    - "&7  Uptime: &f{uptime}"
+    - "&8&m────────────────────────────────────"
+
+  # ── Status ──────────────────────────────────────────────────
+  # Placeholders: {storage}, {storage_latency}, {cache_size}, {auto_save}, {last_save}
+  status:
+    - "&8&m────────────────────────────────────"
+    - "&6&l  Plugin Status"
+    - "&8&m────────────────────────────────────"
+    - "&7  Storage: &f{storage} &7(&a{storage_latency}ms&7)"
+    - "&7  Cache Size: &f{cache_size} players"
+    - "&7  Auto-Save: &f{auto_save}s"
+    - "&7  Last Save: &f{last_save}"
+    - "&8&m────────────────────────────────────"
+
+  # ── Convert ─────────────────────────────────────────────────
+  # Placeholders: {from_currency}, {to_currency}, {from_amount}, {to_amount}, {fee}, {rate}
+  convert:
+    success: "&aConverted &e{from_amount} {from_currency} &ato &e{to_amount} {to_currency}&7. &8(Fee: {fee}%)"
+    insufficient: "&cYou don't have enough {from_currency} to convert!"
+    disabled: "&cCurrency conversion is not enabled."
+    same-currency: "&cYou can't convert {currency} to itself!"
+
+  # ── Migrate ─────────────────────────────────────────────────
+  # Placeholders: {from}, {to}, {count}
+  migrate:
+    start: "&eStarting migration from &f{from} &eto &f{to}&e..."
+    success: "&aMigration complete! &7Migrated &f{count} &7player records."
+    failed: "&cMigration failed! Check the console for details."
+    in-progress: "&cA migration is already in progress! Please wait."
+    same-backend: "&cYou're already using {backend} storage!"
+
+  # ── Baltop (Admin) ──────────────────────────────────────────
+  baltop:
+    header: "&6&l  Global Balance Leaderboard"
+    entry: "&e#{rank} &7- &f{name} &8» &a{total}"
+    footer: "&7Page &f{page}&7/&f{pages}"
+
+  # ── Payall ──────────────────────────────────────────────────
+  # Placeholders: {amount}, {currency}, {symbol}, {count}
+  payall:
+    success: "&aPaid &e{symbol}{amount} {currency} &ato &f{count} &aplayers!"
+    broadcast: "&aYou received &e{symbol}{amount} {currency} &afrom a server payout!"
+    cooldown: "&cPayall is on cooldown! Please wait &e{time}s&c."
+    no-players: "&cNo online players to pay!"
+
+  # ── Credits ─────────────────────────────────────────────────
+  credits:
+    - "&8&m────────────────────────────────────"
+    - "&6&l  DZEconomy Credits"
+    - "&8&m────────────────────────────────────"
+    - "&7  Developed by: &6DemonZ Development"
+    - "&7  Version: &e{version}"
+    - "&7  Wiki: &bhttps://wiki.demonzdevelopment.online/dzeconomy"
+    - "&7  Discord: &bhttps://discord.demonzdevelopment.online"
+    - "&7  Modrinth: &bhttps://modrinth.com/plugin/dzeconomy"
+    - "&8&m────────────────────────────────────"
+
+  # ── Backup ──────────────────────────────────────────────────
+  # Placeholders: {file}
+  backup:
+    success: "&aBackup created successfully! &7({file})"
+    failed: "&cBackup failed! Check the console for details."
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                 COMBAT TAG MESSAGES                         ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Placeholders:
+#   {time}  – Remaining combat tag duration
+#   {killer} – Name of the killer
+#   {victim} – Name of the victim
+
+combat-tag:
+  # Shown when a player gets combat tagged.
+  tagged: "&cYou have been combat-tagged! &7Do not log out for {time}s."
+  # Shown when combat tag expires.
+  expired: "&aYou are no longer combat-tagged."
+  # Action bar format (also set in config.yml).
+  action-bar: "&c&l⚔ &eCombat Tag &7- &c{time}s remaining"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                   PVP MESSAGES                              ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Placeholders:
+#   {killer}    – Killer's name
+#   {victim}    – Victim's name
+#   {amount}    – Amount lost/dropped
+#   {currency}  – Currency display name
+#   {symbol}    – Currency symbol
 
 pvp:
-  killer: "{prefix} &aKilled &e{player}&a! Received: &a{money_symbol}{money}&7, &6{mobcoin_symbol}{mobcoin}&7, &b{gem_symbol}{gem}"
-  victim: "{prefix} &cKilled by &e{player}&c! You lost all your currencies!"
-  broadcast: "{prefix} &e{killer} &7killed &e{victim} &7and stole: &a{money_symbol}{money}&7, &6{mobcoin_symbol}{mobcoin}&7, &b{gem_symbol}{gem}"
+  # Shown to the victim when they lose currency.
+  victim-loss: "&cYou lost &e{symbol}{amount} {currency} &cto &f{killer}&c!"
+  # Shown to the killer when they gain currency.
+  killer-gain: "&aYou gained &e{symbol}{amount} {currency} &afrom killing &f{victim}&a!"
+  # Broadcast message (for high-value kills).
+  broadcast: "&6⚔ &f{killer} &6killed &f{victim} &6and looted &e{symbol}{amount} {currency}&6!"
 
-mob-kill:
-  reward: "{prefix} &7Killed &e{mob}&7: &6+{amount} MobCoin"
-  reward-boss: "{prefix} &e&lBOSS KILL! &7Killed &e{mob}&7: &6+{amount} MobCoin &7(&e+{bonus}% &7rank bonus)"
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                UPDATE NOTIFICATIONS                         ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Placeholders:
+#   {current}  – Current plugin version
+#   {latest}   – Latest available version
+#   {link}     – Download link
 
-gui:
-  request:
-    title: "&e{currency} Request from {player}"
-    info-lore:
-      - "&7Requester: &a{player}"
-      - "&7Amount: &a{symbol}{amount}"
-      - "&7You will send: &c{symbol}{total}"
-      - "&7They receive: &a{symbol}{amount}"
-      - "&7Tax: &e{symbol}{tax} &7(&e{tax_percent}%&7)"
-      - "&7Time Remaining: &c{time}s"
-    accept-name: "&a&lACCEPT"
-    deny-name: "&c&lDENY"
-    timeout-message: "{prefix} &cRequest GUI closed - timeout!"
+update:
+  # Shown to admins on join when an update is available.
+  notification: "&6[DZEconomy] &eA new version is available! &7v{current} → v{latest}"
+  # Hover/click prompt.
+  download: "&7Click here to download: &b{link}"
+  # Console log format.
+  console: "[DZEconomy] New version available! Current: v{current}, Latest: v{latest}. Download: {link}"
+  # Shown when already on the latest version.
+  up-to-date: "&aDZEconomy is up to date! &7(v{current})"
 
-help:
-  money: |
-    &8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&r
-    &a&lMoney Commands
-    &8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&r
-    &a/money balance &7[player] &8- &7Check balance
-    &a/money send &7<player> <amount> &8- &7Send money
-    &a/money request &7<player> <amount> &8- &7Request money
-    &a/money accept &8- &7Accept pending request
-    &a/money deny &8- &7Deny pending request
-    {admin_commands}&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&r
-  
-  money-admin: |
-    &c/money add &7<player> <amount> &8- &7Add money (Admin)
-  
-  mobcoin: |
-    &8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&r
-    &6&lMobCoin Commands
-    &8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&r
-    &a/mobcoin balance &7[player] &8- &7Check balance
-    &a/mobcoin send &7<player> <amount> &8- &7Send mobcoins
-    &a/mobcoin request &7<player> <amount> &8- &7Request mobcoins
-    &a/mobcoin accept &8- &7Accept pending request
-    &a/mobcoin deny &8- &7Deny pending request
-    {admin_commands}&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&r
-  
-  mobcoin-admin: |
-    &c/mobcoin add &7<player> <amount> &8- &7Add mobcoins (Admin)
-  
-  gem: |
-    &8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&r
-    &b&lGem Commands
-    &8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&r
-    &a/gem balance &7[player] &8- &7Check balance
-    &a/gem send &7<player> <amount> &8- &7Send gems
-    &a/gem request &7<player> <amount> &8- &7Request gems
-    &a/gem accept &8- &7Accept pending request
-    &a/gem deny &8- &7Deny pending request
-    {admin_commands}&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&r
-  
-  gem-admin: |
-    &c/gem add &7<player> <amount> &8- &7Add gems (Admin)
-  
-  economy: |
-    &8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&r
-    &e&lEconomy Commands
-    &8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&r
-    &a/economy convert &7<from> <to> <amount> &8- &7Convert currencies
-    &7  Example: &e/economy convert money gem 10000
-    {admin_commands}&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&r
-  
-  economy-admin: |
-    &c/economy reload &8- &7Reload configuration (Admin)
-    &c/economy version &8- &7Check for updates
-    &c/economy update <version|previous|next|latest|auto> &8- &7Update plugin (Admin)
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                  WELCOME MESSAGES                           ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Placeholders:
+#   {name}      – Player's name
+#   {currency}  – Currency display name
+#   {symbol}    – Currency symbol
+#   {amount}    – Starting balance amount
 
 welcome:
-  new-player: |
-    {prefix} &aWelcome to the server, &e{player}&a!
-    {prefix} &7You've received:
-    {prefix} &a  • $50,000 Money
-    {prefix} &6  • 500 MobCoins
-    {prefix} &b  • 5 Gems
+  # Shown when a player joins for the very first time.
+  first-join: "&aWelcome &f{name} &ato the server! You started with &e{symbol}{amount} {currency}&a."
+  # Shown when a returning player joins (optional).
+  returning: "&aWelcome back, &f{name}&a! Your balances are ready."
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                     GUI MESSAGES                            ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Placeholders:
+#   {currency}  – Currency display name
+#   {symbol}    – Currency symbol
+#   {amount}    – Balance amount
+#   {page}      – Current page number
+#   {pages}     – Total pages
+
+gui:
+  # Main economy GUI title.
+  title: "&6DZEconomy"
+  # Balance display item name.
+  balance-item: "&a{currency} Balance: &e{symbol}{amount}"
+  # Baltop GUI title.
+  baltop-title: "&6Top {currency} Balances"
+  # Previous page button.
+  previous-page: "&a← Previous Page"
+  # Next page button.
+  next-page: "&aNext Page →"
+  # Current page indicator.
+  page-indicator: "&7Page {page}/{pages}"
+  # Close button.
+  close: "&cClose"
+  # Back button.
+  back: "&a← Back"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                  BALTOP FORMATTING                          ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Placeholders:
+#   {rank}      – Player's position (1, 2, 3, ...)
+#   {name}      – Player's name
+#   {amount}    – Formatted balance
+#   {currency}  – Currency display name
+#   {symbol}    – Currency symbol
+#   {page}      – Current page
+#   {pages}     – Total pages
+#   {command}   – Command used to access baltop
+#   {next_page} – Next page number
+
+baltop:
+  header: "&8&m────────────────────────────────────&r\n&6&l  Top {currency} Balances\n&8&m────────────────────────────────────&r"
+  # Format for top 3 players (special highlighting).
+  entry-top: "&6#{rank} &7- &f{name} &8» &e{symbol}{amount}"
+  # Format for all other entries.
+  entry: "&7#{rank} &8- &7{name} &8» &a{symbol}{amount}"
+  # Shown for the player's own ranking (appended at the bottom).
+  own-rank: "&7Your rank: &e#{rank} &7with &a{symbol}{amount} {currency}"
+  footer: "&8&m────────────────────────────────────&r\n&7Page &f{page}&7/&f{pages} &8| &7Use &f/{command} top {next_page} &7for next page"
+  # When no players have balances.
+  empty: "&7No balances to display yet."
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                   HELP MESSAGES                             ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Placeholders:
+#   {command}   – Base command name (money, mobcoin, gem, economy)
+#   {currency}  – Currency display name
+
+help:
+  # ── Currency Command Help ───────────────────────────────────
+  currency:
+    - "&8&m────────────────────────────────────"
+    - "&6&l  {currency} Commands"
+    - "&8&m────────────────────────────────────"
+    - "&e/{command} balance &7- Check your balance"
+    - "&e/{command} balance <player> &7- Check another player's balance"
+    - "&e/{command} send <player> <amount> &7- Send {currency}"
+    - "&e/{command} request <player> <amount> &7- Request {currency}"
+    - "&e/{command} accept <id> &7- Accept a request"
+    - "&e/{command} deny <id> &7- Deny a request"
+    - "&e/{command} top [page] &7- View leaderboard"
+    - "&8&m────────────────────────────────────"
+
+  # ── Admin Command Help ──────────────────────────────────────
+  admin:
+    - "&8&m────────────────────────────────────"
+    - "&6&l  Economy Admin Commands"
+    - "&8&m────────────────────────────────────"
+    - "&e/economy info &7- View plugin information"
+    - "&e/economy version &7- View plugin version"
+    - "&e/economy reload &7- Reload configuration"
+    - "&e/economy status &7- View plugin status"
+    - "&e/economy baltop [page] &7- Global leaderboard"
+    - "&e/economy payall <currency> <amount> &7- Pay all online players"
+    - "&e/economy convert <from> <to> <amount> &7- Convert currencies"
+    - "&e/economy migrate <backend> &7- Migrate storage"
+    - "&e/economy backup &7- Create a data backup"
+    - "&e/economy credits &7- View credits"
+    - "&8&m────────────────────────────────────"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                  MOB REWARD MESSAGES                        ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Placeholders:
+#   {amount}    – Reward amount
+#   {currency}  – Currency display name
+#   {mob}       – Mob type name
+#   {multiplier} – Active multiplier
+
+mob-rewards:
+  # Shown when a player earns a mob reward.
+  reward: "&a+{amount} {currency} &7(from killing {mob})"
+  # Shown when a multi-kill bonus is applied.
+  bonus: "&a+{amount} {currency} &7(multi-kill bonus! x{multiplier})"
+  # Shown when a mob is killed in a blacklisted world.
+  blacklisted-world: ""
+  # Shown when a spawner mob is killed and rewards are disabled.
+  spawner-mob: ""
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                    RANK MESSAGES                            ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Placeholders:
+#   {rank}        – Rank display name
+#   {multiplier}  – Rank multiplier
+#   {currency}    – Currency display name
+
+rank:
+  # Shown when a player's rank multiplier is applied.
+  multiplier-applied: "&7Rank bonus: &ax{multiplier} {currency} multiplier (&f{rank}&7)"
+  # Shown in balance display for rank info.
+  info-line: "&7Rank: &6{rank} &7(&ax{multiplier} multiplier&7)"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                  MISC MESSAGES                              ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+misc:
+  # Shown when data is being saved on shutdown.
+  saving: "&7Saving economy data..."
+  # Shown when data save is complete.
+  saved: "&aEconomy data saved successfully."
+  # Shown when a feature is not yet implemented.
+  not-implemented: "&cThis feature is not yet implemented."
+  # Shown when the plugin is disabled.
+  plugin-disabled: "&cDZEconomy is currently disabled."
