@@ -493,3 +493,11 @@ Create a manual backup of all economy data.
 <p align="center">
   See <a href="Permissions.md">Permissions</a> for the full permission node reference.
 </p>
+
+---
+<p align="center">
+  <b>DZEconomy Wiki</b> • Developed by <a href="https://github.com/DemonZ-Development">DemonZ Development</a><br>
+  <a href="https://github.com/DemonZ-Development/DZEconomy">GitHub Repository</a> | 
+  <a href="https://discord.com/invite/GYsTt96ypf">Discord Support</a> | 
+  <a href="https://github.com/DemonZ-Development/DZEconomy/wiki/Home">Wiki Home</a>
+</p>

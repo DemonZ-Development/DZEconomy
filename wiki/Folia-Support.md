@@ -210,3 +210,11 @@ If DZEconomy performs worse on Folia than Paper:
 <p align="center">
   See <a href="Version-Coverage.md">Version Coverage</a> for supported Folia versions.
 </p>
+
+---
+<p align="center">
+  <b>DZEconomy Wiki</b> • Developed by <a href="https://github.com/DemonZ-Development">DemonZ Development</a><br>
+  <a href="https://github.com/DemonZ-Development/DZEconomy">GitHub Repository</a> | 
+  <a href="https://discord.com/invite/GYsTt96ypf">Discord Support</a> | 
+  <a href="https://github.com/DemonZ-Development/DZEconomy/wiki/Home">Wiki Home</a>
+</p>

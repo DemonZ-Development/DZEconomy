@@ -353,3 +353,11 @@ Every message in DZEconomy can be customized. Key sections:
 <p align="center">
   See <a href="Commands.md">Commands</a> and <a href="Permissions.md">Permissions</a> for related references.
 </p>
+
+---
+<p align="center">
+  <b>DZEconomy Wiki</b> • Developed by <a href="https://github.com/DemonZ-Development">DemonZ Development</a><br>
+  <a href="https://github.com/DemonZ-Development/DZEconomy">GitHub Repository</a> | 
+  <a href="https://discord.com/invite/GYsTt96ypf">Discord Support</a> | 
+  <a href="https://github.com/DemonZ-Development/DZEconomy/wiki/Home">Wiki Home</a>
+</p>

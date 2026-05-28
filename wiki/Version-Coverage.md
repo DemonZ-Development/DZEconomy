@@ -202,3 +202,11 @@ These hybrid servers (Bukkit + Forge/Mod loader) may work but are **not official
 <p align="center">
   See <a href="Folia-Support.md">Folia Support</a> for Folia-specific details and <a href="Installation.md">Installation</a> for setup instructions.
 </p>
+
+---
+<p align="center">
+  <b>DZEconomy Wiki</b> • Developed by <a href="https://github.com/DemonZ-Development">DemonZ Development</a><br>
+  <a href="https://github.com/DemonZ-Development/DZEconomy">GitHub Repository</a> | 
+  <a href="https://discord.com/invite/GYsTt96ypf">Discord Support</a> | 
+  <a href="https://github.com/DemonZ-Development/DZEconomy/wiki/Home">Wiki Home</a>
+</p>

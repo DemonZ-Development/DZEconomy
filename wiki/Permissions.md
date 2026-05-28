@@ -204,3 +204,11 @@ This parent permission grants access to all admin sub-permissions:
 <p align="center">
   See <a href="Commands.md">Commands</a> for command usage and <a href="Ranks.md">Ranks</a> for rank-specific perks.
 </p>
+
+---
+<p align="center">
+  <b>DZEconomy Wiki</b> • Developed by <a href="https://github.com/DemonZ-Development">DemonZ Development</a><br>
+  <a href="https://github.com/DemonZ-Development/DZEconomy">GitHub Repository</a> | 
+  <a href="https://discord.com/invite/GYsTt96ypf">Discord Support</a> | 
+  <a href="https://github.com/DemonZ-Development/DZEconomy/wiki/Home">Wiki Home</a>
+</p>

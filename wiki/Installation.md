@@ -312,3 +312,11 @@ DZEconomy v2.0.0 includes an **automatic configuration migration system**. When 
 <p align="center">
   Need more help? Join our <a href="https://discord.com/invite/GYsTt96ypf">Discord</a> for support!
 </p>
+
+---
+<p align="center">
+  <b>DZEconomy Wiki</b> • Developed by <a href="https://github.com/DemonZ-Development">DemonZ Development</a><br>
+  <a href="https://github.com/DemonZ-Development/DZEconomy">GitHub Repository</a> | 
+  <a href="https://discord.com/invite/GYsTt96ypf">Discord Support</a> | 
+  <a href="https://github.com/DemonZ-Development/DZEconomy/wiki/Home">Wiki Home</a>
+</p>

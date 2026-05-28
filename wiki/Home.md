@@ -117,3 +117,11 @@ DZEconomy is licensed under the **GNU General Public License v3.0**. See [LICENS
 <p align="center">
   <strong>DZEconomy v2.0.0</strong> — Made with ❤️ by <a href="https://demonzdevelopment.online">DemonZ Development</a>
 </p>
+
+---
+<p align="center">
+  <b>DZEconomy Wiki</b> • Developed by <a href="https://github.com/DemonZ-Development">DemonZ Development</a><br>
+  <a href="https://github.com/DemonZ-Development/DZEconomy">GitHub Repository</a> | 
+  <a href="https://discord.com/invite/GYsTt96ypf">Discord Support</a> | 
+  <a href="https://github.com/DemonZ-Development/DZEconomy/wiki/Home">Wiki Home</a>
+</p>
