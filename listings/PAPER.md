@@ -105,7 +105,7 @@ All database operations run asynchronously and never block the main thread (or r
 
 ## bStats
 
-[![bStats](https://bstats.org/signatures/bukkit/DZEconomy.svg)](https://bstats.org/plugin/bukkit/DZEconomy/24898)
+[![bStats](https://bstats.org/signatures/bukkit/DZEconomy.svg)](https://bstats.org/plugin/bukkit/DZEconomy/31625)
 
 ---
 

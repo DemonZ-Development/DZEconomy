@@ -100,7 +100,7 @@ public class DZEconomy extends JavaPlugin {
         
         // Initialize bStats (wrapped in try-catch to allow MockBukkit tests to pass without shadow relocation)
         try {
-            int pluginId = 24898;
+            int pluginId = 31625;
             Metrics metrics = new Metrics(this, pluginId);
             getLogger().info("bStats metrics enabled.");
         } catch (IllegalStateException e) {
