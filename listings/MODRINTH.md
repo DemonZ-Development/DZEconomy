@@ -1,4 +1,4 @@
-![DZEconomy Banner](../assets/bannerv2.png)
+![DZEconomy Banner](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/bannerv2.png)
 
 # 💰 DZEconomy — Multi-Currency Economy Plugin
 
@@ -46,11 +46,11 @@
 
 | | |
 |---|---|
-| ![Balance Display](../assets/screenshots/balance_display.png) | ![Baltop Leaderboard](../assets/screenshots/baltop_leaderboard.png) |
+| ![Balance Display](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/balance_display.png) | ![Baltop Leaderboard](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/baltop_leaderboard.png) |
 | *Balance Display* | *Baltop Leaderboard* |
-| ![Combat Tag](../assets/screenshots/combat_tag.png) | ![Mob Reward](../assets/screenshots/mob_reward.png) |
+| ![Combat Tag](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/combat_tag.png) | ![Mob Reward](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/mob_reward.png) |
 | *Combat Tag Indicator* | *Mob Reward Notification* |
-| ![Payment Request](../assets/screenshots/payment_request.png) | ![Admin Status](../assets/screenshots/admin_status.png) |
+| ![Payment Request](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/payment_request.png) | ![Admin Status](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/admin_status.png) |
 | *Payment Request* | *Admin Status Panel* |
 
 ---
