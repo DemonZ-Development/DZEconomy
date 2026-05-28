@@ -173,23 +173,7 @@ public class DZEconomy extends JavaPlugin {
     }
     
     private void printStartupBanner() {
-        String[] banner = {
-            "",
-            ColorUtil.translate("&a  ____             ____&2___  __"),
-            ColorUtil.translate("&a |  _ \\ _ __ ___ |__ &2/ _ \\|  \\/  |"),
-            ColorUtil.translate("&a | | | | '__/ _ \\  &2| | | | |\\/| |"),
-            ColorUtil.translate("&a | |_| | | | (_) | &2| |_| | |  | |"),
-            ColorUtil.translate("&a |____/|_|  \\___/  &2\\___/|_|  |_|"),
-            "",
-            ColorUtil.translate("&7  Version &a2.1.0 &7| &7By &aDemonZ Development"),
-            ColorUtil.translate("&7  Wiki: &ahttps://wiki.demonzdevelopment.online/dzeconomy"),
-            ColorUtil.translate("&7  Modrinth: &ahttps://modrinth.com/plugin/dzeconomy"),
-            ColorUtil.translate("&7  Thank you for choosing DZEconomy! &a<3"),
-            ""
-        };
-        for (String line : banner) {
-            Bukkit.getConsoleSender().sendMessage(line);
-        }
+        getLogger().info("Starting DZEconomy v2.1.0 by DemonZ Development");
     }
     
     private boolean initializeStorage() {
