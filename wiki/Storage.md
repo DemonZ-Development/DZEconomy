@@ -385,9 +385,7 @@ For very large databases (>10K players):
 </p>
 
 ---
-<p align="center">
-  <b>DZEconomy Wiki</b> • Developed by <a href="https://github.com/DemonZ-Development">DemonZ Development</a><br>
-  <a href="https://github.com/DemonZ-Development/DZEconomy">GitHub Repository</a> | 
-  <a href="https://discord.com/invite/GYsTt96ypf">Discord Support</a> | 
-  <a href="https://github.com/DemonZ-Development/DZEconomy/wiki/Home">Wiki Home</a>
-</p>
+### 📖 Quick Links
+[**DZEconomy GitHub**](https://github.com/DemonZ-Development/DZEconomy) • [**Discord Support**](https://discord.com/invite/GYsTt96ypf) • [**Wiki Home**](https://github.com/DemonZ-Development/DZEconomy/wiki/Home)
+
+*Developed by **[DemonZ Development](https://github.com/DemonZ-Development)***

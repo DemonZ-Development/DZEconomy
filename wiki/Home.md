@@ -86,11 +86,11 @@ Players can immediately use:
 
 | | |
 |---|---|
-| ![Balance Display](../assets/screenshots/balance_display.png) | ![Baltop Leaderboard](../assets/screenshots/baltop_leaderboard.png) |
+| ![Balance Display](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/balance_display.png) | ![Baltop Leaderboard](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/baltop_leaderboard.png) |
 | *Balance Display* | *Baltop Leaderboard* |
-| ![Combat Tag Indicator](../assets/screenshots/combat_tag.png) | ![Mob Reward Notification](../assets/screenshots/mob_reward.png) |
+| ![Combat Tag Indicator](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/combat_tag.png) | ![Mob Reward Notification](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/mob_reward.png) |
 | *Combat Tag Indicator* | *Mob Reward Notification* |
-| ![Payment Request](../assets/screenshots/payment_request.png) | ![Admin Status Panel](../assets/screenshots/admin_status.png) |
+| ![Payment Request](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/payment_request.png) | ![Admin Status Panel](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/admin_status.png) |
 | *Payment Request GUI* | *Admin Status Panel* |
 
 ---
@@ -119,9 +119,7 @@ DZEconomy is licensed under the **GNU General Public License v3.0**. See [LICENS
 </p>
 
 ---
-<p align="center">
-  <b>DZEconomy Wiki</b> • Developed by <a href="https://github.com/DemonZ-Development">DemonZ Development</a><br>
-  <a href="https://github.com/DemonZ-Development/DZEconomy">GitHub Repository</a> | 
-  <a href="https://discord.com/invite/GYsTt96ypf">Discord Support</a> | 
-  <a href="https://github.com/DemonZ-Development/DZEconomy/wiki/Home">Wiki Home</a>
-</p>
+### 📖 Quick Links
+[**DZEconomy GitHub**](https://github.com/DemonZ-Development/DZEconomy) • [**Discord Support**](https://discord.com/invite/GYsTt96ypf) • [**Wiki Home**](https://github.com/DemonZ-Development/DZEconomy/wiki/Home)
+
+*Developed by **[DemonZ Development](https://github.com/DemonZ-Development)***
