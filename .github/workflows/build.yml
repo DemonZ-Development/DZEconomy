@@ -31,14 +31,14 @@ jobs:
       - name: Upload Plugin JAR
         uses: actions/upload-artifact@v4
         with:
-          name: DZEconomy-2.0.0.jar
-          path: build/libs/DZEconomy-2.0.0.jar
+          name: DZEconomy-Plugin-JAR
+          path: build/libs/DZEconomy-*.jar
           compression-level: 0
           if-no-files-found: error
 
       - name: Build Summary
         run: |
-          echo "DZEconomy v2.0.0 Build Complete!"
+          echo "DZEconomy Build Complete!"
           echo "Java: Temurin JDK 21"
           echo "OS: Ubuntu 24.04"
-          echo "Artifact: DZEconomy-v2.0.0.jar"
+          echo "Artifact: $(basename build/libs/DZEconomy-*.jar)"
