@@ -336,11 +336,6 @@ public final class FoliaAdapter {
                         .getMethod("cancelTasks", Plugin.class)
                         .invoke(globalScheduler, plugin);
 
-                Object regionScheduler = getRegionSchedulerMethod.invoke(null);
-                regionScheduler.getClass()
-                        .getMethod("cancelTasks", Plugin.class)
-                        .invoke(regionScheduler, plugin);
-
                 try {
                     Object asyncScheduler = Bukkit.class.getMethod("getAsyncScheduler").invoke(null);
                     asyncScheduler.getClass()
