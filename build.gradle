@@ -49,7 +49,6 @@ shadowJar {
 
     relocate 'com.google.gson', 'online.demonzdevelopment.dzeconomy.libs.gson'
     relocate 'com.zaxxer.hikari', 'online.demonzdevelopment.dzeconomy.libs.hikari'
-    relocate 'org.sqlite', 'online.demonzdevelopment.dzeconomy.libs.sqlite'
     relocate 'org.slf4j', 'online.demonzdevelopment.dzeconomy.libs.slf4j'
     relocate 'org.bstats', 'online.demonzdevelopment.dzeconomy.libs.bstats'
     relocate 'com.github.benmanes.caffeine', 'online.demonzdevelopment.dzeconomy.libs.caffeine'

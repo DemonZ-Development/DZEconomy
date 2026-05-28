@@ -197,10 +197,6 @@
                                     <shadedPattern>online.demonzdevelopment.dzeconomy.libs.hikari</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>org.sqlite</pattern>
-                                    <shadedPattern>online.demonzdevelopment.dzeconomy.libs.sqlite</shadedPattern>
-                                </relocation>
-                                <relocation>
                                     <pattern>org.slf4j</pattern>
                                     <shadedPattern>online.demonzdevelopment.dzeconomy.libs.slf4j</shadedPattern>
                                 </relocation>

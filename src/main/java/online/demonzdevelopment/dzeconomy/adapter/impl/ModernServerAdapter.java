@@ -13,7 +13,6 @@ public class ModernServerAdapter implements ServerAdapter {
     private static final Logger LOGGER = Logger.getLogger("DZEconomy");
 
     private static final String[] DRIVER_CANDIDATES = {
-        "online.demonzdevelopment.dzeconomy.libs.sqlite.JDBC",
         "org.sqlite.JDBC"
     };
 
