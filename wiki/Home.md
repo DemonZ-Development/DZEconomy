@@ -1,3 +1,5 @@
+![DZEconomy Banner](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/bannerv2-release.png)
+
 # 🏦 DZEconomy Wiki
 
 > **A powerful multi-currency economy plugin for Minecraft** — by [DemonZ Development](https://demonzdevelopment.online)

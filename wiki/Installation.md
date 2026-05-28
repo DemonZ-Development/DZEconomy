@@ -1,3 +1,5 @@
+![DZEconomy Banner](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/bannerv2-release.png)
+
 # 📦 Installation Guide
 
 Complete setup instructions for DZEconomy v2.1.0 on all supported server platforms.

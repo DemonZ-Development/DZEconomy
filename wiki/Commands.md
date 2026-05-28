@@ -1,3 +1,5 @@
+![DZEconomy Banner](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/bannerv2-release.png)
+
 # 📋 Commands Reference
 
 Complete command reference for DZEconomy v2.1.0. All commands support tab completion.
