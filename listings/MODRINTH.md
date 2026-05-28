@@ -57,7 +57,7 @@
 
 ## ⚡ Quick Start
 
-1. Download and place `DZEconomy-2.1.0.jar` in your `plugins/` folder
+1. Download and place `DZEconomy-2.1.1.jar` in your `plugins/` folder
 2. Restart your server
 3. Players can immediately use `/money`, `/mobcoin`, `/gem`
 4. Customize `config.yml`, `ranks.yml`, and `mob-rewards.yml`

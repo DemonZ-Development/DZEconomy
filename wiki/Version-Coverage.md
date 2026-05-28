@@ -1,6 +1,6 @@
 # 📊 Version Coverage
 
-Supported Minecraft versions and server software for DZEconomy v2.1.0.
+Supported Minecraft versions and server software for DZEconomy v2.1.1.
 
 ---
 
@@ -29,7 +29,7 @@ Supported Minecraft versions and server software for DZEconomy v2.1.0.
 | **Java 17** | ✅ Minimum for modern | Full modern adapter (SPI driver loading) |
 | **Java 21** | ✅ **Recommended** | Best performance and features |
 
-DZEconomy v2.1.0 is compiled with Java 21. The built JAR requires Java 21+ to run. The **Server Adapter** system detects the Java version at runtime and provides appropriate driver loading behavior: legacy (pre-Java 17) uses explicit `Class.forName()`, modern (Java 17+) relies on SPI with fallback.
+DZEconomy v2.1.1 is compiled with Java 21. The built JAR requires Java 21+ to run. The **Server Adapter** system detects the Java version at runtime and provides appropriate driver loading behavior: legacy (pre-Java 17) uses explicit `Class.forName()`, modern (Java 17+) relies on SPI with fallback.
 
 ### Checking Your Java Version
 

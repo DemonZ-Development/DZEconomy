@@ -2,7 +2,7 @@
 
 # 📦 Installation Guide
 
-Complete setup instructions for DZEconomy v2.1.0 on all supported server platforms.
+Complete setup instructions for DZEconomy v2.1.1 on all supported server platforms.
 
 ---
 
@@ -20,7 +20,7 @@ Complete setup instructions for DZEconomy v2.1.0 on all supported server platfor
 
 ### Step 1: Download
 
-Download the latest `DZEconomy-2.1.0.jar` from [Modrinth](https://modrinth.com/plugin/dzeconomy).
+Download the latest `DZEconomy-2.1.1.jar` from [Modrinth](https://modrinth.com/plugin/dzeconomy).
 
 ### Step 2: Install the Plugin
 
@@ -29,7 +29,7 @@ Place the jar file in your server's `plugins/` directory:
 ```
 server/
 ├── plugins/
-│   └── DZEconomy-2.1.0.jar   ← Place here
+│   └── DZEconomy-2.1.1.jar   ← Place here
 ├── server.jar
 └── ...
 ```
@@ -49,8 +49,8 @@ Look for the following in your console:
  | |_| | | | (_) | | |_| | |  | |
  |____/|_|  \___/   \___/|_|  |_|
 
-  Version 2.1.0 | By DemonZ Development
-[INFO] DZEconomy v2.1.0 has been successfully enabled!
+  Version 2.1.1 | By DemonZ Development
+[INFO] DZEconomy v2.1.1 has been successfully enabled!
 [INFO] Running on Paper 1.21.4-...
 ```
 
@@ -195,12 +195,12 @@ plugins/DZEconomy/
 
 ## ⬆️ Updating from v1 to v2
 
-DZEconomy v2.1.0 includes an **automatic configuration migration system**. When you update:
+DZEconomy v2.1.1 includes an **automatic configuration migration system**. When you update:
 
 ### Automatic Migration
 
 1. **Back up your `plugins/DZEconomy/` folder** before updating
-2. Replace the old jar with the new `DZEconomy-2.1.0.jar`
+2. Replace the old jar with the new `DZEconomy-2.1.1.jar`
 3. Start the server — the `ConfigMigrator` will automatically:
    - Detect the old `config-version: 1`
    - Migrate all settings to the new v2 format
@@ -292,7 +292,7 @@ DZEconomy v2.1.0 includes an **automatic configuration migration system**. When 
 **Symptom**: Tasks not executing, errors about "not on the main thread"
 
 **Solutions**:
-1. Ensure you're running DZEconomy v2.1.0+ (Folia support was added in v2)
+1. Ensure you're running DZEconomy v2.1.1+ (Folia support was added in v2)
 2. DZEconomy uses `FoliaAdapter` for all scheduling — no manual changes needed
 3. Check console for "Folia detected! Using region-based scheduling."
 4. See [Folia Support](Folia-Support.md) for known limitations

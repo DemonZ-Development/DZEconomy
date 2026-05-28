@@ -1,6 +1,6 @@
 # 🛠️ Developer API
 
-Complete guide to integrating with the DZEconomy API v2.1.0.
+Complete guide to integrating with the DZEconomy API v2.1.1.
 
 ---
 
@@ -34,7 +34,7 @@ All methods that modify balances are **thread-safe** and use per-player locks.
     <dependency>
         <groupId>com.github.DemonZ-Development</groupId>
         <artifactId>DZEconomy</artifactId>
-        <version>2.1.0</version>
+        <version>2.1.1</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>
@@ -48,7 +48,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'com.github.DemonZ-Development:DZEconomy:2.1.0'
+    compileOnly 'com.github.DemonZ-Development:DZEconomy:2.1.1'
 }
 ```
 
@@ -460,7 +460,7 @@ All API methods that modify balances are **thread-safe** and use per-player lock
 | API Version | Plugin Version | Changes |
 |-------------|----------------|---------|
 | 2 | 2.0.0 | Initial public API |
-| 3 | 2.1.0 | Server Adapter system, legacy Java support, FoliaAdapter migration |
+| 3 | 2.1.1 | Server Adapter system, legacy Java support, FoliaAdapter migration |
 
 Check the API version at runtime:
 

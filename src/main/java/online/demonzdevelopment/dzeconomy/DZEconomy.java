@@ -114,7 +114,7 @@ public class DZEconomy extends JavaPlugin {
         this.updateManager = new UpdateManager(this);
         updateManager.checkForUpdates();
         
-        getLogger().info("DZEconomy v2.1.0 has been successfully enabled!");
+        getLogger().info("DZEconomy v2.1.1 has been successfully enabled!");
         getLogger().info("Running on " + (FoliaAdapter.isFolia() ? "Folia" : Bukkit.getName()) + " " + Bukkit.getVersion());
         getLogger().info("Support & Wiki: https://wiki.demonzdevelopment.online/dzeconomy");
         getLogger().info("Thank you for choosing DZEconomy!");
@@ -170,11 +170,11 @@ public class DZEconomy extends JavaPlugin {
         }
 
         instance = null;
-        getLogger().info("DZEconomy v2.1.0 has been disabled. Thank you for using DZEconomy!");
+        getLogger().info("DZEconomy v2.1.1 has been disabled. Thank you for using DZEconomy!");
     }
     
     private void printStartupBanner() {
-        getLogger().info("Starting DZEconomy v2.1.0 by DemonZ Development");
+        getLogger().info("Starting DZEconomy v2.1.1 by DemonZ Development");
     }
     
     private boolean initializeStorage() {

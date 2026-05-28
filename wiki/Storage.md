@@ -1,6 +1,6 @@
 # 🗄️ Storage Backends
 
-Complete guide to storage backends, migration, backup, and performance optimization for DZEconomy v2.1.0.
+Complete guide to storage backends, migration, backup, and performance optimization for DZEconomy v2.1.1.
 
 ---
 

@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
 public class ModrinthAPIClient {
     
     private static final String API_BASE = "https://api.modrinth.com/v2";
-    private static final String USER_AGENT = "DZEconomy/2.1.0 (https://github.com/DemonZ-Development/DZEconomy)";
+    private static final String USER_AGENT = "DZEconomy/2.1.1 (https://github.com/DemonZ-Development/DZEconomy)";
     
     private final String projectId;
     

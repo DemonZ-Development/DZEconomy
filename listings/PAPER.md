@@ -39,7 +39,7 @@ No configuration changes needed — DZEconomy adapts automatically.
 
 ## Quick Setup
 
-1. Place `DZEconomy-2.1.0.jar` in `plugins/`
+1. Place `DZEconomy-2.1.1.jar` in `plugins/`
 2. Restart the server
 3. Players can immediately use `/money`, `/mobcoin`, `/gem`
 4. Customize `config.yml`, `ranks.yml`, `mob-rewards.yml`
@@ -118,4 +118,4 @@ All database operations run asynchronously and never block the main thread (or r
 
 ---
 
-*DZEconomy v2.1.0 — Made with ❤️ by DemonZ Development*
+*DZEconomy v2.1.1 — Made with ❤️ by DemonZ Development*

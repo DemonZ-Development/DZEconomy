@@ -1,6 +1,6 @@
 # ⚙️ Configuration Reference
 
-Complete configuration reference for DZEconomy v2.1.0. All configuration files are located in `plugins/DZEconomy/`.
+Complete configuration reference for DZEconomy v2.1.1. All configuration files are located in `plugins/DZEconomy/`.
 
 ---
 

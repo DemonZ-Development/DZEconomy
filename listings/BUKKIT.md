@@ -2,7 +2,7 @@
 
 # DZEconomy
 
-**Advanced Multi-Currency Economy Plugin** — v2.1.0 by DemonZ Development
+**Advanced Multi-Currency Economy Plugin** — v2.1.1 by DemonZ Development
 
 ---
 
@@ -32,7 +32,7 @@ DZEconomy is a comprehensive economy plugin introducing **three distinct currenc
 
 ## Installation
 
-1. Download `DZEconomy-2.1.0.jar`
+1. Download `DZEconomy-2.1.1.jar`
 2. Place in `plugins/`
 3. Restart server
 4. Run `/economy reload` after configuring
@@ -72,4 +72,4 @@ DZEconomy is a comprehensive economy plugin introducing **three distinct currenc
 
 ---
 
-*DZEconomy v2.1.0 — Licensed under GNU GPLv3 — Made by DemonZ Development*
+*DZEconomy v2.1.1 — Licensed under GNU GPLv3 — Made by DemonZ Development*
