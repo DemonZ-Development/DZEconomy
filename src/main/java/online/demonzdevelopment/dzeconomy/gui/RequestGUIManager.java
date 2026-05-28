@@ -33,9 +33,56 @@ public class RequestGUIManager implements Listener {
         CURRENCY_MATERIALS.put("gem", Material.DIAMOND);
     }
     
-    // Accept/Deny materials
-    private static final Material ACCEPT_MATERIAL = Material.LIME_CONCRETE;
-    private static final Material DENY_MATERIAL = Material.RED_CONCRETE;
+    // Accept/Deny items
+    private static final ItemStack ACCEPT_ITEM = getAcceptItem();
+    private static final ItemStack DENY_ITEM = getDenyItem();
+    private static final ItemStack FILLER_ITEM = getFillerItem();
+
+    private static Material resolveMaterial(String... names) {
+        for (String name : names) {
+            try {
+                Material mat = Material.valueOf(name);
+                if (mat != null) return mat;
+            } catch (IllegalArgumentException ignored) {}
+        }
+        return Material.AIR;
+    }
+
+    private static ItemStack getAcceptItem() {
+        Material mat = resolveMaterial("LIME_CONCRETE");
+        if (mat != Material.AIR) {
+            return new ItemStack(mat);
+        }
+        Material wool = resolveMaterial("WOOL");
+        if (wool != Material.AIR) {
+            return new ItemStack(wool, 1, (short) 5); // Lime wool
+        }
+        return new ItemStack(resolveMaterial("EMERALD_BLOCK", "DIRT"));
+    }
+
+    private static ItemStack getDenyItem() {
+        Material mat = resolveMaterial("RED_CONCRETE");
+        if (mat != Material.AIR) {
+            return new ItemStack(mat);
+        }
+        Material wool = resolveMaterial("WOOL");
+        if (wool != Material.AIR) {
+            return new ItemStack(wool, 1, (short) 14); // Red wool
+        }
+        return new ItemStack(resolveMaterial("REDSTONE_BLOCK", "DIRT"));
+    }
+
+    private static ItemStack getFillerItem() {
+        Material mat = resolveMaterial("GRAY_STAINED_GLASS_PANE");
+        if (mat != Material.AIR) {
+            return new ItemStack(mat);
+        }
+        Material pane = resolveMaterial("STAINED_GLASS_PANE");
+        if (pane != Material.AIR) {
+            return new ItemStack(pane, 1, (short) 7); // Gray stained glass pane
+        }
+        return new ItemStack(resolveMaterial("GLASS", "DIRT"));
+    }
     
     // Active request GUIs: target UUID -> request data
     private final Map<UUID, PendingRequest> pendingRequests = new java.util.concurrent.ConcurrentHashMap<>();
@@ -101,7 +148,7 @@ public class RequestGUIManager implements Listener {
         inv.setItem(13, currencyItem);
         
         // Accept button (slot 11)
-        ItemStack acceptItem = new ItemStack(ACCEPT_MATERIAL);
+        ItemStack acceptItem = ACCEPT_ITEM.clone();
         ItemMeta acceptMeta = acceptItem.getItemMeta();
         if (acceptMeta != null) {
             acceptMeta.setDisplayName(ColorUtil.translate("&a&l✔ Accept Request"));
@@ -114,7 +161,7 @@ public class RequestGUIManager implements Listener {
         inv.setItem(11, acceptItem);
         
         // Deny button (slot 15)
-        ItemStack denyItem = new ItemStack(DENY_MATERIAL);
+        ItemStack denyItem = DENY_ITEM.clone();
         ItemMeta denyMeta = denyItem.getItemMeta();
         if (denyMeta != null) {
             denyMeta.setDisplayName(ColorUtil.translate("&c&l✘ Deny Request"));
@@ -127,7 +174,7 @@ public class RequestGUIManager implements Listener {
         inv.setItem(15, denyItem);
         
         // Fill borders with gray glass
-        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemStack filler = FILLER_ITEM.clone();
         ItemMeta fillerMeta = filler.getItemMeta();
         if (fillerMeta != null) {
             fillerMeta.setDisplayName(ColorUtil.translate("&r"));
@@ -192,12 +239,15 @@ public class RequestGUIManager implements Listener {
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
         
-        if (clicked.getType() == ACCEPT_MATERIAL) {
-            pendingRequests.remove(requestId);
-            handleAccept(player, request);
-        } else if (clicked.getType() == DENY_MATERIAL) {
-            pendingRequests.remove(requestId);
-            handleDeny(player, request);
+        if (clicked.hasItemMeta() && clicked.getItemMeta().hasDisplayName()) {
+            String displayName = clicked.getItemMeta().getDisplayName();
+            if (displayName.contains("Accept Request")) {
+                pendingRequests.remove(requestId);
+                handleAccept(player, request);
+            } else if (displayName.contains("Deny Request")) {
+                pendingRequests.remove(requestId);
+                handleDeny(player, request);
+            }
         }
     }
     

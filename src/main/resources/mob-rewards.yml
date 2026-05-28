@@ -337,7 +337,7 @@ boss:
       min-amount: 5
       max-amount: 10
     chance: 1.0
-    message: "&6+{amount} {currency} &7(🐉 Ender Dragon defeated!)"
+    message: "&6+{amount} {currency} &7(Ender Dragon defeated!)"
 
   # ── Wither ──────────────────────────────────────────────────
   WITHER:
@@ -351,7 +351,7 @@ boss:
       min-amount: 3
       max-amount: 7
     chance: 1.0
-    message: "&6+{amount} {currency} &7(💀 Wither destroyed!)"
+    message: "&6+{amount} {currency} &7(Wither destroyed!)"
 
   # ── Wither Storm ────────────────────────────────────────────
   # (For servers using custom Wither Storm plugins/mythic mobs)
@@ -388,7 +388,7 @@ custom:
   #   money: 100.0
   #   gem: 5
   #   chance: 1.0
-  #   message: "&d+{amount} {currency} &7(👑 King Slime defeated!)"
+  #   message: "&d+{amount} {currency} &7(King Slime defeated!)"
 
   # ── Example: Infernal Mob ───────────────────────────────────
   # INFERNAL_ZOMBIE:
@@ -396,7 +396,7 @@ custom:
   #   money: 15.0
   #   gem: 1
   #   chance: 0.8
-  #   message: "&c+{amount} {currency} &7(🔥 Infernal Zombie slain!)"
+  #   message: "&c+{amount} {currency} &7(Infernal Zombie slain!)"
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                 GLOBAL REWARD MULTIPLIERS                   ║
@@ -437,13 +437,13 @@ kill-streaks:
   tiers:
     10:
       multiplier: 2.0
-      message: "&6🔥 Kill Streak x{kills}! &7(2x rewards for {kills} kills!)"
+      message: "&6* Kill Streak x{kills}! &7(2x rewards for {kills} kills!)"
     5:
       multiplier: 1.5
-      message: "&e🔥 Kill Streak x{kills}! &7(1.5x rewards!)"
+      message: "&e* Kill Streak x{kills}! &7(1.5x rewards!)"
     3:
       multiplier: 1.25
-      message: "&a🔥 Kill Streak x{kills}! &7(1.25x rewards!)"
+      message: "&a* Kill Streak x{kills}! &7(1.25x rewards!)"
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                 SPECIAL EVENT BONUSES                       ║
@@ -490,8 +490,8 @@ events:
   #   halloween:
   #     multiplier: 3.0
   #     currency: mobcoin
-  #     message: "&6🎃 Halloween Special! &73x MobCoin rewards!"
+  #     message: "&6Halloween Special! &73x MobCoin rewards!"
   #   christmas:
   #     multiplier: 2.5
   #     currency: money
-  #     message: "&c🎄 Christmas Bonus! &72.5x Money rewards!"
+  #     message: "&cChristmas Bonus! &72.5x Money rewards!"

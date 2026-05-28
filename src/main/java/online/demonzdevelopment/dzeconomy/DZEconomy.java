@@ -76,6 +76,7 @@ public class DZEconomy extends JavaPlugin {
         // Initialize managers
         this.currencyManager = new CurrencyManager(this);
         this.rankManager = new RankManager(this);
+        this.rankManager.loadRanks();
         this.luckPermsIntegration = new LuckPermsIntegration(this);
         this.requestGUIManager = new RequestGUIManager(this);
         this.combatTagManager = new CombatTagManager(this);

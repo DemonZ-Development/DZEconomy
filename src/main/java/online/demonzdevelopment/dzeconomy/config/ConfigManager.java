@@ -76,7 +76,12 @@ public class ConfigManager {
             }
         }
         
-        FileConfiguration fileConfig = YamlConfiguration.loadConfiguration(file);
+        FileConfiguration fileConfig;
+        try (InputStreamReader reader = new InputStreamReader(new java.io.FileInputStream(file), StandardCharsets.UTF_8)) {
+            fileConfig = YamlConfiguration.loadConfiguration(reader);
+        } catch (Exception e) {
+            fileConfig = YamlConfiguration.loadConfiguration(file);
+        }
         
         // Load defaults from JAR with proper InputStream closing
         try (InputStream defaultStream = plugin.getResource(fileName)) {

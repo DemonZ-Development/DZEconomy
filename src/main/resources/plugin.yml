@@ -1,7 +1,7 @@
 name: DZEconomy
 version: '2.1.0'
 main: online.demonzdevelopment.dzeconomy.DZEconomy
-api-version: '1.20'
+api-version: '1.13'
 description: A powerful multi-currency economy plugin with ranks, combat tagging, and more.
 author: DemonZ Development
 website: https://wiki.demonzdevelopment.online/dzeconomy

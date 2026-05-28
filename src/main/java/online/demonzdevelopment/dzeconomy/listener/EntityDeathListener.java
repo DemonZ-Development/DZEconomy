@@ -39,14 +39,26 @@ public class EntityDeathListener implements Listener {
     private double bossBonus = 1.0;
     private double notifyThreshold = 1.0;
 
-    private final NamespacedKey spawnerKey;
-    private final NamespacedKey spawnEggKey;
+    private static final boolean HAS_PDC;
+    static {
+        boolean hasPdc = false;
+        try {
+            Class.forName("org.bukkit.persistence.PersistentDataContainer");
+            hasPdc = true;
+        } catch (ClassNotFoundException ignored) {}
+        HAS_PDC = hasPdc;
+    }
+
+    private final Object pdcHelper;
     private final Map<UUID, SplitInfo> activeSplits = new ConcurrentHashMap<>();
 
     public EntityDeathListener(DZEconomy plugin) {
         this.plugin = plugin;
-        this.spawnerKey = new NamespacedKey(plugin, "spawner");
-        this.spawnEggKey = new NamespacedKey(plugin, "spawn-egg");
+        if (HAS_PDC) {
+            this.pdcHelper = new PDCHelper(plugin);
+        } else {
+            this.pdcHelper = null;
+        }
         loadRewards();
     }
 
@@ -170,21 +182,29 @@ public class EntityDeathListener implements Listener {
     public void onCreatureSpawn(CreatureSpawnEvent event) {
         CreatureSpawnEvent.SpawnReason reason = event.getSpawnReason();
         if (reason == CreatureSpawnEvent.SpawnReason.SPAWNER) {
-            event.getEntity().getPersistentDataContainer().set(spawnerKey, PersistentDataType.BYTE, (byte) 1);
+            if (HAS_PDC && pdcHelper != null) {
+                ((PDCHelper) pdcHelper).setSpawner(event.getEntity());
+            }
             event.getEntity().setMetadata("dzeconomy-spawner", new FixedMetadataValue(plugin, true));
         } else if (reason == CreatureSpawnEvent.SpawnReason.SPAWNER_EGG) {
-            event.getEntity().getPersistentDataContainer().set(spawnEggKey, PersistentDataType.BYTE, (byte) 1);
+            if (HAS_PDC && pdcHelper != null) {
+                ((PDCHelper) pdcHelper).setSpawnEgg(event.getEntity());
+            }
             event.getEntity().setMetadata("dzeconomy-spawn-egg", new FixedMetadataValue(plugin, true));
         } else if (reason == CreatureSpawnEvent.SpawnReason.SLIME_SPLIT) {
             org.bukkit.Location loc = event.getLocation();
             for (SplitInfo info : activeSplits.values()) {
                 if (info.location.getWorld().equals(loc.getWorld()) && info.location.distanceSquared(loc) < 4.0) {
                     if (info.isSpawner) {
-                        event.getEntity().getPersistentDataContainer().set(spawnerKey, PersistentDataType.BYTE, (byte) 1);
+                        if (HAS_PDC && pdcHelper != null) {
+                            ((PDCHelper) pdcHelper).setSpawner(event.getEntity());
+                        }
                         event.getEntity().setMetadata("dzeconomy-spawner", new FixedMetadataValue(plugin, true));
                     }
                     if (info.isSpawnEgg) {
-                        event.getEntity().getPersistentDataContainer().set(spawnEggKey, PersistentDataType.BYTE, (byte) 1);
+                        if (HAS_PDC && pdcHelper != null) {
+                            ((PDCHelper) pdcHelper).setSpawnEgg(event.getEntity());
+                        }
                         event.getEntity().setMetadata("dzeconomy-spawn-egg", new FixedMetadataValue(plugin, true));
                     }
                     break;
@@ -196,10 +216,14 @@ public class EntityDeathListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSlimeSplit(org.bukkit.event.entity.SlimeSplitEvent event) {
         LivingEntity parent = event.getEntity();
-        boolean isSpawner = parent.getPersistentDataContainer().has(spawnerKey, PersistentDataType.BYTE)
-                || parent.hasMetadata("dzeconomy-spawner");
-        boolean isSpawnEgg = parent.getPersistentDataContainer().has(spawnEggKey, PersistentDataType.BYTE)
-                || parent.hasMetadata("dzeconomy-spawn-egg");
+        boolean isSpawner = false;
+        boolean isSpawnEgg = false;
+        if (HAS_PDC && pdcHelper != null) {
+            isSpawner = ((PDCHelper) pdcHelper).isSpawner(parent);
+            isSpawnEgg = ((PDCHelper) pdcHelper).isSpawnEgg(parent);
+        }
+        isSpawner = isSpawner || parent.hasMetadata("dzeconomy-spawner");
+        isSpawnEgg = isSpawnEgg || parent.hasMetadata("dzeconomy-spawn-egg");
         if (isSpawner || isSpawnEgg) {
             UUID parentUuid = parent.getUniqueId();
             activeSplits.put(parentUuid, new SplitInfo(parent.getLocation(), isSpawner, isSpawnEgg));
@@ -228,15 +252,18 @@ public class EntityDeathListener implements Listener {
         }
 
         // Spawner mob check
-        boolean isSpawner = entity.getPersistentDataContainer().has(spawnerKey, PersistentDataType.BYTE)
-                || entity.hasMetadata("dzeconomy-spawner");
+        boolean isSpawner = false;
+        boolean isSpawnEgg = false;
+        if (HAS_PDC && pdcHelper != null) {
+            isSpawner = ((PDCHelper) pdcHelper).isSpawner(entity);
+            isSpawnEgg = ((PDCHelper) pdcHelper).isSpawnEgg(entity);
+        }
+        isSpawner = isSpawner || entity.hasMetadata("dzeconomy-spawner");
+        isSpawnEgg = isSpawnEgg || entity.hasMetadata("dzeconomy-spawn-egg");
+        
         if (!allowSpawnerMobs && isSpawner) {
             return;
         }
-
-        // Spawn egg mob check
-        boolean isSpawnEgg = entity.getPersistentDataContainer().has(spawnEggKey, PersistentDataType.BYTE)
-                || entity.hasMetadata("dzeconomy-spawn-egg");
         if (!allowSpawnEggMobs && isSpawnEgg) {
             return;
         }
@@ -444,6 +471,32 @@ public class EntityDeathListener implements Listener {
             this.location = location;
             this.isSpawner = isSpawner;
             this.isSpawnEgg = isSpawnEgg;
+        }
+    }
+
+    private static class PDCHelper {
+        private final org.bukkit.NamespacedKey spawnerKey;
+        private final org.bukkit.NamespacedKey spawnEggKey;
+
+        public PDCHelper(org.bukkit.plugin.Plugin plugin) {
+            this.spawnerKey = new org.bukkit.NamespacedKey(plugin, "spawner");
+            this.spawnEggKey = new org.bukkit.NamespacedKey(plugin, "spawn-egg");
+        }
+
+        public void setSpawner(org.bukkit.entity.LivingEntity entity) {
+            entity.getPersistentDataContainer().set(spawnerKey, org.bukkit.persistence.PersistentDataType.BYTE, (byte) 1);
+        }
+
+        public void setSpawnEgg(org.bukkit.entity.LivingEntity entity) {
+            entity.getPersistentDataContainer().set(spawnEggKey, org.bukkit.persistence.PersistentDataType.BYTE, (byte) 1);
+        }
+
+        public boolean isSpawner(org.bukkit.entity.LivingEntity entity) {
+            return entity.getPersistentDataContainer().has(spawnerKey, org.bukkit.persistence.PersistentDataType.BYTE);
+        }
+
+        public boolean isSpawnEgg(org.bukkit.entity.LivingEntity entity) {
+            return entity.getPersistentDataContainer().has(spawnEggKey, org.bukkit.persistence.PersistentDataType.BYTE);
         }
     }
 }

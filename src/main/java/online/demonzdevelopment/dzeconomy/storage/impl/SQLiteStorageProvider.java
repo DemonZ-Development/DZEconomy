@@ -35,13 +35,18 @@ public class SQLiteStorageProvider implements StorageProvider {
                 dataFolder.mkdirs();
             }
             File dbFile = new File(dataFolder, "dzeconomy.db");
-            this.url = "jdbc:sqlite:" + dbFile.getAbsolutePath() + "?journal_mode=WAL&foreign_keys=on&synchronous=NORMAL&busy_timeout=5000";
+            this.url = "jdbc:sqlite:" + dbFile.getAbsolutePath();
             
             HikariConfig config = new HikariConfig();
             config.setJdbcUrl(url);
             config.setDriverClassName("org.sqlite.JDBC");
             config.setMaximumPoolSize(1);
             config.setPoolName("DZEconomy-SQLite");
+            config.setConnectionInitSql("PRAGMA journal_mode = WAL;");
+            config.setConnectionTestQuery("SELECT 1");
+            config.addDataSourceProperty("foreign_keys", "on");
+            config.addDataSourceProperty("synchronous", "NORMAL");
+            config.addDataSourceProperty("busy_timeout", "5000");
             
             this.dataSource = new HikariDataSource(config);
             
