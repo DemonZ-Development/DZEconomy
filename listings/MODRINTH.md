@@ -1,4 +1,4 @@
-![DZEconomy Banner](../assets/banner.png)
+![DZEconomy Banner](../assets/bannerv2.png)
 
 # 💰 DZEconomy — Multi-Currency Economy Plugin
 
@@ -185,7 +185,7 @@ combat-tag:
 | Resource | URL |
 |----------|-----|
 | Wiki | [GitHub Wiki](https://github.com/DemonZDevelopment/DZEconomy/wiki) |
-| Discord | [discord.gg/dzeconomy](https://discord.gg/dzeconomy) |
+| Discord | [discord.com/invite/GYsTt96ypf](https://discord.com/invite/GYsTt96ypf) |
 | Source Code | [GitHub](https://github.com/DemonZDevelopment/DZEconomy) |
 | Issue Tracker | [GitHub Issues](https://github.com/DemonZDevelopment/DZEconomy/issues) |
 | Website | [demonzdevelopment.online](https://demonzdevelopment.online) |

@@ -1,4 +1,4 @@
-![DZEconomy Banner](../assets/banner.png)
+![DZEconomy Banner](../assets/bannerv2.png)
 
 # DZEconomy
 
@@ -112,7 +112,7 @@ All database operations run asynchronously and never block the main thread (or r
 ## Links
 
 - **Wiki:** [GitHub Wiki](https://github.com/DemonZDevelopment/DZEconomy/wiki)
-- **Discord:** [discord.gg/dzeconomy](https://discord.gg/dzeconomy)
+- **Discord:** [discord.com/invite/GYsTt96ypf](https://discord.com/invite/GYsTt96ypf)
 - **GitHub:** [github.com/DemonZDevelopment/DZEconomy](https://github.com/DemonZDevelopment/DZEconomy)
 - **Website:** [demonzdevelopment.online](https://demonzdevelopment.online)
 

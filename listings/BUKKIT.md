@@ -1,4 +1,4 @@
-![DZEconomy Banner](../assets/banner.png)
+![DZEconomy Banner](../assets/bannerv2.png)
 
 # DZEconomy
 
@@ -217,7 +217,7 @@ Per-mob reward configuration with 4 categories (neutral, easy, hard, boss), cust
 ## Links
 
 - **Wiki:** [GitHub Wiki](https://github.com/DemonZDevelopment/DZEconomy/wiki)
-- **Discord:** [discord.gg/dzeconomy](https://discord.gg/dzeconomy)
+- **Discord:** [discord.com/invite/GYsTt96ypf](https://discord.com/invite/GYsTt96ypf)
 - **GitHub:** [github.com/DemonZDevelopment/DZEconomy](https://github.com/DemonZDevelopment/DZEconomy)
 - **Issues:** [github.com/DemonZDevelopment/DZEconomy/issues](https://github.com/DemonZDevelopment/DZEconomy/issues)
 - **Website:** [demonzdevelopment.online](https://demonzdevelopment.online)
