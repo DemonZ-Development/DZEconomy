@@ -310,5 +310,5 @@ DZEconomy v2.0.0 includes an **automatic configuration migration system**. When 
 ---
 
 <p align="center">
-  Need more help? Join our <a href="https://discord.gg/dzeconomy">Discord</a> for support!
+  Need more help? Join our <a href="https://discord.com/invite/GYsTt96ypf">Discord</a> for support!
 </p>

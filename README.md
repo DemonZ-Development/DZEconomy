@@ -16,7 +16,7 @@
 [![Paper](https://img.shields.io/badge/paper-1.20+-green?style=for-the-badge)](https://papermc.io/)
 
 [![Modrinth](https://img.shields.io/badge/Modrinth-Download-brightgreen?style=for-the-badge&logo=modrinth)](https://modrinth.com/plugin/dzeconomy)
-[![Discord](https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/dzeconomy)
+[![Discord](https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/invite/GYsTt96ypf)
 [![Wiki](https://img.shields.io/badge/Wiki-Read-informational?style=for-the-badge)](https://github.com/DemonZDevelopment/DZEconomy/wiki)
 
 </div>
@@ -326,7 +326,7 @@ See the [LICENSE](LICENSE) file for the full license text.
 | Resource | URL |
 |----------|-----|
 | 📦 **Modrinth** | [modrinth.com/plugin/dzeconomy](https://modrinth.com/plugin/dzeconomy) |
-| 💬 **Discord** | [discord.gg/dzeconomy](https://discord.gg/dzeconomy) |
+| 💬 **Discord** | [discord.com/invite/GYsTt96ypf](https://discord.com/invite/GYsTt96ypf) |
 | 📖 **Wiki** | [github.com/DemonZDevelopment/DZEconomy/wiki](https://github.com/DemonZDevelopment/DZEconomy/wiki) |
 | 🐛 **Issues** | [github.com/DemonZDevelopment/DZEconomy/issues](https://github.com/DemonZDevelopment/DZEconomy/issues) |
 | 📦 **Source** | [github.com/DemonZDevelopment/DZEconomy](https://github.com/DemonZDevelopment/DZEconomy) |

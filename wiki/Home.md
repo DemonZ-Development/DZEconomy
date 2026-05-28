@@ -101,7 +101,7 @@ Players can immediately use:
 |----------|------|
 | 📦 Download | [Modrinth](https://modrinth.com/plugin/dzeconomy) |
 | 📖 Wiki | [GitHub Wiki](https://github.com/DemonZDevelopment/DZEconomy/wiki) |
-| 💬 Discord | [discord.gg/dzeconomy](https://discord.gg/dzeconomy) |
+| 💬 Discord | [discord.com/invite/GYsTt96ypf](https://discord.com/invite/GYsTt96ypf) |
 | 🐛 Issue Tracker | [GitHub Issues](https://github.com/DemonZDevelopment/DZEconomy/issues) |
 | 📝 Source Code | [GitHub](https://github.com/DemonZDevelopment/DZEconomy) |
 | 🌐 Website | [demonzdevelopment.online](https://demonzdevelopment.online) |

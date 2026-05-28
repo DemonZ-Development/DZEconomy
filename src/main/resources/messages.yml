@@ -3,7 +3,7 @@
 # ║              Messages & Language Configuration              ║
 # ║                                                            ║
 # ║   Wiki: https://wiki.demonzdevelopment.online/dzeconomy                 ║
-# ║   Support: https://discord.demonzdevelopment.online                      ║
+# ║   Support: https://discord.com/invite/GYsTt96ypf                      ║
 # ╚══════════════════════════════════════════════════════════════╝
 #
 # ┌──────────────────────────────────────────────────────────────┐
@@ -252,7 +252,7 @@ economy:
     - "&7  Developed by: &6DemonZ Development"
     - "&7  Version: &e{version}"
     - "&7  Wiki: &bhttps://wiki.demonzdevelopment.online/dzeconomy"
-    - "&7  Discord: &bhttps://discord.demonzdevelopment.online"
+    - "&7  Discord: &bhttps://discord.com/invite/GYsTt96ypf"
     - "&7  Modrinth: &bhttps://modrinth.com/plugin/dzeconomy"
     - "&8&m────────────────────────────────────"
 
