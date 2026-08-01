@@ -59,6 +59,10 @@ public class MessagesUtil {
         if (lower.equals("migrate-start")) return "economy.migrate.start";
         if (lower.equals("payall-success")) return "economy.payall.success";
         if (lower.equals("payall-received")) return "economy.payall.broadcast";
+        if (lower.equals("usage-economy-give")) return "economy.give.usage";
+        if (lower.equals("give-success")) return "economy.give.success";
+        if (lower.equals("give-target")) return "economy.give.target";
+        if (lower.equals("give-failed")) return "economy.give.failed";
         if (lower.startsWith("pvp-lost-")) return "pvp.victim-loss";
         if (lower.startsWith("pvp-gained-")) return "pvp.killer-gain";
         if (lower.endsWith("-earned")) return "mob-rewards.reward";

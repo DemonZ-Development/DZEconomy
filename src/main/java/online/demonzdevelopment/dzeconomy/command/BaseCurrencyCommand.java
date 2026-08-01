@@ -346,7 +346,8 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         MessagesUtil.sendMessage(player, commandName + "-request-sent",
                 "%player%", target.getName(),
                 "%amount%", String.format("%,.2f", amount),
-                "%currency%", commandName);
+                "%currency%", commandName,
+                "%timeout%", String.valueOf(timeoutSeconds));
 
         MessagesUtil.sendMessage(target, commandName + "-request-received",
                 "%player%", player.getName(),

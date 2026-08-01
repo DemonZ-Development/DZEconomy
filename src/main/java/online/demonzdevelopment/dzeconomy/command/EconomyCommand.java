@@ -56,6 +56,8 @@ public class EconomyCommand implements TabExecutor {
                 return handleBaltop(sender, args);
             case "payall":
                 return handlePayall(sender, args);
+            case "give":
+                return handleGive(sender, args);
             default:
                 MessagesUtil.sendMessage(sender, "unknown-subcommand", "%subcommand%", sub);
                 return true;
@@ -461,6 +463,102 @@ public class EconomyCommand implements TabExecutor {
         return true;
     }
 
+    private boolean handleGive(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("dzeconomy.admin")) {
+            MessagesUtil.sendMessage(sender, "no-permission");
+            return true;
+        }
+
+        if (args.length < 3) {
+            MessagesUtil.sendMessage(sender, "usage-economy-give");
+            return true;
+        }
+
+        String targetName = args[1];
+        CurrencyType type = CurrencyType.MONEY;
+        if (args.length >= 4) {
+            type = parseCurrencyType(args[3]);
+            if (type == null) {
+                MessagesUtil.sendMessage(sender, "invalid-currency-type");
+                return true;
+            }
+        }
+
+        double amount;
+        try {
+            amount = Double.parseDouble(args[2]);
+        } catch (NumberFormatException e) {
+            MessagesUtil.sendMessage(sender, "invalid-amount", "%input%", args[2]);
+            return true;
+        }
+
+        if (Double.isNaN(amount) || Double.isInfinite(amount) || amount <= 0) {
+            MessagesUtil.sendMessage(sender, "amount-must-be-positive");
+            return true;
+        }
+
+        CurrencyManager cm = plugin.getCurrencyManager();
+        final CurrencyType finalType = type;
+        resolveOfflinePlayer(targetName, target -> {
+            if (target == null || (!target.hasPlayedBefore() && !target.isOnline() && !cm.playerDataExists(target.getUniqueId()))) {
+                MessagesUtil.sendMessage(sender, "player-not-found", "%player%", targetName);
+                return;
+            }
+
+            online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTaskAsynchronously(plugin, () -> {
+                boolean success = cm.addBalance(target.getUniqueId(), finalType, amount);
+
+                if (success) {
+                    double newBalance = cm.getBalance(target.getUniqueId(), finalType);
+                    boolean isOnline = target.isOnline();
+                    if (!isOnline) {
+                        cm.unloadPlayerData(target.getUniqueId());
+                    }
+                    String currencyName = finalType.name().toLowerCase();
+                    String symbol = plugin.getConfigManager().getConfig().getString("currencies." + currencyName + ".symbol", "$");
+                    Runnable notifyTask = () -> {
+                        MessagesUtil.sendMessage(sender, "give-success",
+                                "%player%", target.getName() != null ? target.getName() : targetName,
+                                "%amount%", String.format("%,.2f", amount),
+                                "%balance%", String.format("%,.2f", newBalance),
+                                "%currency%", currencyName,
+                                "%symbol%", symbol);
+
+                        if (isOnline && target instanceof Player) {
+                            Player targetPlayer = (Player) target;
+                            online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, targetPlayer, () -> {
+                                MessagesUtil.sendMessage(targetPlayer, "give-target",
+                                        "%player%", sender.getName(),
+                                        "%amount%", String.format("%,.2f", amount),
+                                        "%balance%", String.format("%,.2f", newBalance),
+                                        "%currency%", currencyName,
+                                        "%symbol%", symbol);
+                            });
+                        }
+                    };
+                    if (sender instanceof Player) {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, (Player) sender, notifyTask);
+                    } else {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTask(plugin, notifyTask);
+                    }
+                } else {
+                    Runnable failTask = () -> {
+                        MessagesUtil.sendMessage(sender, "give-failed",
+                                "%player%", target.getName() != null ? target.getName() : targetName,
+                                "%amount%", String.format("%,.2f", amount),
+                                "%currency%", finalType.name().toLowerCase());
+                    };
+                    if (sender instanceof Player) {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, (Player) sender, failTask);
+                    } else {
+                        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTask(plugin, failTask);
+                    }
+                }
+            });
+        });
+        return true;
+    }
+
     // ─── Help ─────────────────────────────────────────────────────────────────
 
     private void sendHelp(CommandSender sender) {
@@ -478,6 +576,7 @@ public class EconomyCommand implements TabExecutor {
             sender.sendMessage(MessagesUtil.colorize("  &8▸ &e/economy migrate <from> <to> &8- &7Migrate storage"));
             sender.sendMessage(MessagesUtil.colorize("  &8▸ &e/economy baltop [currency] [page] &8- &7Balance leaderboard"));
             sender.sendMessage(MessagesUtil.colorize("  &8▸ &e/economy payall <currency> <amount> &8- &7Pay all online players"));
+            sender.sendMessage(MessagesUtil.colorize("  &8▸ &e/economy give <player> <amount> [currency] &8- &7Give any currency"));
         } else {
             if (sender.hasPermission("dzeconomy.admin.baltop")) {
                 sender.sendMessage(MessagesUtil.colorize("  &8▸ &e/economy baltop [currency] [page] &8- &7Balance leaderboard"));
@@ -525,6 +624,7 @@ public class EconomyCommand implements TabExecutor {
                 subs.add("migrate");
                 subs.add("baltop");
                 subs.add("payall");
+                subs.add("give");
             } else {
                 if (sender.hasPermission("dzeconomy.admin.baltop")) {
                     subs.add("baltop");
@@ -565,6 +665,17 @@ public class EconomyCommand implements TabExecutor {
                         String name = type.name().toLowerCase();
                         if (name.startsWith(args[1].toLowerCase())) {
                             completions.add(name);
+                        }
+                    }
+                    break;
+                case "give":
+                    if (!sender.hasPermission("dzeconomy.admin")) break;
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        if (sender instanceof Player && !((Player) sender).canSee(p)) {
+                            continue;
+                        }
+                        if (p.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
+                            completions.add(p.getName());
                         }
                     }
                     break;
@@ -611,10 +722,24 @@ public class EconomyCommand implements TabExecutor {
                     completions.add("500");
                     completions.add("1000");
                     break;
+                case "give":
+                    if (!sender.hasPermission("dzeconomy.admin")) break;
+                    completions.add("100");
+                    completions.add("500");
+                    completions.add("1000");
+                    break;
             }
         } else if (args.length == 4) {
             String sub = args[0].toLowerCase();
             if (sub.equals("convert")) {
+                if (!sender.hasPermission("dzeconomy.admin")) return completions;
+                for (CurrencyType type : CurrencyType.values()) {
+                    String name = type.name().toLowerCase();
+                    if (name.startsWith(args[3].toLowerCase())) {
+                        completions.add(name);
+                    }
+                }
+            } else if (sub.equals("give")) {
                 if (!sender.hasPermission("dzeconomy.admin")) return completions;
                 for (CurrencyType type : CurrencyType.values()) {
                     String name = type.name().toLowerCase();

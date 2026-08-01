@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - **`storage.sqlite.file` option** — configurable SQLite database file name (defaults to `data.db`)
+- **`/economy give <player> <amount> [currency]`** — unified admin command to give any currency (defaults to money; aliases: `money`, `mobcoin(s)`, `gem(s)`) with success/target notifications and tab completion
 
 ### Fixed
 
@@ -35,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Request notification misleading** — told players to `/accept <id>` although the command takes a player name; the message and help now say `<player>`
 - **Pre-release version ordering** — `SemanticVersion` compared suffixes as plain strings, so `1.0-rc10` sorted below `1.0-rc9` and `1.0-alpha` above `1.0-beta`; prerelease identifiers are now compared per semver rules
 - **FlatFile save error reporting** — `savePlayerData` returned void and hid write failures; all storage providers now return a boolean success flag that callers report on failure
+- **`{timeout}` rendered literally in request messages** — `Request sent ... (Expires in {timeout}s)` showed the raw placeholder because the sender notification never passed a timeout value; it now includes the configured `request.timeout`
 
 ## [2.1.0] — 2026-05-28
 

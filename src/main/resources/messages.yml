@@ -207,6 +207,14 @@ economy:
     broadcast: "&aYou received &e{symbol}{amount} {currency} &afrom a server payout!"
     usage: "&cUsage: &e/economy payall <currency> <amount>"
 
+  # ── Give ───────────────────────────────────────────────────
+  # Placeholders: {amount}, {currency}, {symbol}, {name}, {balance}
+  give:
+    success: "&aGave &e{symbol}{amount} {currency} &ato &f{name}&7. &8(New balance: {symbol}{balance})"
+    target: "&aYou received &e{symbol}{amount} {currency} &afrom an admin. &8(New balance: {symbol}{balance})"
+    failed: "&cFailed to give {currency} to &f{name}&c!"
+    usage: "&cUsage: &e/economy give <player> <amount> [currency]"
+
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                 COMBAT TAG MESSAGES                         ║
 # ╚══════════════════════════════════════════════════════════════╝
