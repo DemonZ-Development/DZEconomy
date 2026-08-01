@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [26.2.0] — 2026-08-01
+
+### Removed
+
+- **Dead code** — deleted `UpdateCheckTask`, `RequestGUIManager` (and the `gui` package), `TransactionLogEntry`, and dozens of unused public methods, fields, and imports across `DZEconomy`, `CurrencyManager`, `StorageProvider` implementations, `UpdateManager`, `CombatTagManager`, `Rank`, `MoneyUtil`, `ColorUtil`, `ServerPlatform`, and `CurrencyType`; this also removes the now-unused `MessageUtil` integration that surfaced broken message wiring
+- **Dead config keys** — removed unused `display-format`, `auto-save.save-on-transaction`, `conversion.player-convert`, combat-tag `blocked-actions`/`include-pve`/`action-bar`, request, baltop, payall, updates-notify, ranks, and misc sections from `config.yml`; unused message keys stripped from `messages.yml`
+
+### Added
+
+- **`storage.sqlite.file` option** — configurable SQLite database file name (defaults to `data.db`)
+
+### Fixed
+
+- **Broken message wiring** — ~20 messages (`reload-success`, `convert-success`, `migrate-*`, `payall-*`, `combat-tagged`, `unknown-subcommand`, `update-available`, ...) referenced nonexistent `messages.yml` keys and rendered "Message not found"; aliases and correct placeholder mappings (`{from}`, `{to}`, `{from_balance}`, `{to_balance}`, `{count}`) are now in place
+- **Update checker ignoring config** — the scheduled update check now honors `updates.check-enabled`
+- **Lifetime statistics being wiped daily** — `resetDailyReceived()` overwrote the lifetime `money_received` total with 0; the daily reset now only clears daily counters and daily sent amounts
+- **Per-player lock leak** — `CurrencyManager.playerLocks` entries were never removed, growing unbounded on servers with many join/quit cycles; locks are now released on player unload when safe
+- **Migration silently reporting success** — `MigrationManager` ignored `initialize()` results and counted players as migrated even when `savePlayerData` failed; failed saves are now counted and reported, and migrations abort if a storage backend fails to initialize
+- **Corrupt SQLite backups** — backups zipped the live WAL-mode database without checkpointing, producing torn files; a `wal_checkpoint(TRUNCATE)` is now issued before backup
+- **Dead config keys for transfer limits** — `/money send` etc. read nonexistent `currencies.<cur>.max-transaction/send-cooldown/daily-limit` keys, so limits and cooldowns were silently never enforced; the code now reads `transfer.max-transaction`, `transfer.cooldowns.*`, and `transfer.daily-limit.*` (with legacy per-currency fallback), and honors `transfer.allow-self-transfer` and `transfer.block-during-combat`
+- **Cooldown/daily-limit reset exploit** — send cooldowns and daily sent amounts were in-memory only, so relogging reset them; both are now persisted (SQLite/MySQL columns `sent_amount`/`send_time` added with a safe schema upgrade, FlatFile keys added)
+- **Request accept bypassing limits** — `/money accept` transferred without max-transaction, cooldown, or daily-limit checks; it now applies the same limits as `/send`
+- **Dead config keys for PvP loss** — `PlayerDeathListener` read nonexistent `pvp.<currency>.enabled/loss-percentage/broadcast-threshold` keys, defaulting to 100% loss with stock config; it now reads `pvp.loss-percent.*` (percent), `pvp.minimum-balance.*`, `pvp.broadcast.*`, and honors `pvp.world-blacklist`
+- **New-player detection broken** — `isNewPlayer` was never set, so starting balances and first-join welcome messages never fired; SQLite/MySQL `loadPlayerData` now return null for players without a record (matching FlatFile), and new players get their configured starting balance once
+- **`%balance%` placeholder clobbering `{amount}`** — messages using both placeholders (e.g. send confirmations) could show the new balance as the transferred amount
+- **Broken message paths** — welcome messages (`welcome-new-player`/`welcome-back`), PvP loss/gain messages, `max-transaction-exceeded`, and update notifications mapped to nonexistent keys and rendered "Message not found"; all now resolve to the correct `messages.yml` entries, and missing placeholder mappings (`{command}`, `{symbol}`, `{money}`, `{mobcoins}`, `{gems}`, `{current}`, `{latest}`) were added
+- **Request notification misleading** — told players to `/accept <id>` although the command takes a player name; the message and help now say `<player>`
+- **Pre-release version ordering** — `SemanticVersion` compared suffixes as plain strings, so `1.0-rc10` sorted below `1.0-rc9` and `1.0-alpha` above `1.0-beta`; prerelease identifiers are now compared per semver rules
+- **FlatFile save error reporting** — `savePlayerData` returned void and hid write failures; all storage providers now return a boolean success flag that callers report on failure
+
 ## [2.1.0] — 2026-05-28
 
 ### Added
@@ -75,6 +105,7 @@ DZEconomy v2.0.0 is a ground-up rewrite of the plugin with a modern architecture
 
 ---
 
+[26.2.0]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v26.2.0
 [2.1.0]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v2.1.0
 [2.0.0]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v2.0.0
 [1.0.0]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v1.0.0
