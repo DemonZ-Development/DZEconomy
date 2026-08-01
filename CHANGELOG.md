@@ -41,6 +41,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Convert confirmation showed the wrong amount** — `/economy convert` reported the input amount for the target currency even when conversion rates/fees change it (e.g. rate 100x with 5% fee); the message now shows the actual amount received (`{to_amount}`)
 - **`/economy baltop` and `/money top` showing stale balances** — leaderboards read the storage backend directly, which lags behind the in-memory cache (writes flush on unload/autosave); cached balances are now overlaid so rankings are current
 - **New message keys invisible on existing installs** — `messages.yml` was read with a fallback that bypassed JAR defaults, so missing keys rendered "Message not found"; missing keys now fall back to the JAR default automatically
+- **PvP loss/gain messages showing literal `{killer}`/`{victim}`** — the placeholder replacement table never mapped `%killer%`/`%victim%`, so both players saw raw placeholders instead of names
+- **Mob reward messages showing literal `{mob}`** — `%mob%` was never mapped, so kill rewards showed `{mob}` instead of the mob name
+- **PvP high-value kill broadcast rendering "Message not found"** — the `pvp-broadcast` message key was not mapped to `pvp.broadcast` in `messages.yml`
 
 ## [2.1.0] — 2026-05-28
 

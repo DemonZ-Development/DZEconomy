@@ -65,6 +65,7 @@ public class MessagesUtil {
         if (lower.equals("give-failed")) return "economy.give.failed";
         if (lower.startsWith("pvp-lost-")) return "pvp.victim-loss";
         if (lower.startsWith("pvp-gained-")) return "pvp.killer-gain";
+        if (lower.equals("pvp-broadcast")) return "pvp.broadcast";
         if (lower.endsWith("-earned")) return "mob-rewards.reward";
         
         String base = lower;
@@ -236,6 +237,15 @@ public class MessagesUtil {
                     break;
                 case "%to_amount%":
                     finalReplacements.put("{to_amount}", value);
+                    break;
+                case "%killer%":
+                    finalReplacements.put("{killer}", value);
+                    break;
+                case "%victim%":
+                    finalReplacements.put("{victim}", value);
+                    break;
+                case "%mob%":
+                    finalReplacements.put("{mob}", value);
                     break;
                 case "%count%":
                     finalReplacements.put("{count}", value);
