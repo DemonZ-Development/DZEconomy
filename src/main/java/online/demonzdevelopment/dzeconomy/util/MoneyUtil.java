@@ -101,35 +101,6 @@ public final class MoneyUtil {
     }
 
     /**
-     * Divides two monetary values with proper precision.
-     *
-     * @param a the dividend
-     * @param b the divisor
-     * @return the quotient, rounded to default scale
-     * @throws ArithmeticException if divisor is zero
-     */
-    public static double divide(double a, double b) {
-        if (b == 0) throw new ArithmeticException("Division by zero");
-        if (!Double.isFinite(a) || !Double.isFinite(b)) {
-            return a / b;
-        }
-        return BigDecimal.valueOf(a)
-                .divide(BigDecimal.valueOf(b), DEFAULT_SCALE, ROUNDING_MODE)
-                .doubleValue();
-    }
-
-    /**
-     * Checks if two monetary values are equal within floating-point tolerance.
-     *
-     * @param a the first value
-     * @param b the second value
-     * @return true if the values are equal after rounding
-     */
-    public static boolean equals(double a, double b) {
-        return compare(a, b) == 0;
-    }
-
-    /**
      * Compares two monetary values after rounding.
      *
      * @param a the first value
@@ -141,67 +112,5 @@ public final class MoneyUtil {
             return Double.compare(a, b);
         }
         return Double.compare(round(a), round(b));
-    }
-
-    /**
-     * Returns the greater of two monetary values.
-     *
-     * @param a the first value
-     * @param b the second value
-     * @return the greater value
-     */
-    public static double max(double a, double b) {
-        int cmp = compare(a, b);
-        if (cmp != 0) {
-            return cmp > 0 ? a : b;
-        }
-        return Double.compare(a, b) >= 0 ? a : b;
-    }
-
-    /**
-     * Returns the lesser of two monetary values.
-     *
-     * @param a the first value
-     * @param b the second value
-     * @return the lesser value
-     */
-    public static double min(double a, double b) {
-        int cmp = compare(a, b);
-        if (cmp != 0) {
-            return cmp < 0 ? a : b;
-        }
-        return Double.compare(a, b) <= 0 ? a : b;
-    }
-
-    /**
-     * Ensures a value is not negative (clamps to zero).
-     *
-     * @param value the value to clamp
-     * @return the value if positive, 0.0 otherwise
-     */
-    public static double clampToZero(double value) {
-        return value < 0 ? 0.0 : round(value);
-    }
-
-    /**
-     * Formats a monetary value for display.
-     *
-     * @param value the value to format
-     * @param decimalPlaces the number of decimal places
-     * @return formatted string (e.g. "1,000.00")
-     */
-    public static String format(double value, int decimalPlaces) {
-        if (decimalPlaces < 0) decimalPlaces = 0;
-        return String.format("%,." + decimalPlaces + "f", round(value, decimalPlaces));
-    }
-
-    /**
-     * Formats a monetary value with default decimal places.
-     *
-     * @param value the value to format
-     * @return formatted string (e.g. "1,000.00")
-     */
-    public static String format(double value) {
-        return format(value, DEFAULT_SCALE);
     }
 }

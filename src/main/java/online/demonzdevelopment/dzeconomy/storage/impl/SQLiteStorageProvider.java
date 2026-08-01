@@ -34,7 +34,11 @@ public class SQLiteStorageProvider implements StorageProvider {
             if (!dataFolder.exists()) {
                 dataFolder.mkdirs();
             }
-            File dbFile = new File(dataFolder, "dzeconomy.db");
+            String dbFileName = "dzeconomy.db";
+            if (plugin.getConfigManager() != null && plugin.getConfigManager().getConfig() != null) {
+                dbFileName = plugin.getConfigManager().getConfig().getString("storage.sqlite.file", "dzeconomy.db");
+            }
+            File dbFile = new File(dataFolder, dbFileName);
             this.url = "jdbc:sqlite:" + dbFile.getAbsolutePath();
             
             HikariConfig config = new HikariConfig();
@@ -93,6 +97,7 @@ public class SQLiteStorageProvider implements StorageProvider {
                 "currency_type VARCHAR(16) NOT NULL, " +
                 "send_count INTEGER DEFAULT 0, " +
                 "request_count INTEGER DEFAULT 0, " +
+                "sent_amount REAL DEFAULT 0, " +
                 "PRIMARY KEY (uuid, currency_type), " +
                 "FOREIGN KEY (uuid) REFERENCES dze_players(uuid) ON DELETE CASCADE)"
             );
@@ -102,11 +107,23 @@ public class SQLiteStorageProvider implements StorageProvider {
                 "currency_type VARCHAR(16) NOT NULL, " +
                 "send_cooldown INTEGER DEFAULT 0, " +
                 "request_cooldown INTEGER DEFAULT 0, " +
+                "send_time INTEGER DEFAULT 0, " +
                 "PRIMARY KEY (uuid, currency_type), " +
                 "FOREIGN KEY (uuid) REFERENCES dze_players(uuid) ON DELETE CASCADE)"
             );
+            // Schema upgrades for databases created by older versions
+            addColumnIfMissing(connection, "dze_daily_limits", "sent_amount", "REAL DEFAULT 0");
+            addColumnIfMissing(connection, "dze_cooldowns", "send_time", "INTEGER DEFAULT 0");
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to create SQLite tables", e);
+        }
+    }
+
+    private void addColumnIfMissing(Connection connection, String table, String column, String definition) {
+        try (Statement stmt = connection.createStatement()) {
+            stmt.executeUpdate("ALTER TABLE " + table + " ADD COLUMN " + column + " " + definition);
+        } catch (SQLException e) {
+            // Column already exists (SQLite error 1: duplicate column name) — ignore
         }
     }
     
@@ -114,12 +131,14 @@ public class SQLiteStorageProvider implements StorageProvider {
     public PlayerData loadPlayerData(UUID uuid) {
         try (Connection connection = getConnection()) {
             PlayerData data = new PlayerData(uuid);
+            boolean found = false;
             
             try (PreparedStatement stmt = connection.prepareStatement(
                     "SELECT * FROM dze_players WHERE uuid = ?")) {
                 stmt.setString(1, uuid.toString());
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
+                        found = true;
                         data.setUsername(rs.getString("username"));
                         data.setFirstJoin(rs.getLong("first_join"));
                         data.setLastSeen(rs.getLong("last_seen"));
@@ -136,6 +155,10 @@ public class SQLiteStorageProvider implements StorageProvider {
                 }
             }
             
+            if (!found) {
+                return null;
+            }
+            
             loadDailyLimits(connection, data);
             loadCooldowns(connection, data);
             data.setDirty(false);
@@ -148,7 +171,7 @@ public class SQLiteStorageProvider implements StorageProvider {
     
     private void loadDailyLimits(Connection connection, PlayerData data) throws SQLException {
         try (PreparedStatement stmt = connection.prepareStatement(
-                "SELECT currency_type, send_count, request_count FROM dze_daily_limits WHERE uuid = ?")) {
+                "SELECT currency_type, send_count, request_count, sent_amount FROM dze_daily_limits WHERE uuid = ?")) {
             stmt.setString(1, data.getUuid().toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -156,6 +179,7 @@ public class SQLiteStorageProvider implements StorageProvider {
                     if (type != null) {
                         data.setDailySendCount(type, rs.getLong("send_count"));
                         data.setDailyRequestCount(type, rs.getLong("request_count"));
+                        data.setDailySent(type, rs.getDouble("sent_amount"));
                     }
                 }
             }
@@ -164,7 +188,7 @@ public class SQLiteStorageProvider implements StorageProvider {
     
     private void loadCooldowns(Connection connection, PlayerData data) throws SQLException {
         try (PreparedStatement stmt = connection.prepareStatement(
-                "SELECT currency_type, send_cooldown, request_cooldown FROM dze_cooldowns WHERE uuid = ?")) {
+                "SELECT currency_type, send_cooldown, request_cooldown, send_time FROM dze_cooldowns WHERE uuid = ?")) {
             stmt.setString(1, data.getUuid().toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -172,6 +196,7 @@ public class SQLiteStorageProvider implements StorageProvider {
                     if (type != null) {
                         data.setSendCooldown(type, rs.getLong("send_cooldown"));
                         data.setRequestCooldown(type, rs.getLong("request_cooldown"));
+                        data.setLastSendTime(type, rs.getLong("send_time"));
                     }
                 }
             }
@@ -179,7 +204,7 @@ public class SQLiteStorageProvider implements StorageProvider {
     }
     
     @Override
-    public void savePlayerData(PlayerData data) {
+    public boolean savePlayerData(PlayerData data) {
         try (Connection connection = getConnection()) {
             connection.setAutoCommit(false);
             try {
@@ -188,13 +213,15 @@ public class SQLiteStorageProvider implements StorageProvider {
                 saveCooldowns(connection, data);
                 connection.commit();
                 data.setDirty(false);
+                return true;
             } catch (SQLException e) {
                 try {
                     connection.rollback();
                 } catch (SQLException ex) {
                     plugin.getLogger().log(Level.SEVERE, "Failed to rollback SQLite transaction", ex);
                 }
-                throw e;
+                plugin.getLogger().log(Level.SEVERE, "Failed to save player data for " + data.getUuid(), e);
+                return false;
             } finally {
                 try {
                     connection.setAutoCommit(true);
@@ -202,6 +229,7 @@ public class SQLiteStorageProvider implements StorageProvider {
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to save player data for " + data.getUuid(), e);
+            return false;
         }
     }
     
@@ -231,13 +259,14 @@ public class SQLiteStorageProvider implements StorageProvider {
     
     private void saveDailyLimits(Connection connection, PlayerData data) throws SQLException {
         try (PreparedStatement stmt = connection.prepareStatement(
-                "INSERT OR REPLACE INTO dze_daily_limits (uuid, currency_type, send_count, request_count) " +
-                "VALUES (?, ?, ?, ?)")) {
+                "INSERT OR REPLACE INTO dze_daily_limits (uuid, currency_type, send_count, request_count, sent_amount) " +
+                "VALUES (?, ?, ?, ?, ?)")) {
             for (CurrencyType type : CurrencyType.values()) {
                 stmt.setString(1, data.getUuid().toString());
                 stmt.setString(2, type.getId());
                 stmt.setLong(3, data.getDailySendCount(type));
                 stmt.setLong(4, data.getDailyRequestCount(type));
+                stmt.setDouble(5, data.getDailySent(type));
                 stmt.addBatch();
             }
             stmt.executeBatch();
@@ -246,16 +275,27 @@ public class SQLiteStorageProvider implements StorageProvider {
     
     private void saveCooldowns(Connection connection, PlayerData data) throws SQLException {
         try (PreparedStatement stmt = connection.prepareStatement(
-                "INSERT OR REPLACE INTO dze_cooldowns (uuid, currency_type, send_cooldown, request_cooldown) " +
-                "VALUES (?, ?, ?, ?)")) {
+                "INSERT OR REPLACE INTO dze_cooldowns (uuid, currency_type, send_cooldown, request_cooldown, send_time) " +
+                "VALUES (?, ?, ?, ?, ?)")) {
             for (CurrencyType type : CurrencyType.values()) {
                 stmt.setString(1, data.getUuid().toString());
                 stmt.setString(2, type.getId());
                 stmt.setLong(3, data.getSendCooldown(type));
                 stmt.setLong(4, data.getRequestCooldown(type));
+                stmt.setLong(5, data.getLastSendTime(type));
                 stmt.addBatch();
             }
             stmt.executeBatch();
+        }
+    }
+
+    @Override
+    public void checkpoint() {
+        try (Connection connection = getConnection();
+             Statement stmt = connection.createStatement()) {
+            stmt.execute("PRAGMA wal_checkpoint(TRUNCATE)");
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.WARNING, "Failed to checkpoint SQLite database", e);
         }
     }
     
@@ -299,42 +339,6 @@ public class SQLiteStorageProvider implements StorageProvider {
         return uuids;
     }
     
-    @Override
-    public Map<String, Double> getAllBalances(UUID uuid) {
-        Map<String, Double> balances = new HashMap<>();
-        try (Connection connection = getConnection();
-             PreparedStatement stmt = connection.prepareStatement(
-                "SELECT money_balance, mobcoin_balance, gem_balance FROM dze_players WHERE uuid = ?")) {
-            stmt.setString(1, uuid.toString());
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    balances.put("money", rs.getDouble("money_balance"));
-                    balances.put("mobcoin", rs.getDouble("mobcoin_balance"));
-                    balances.put("gem", rs.getDouble("gem_balance"));
-                }
-            }
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to get all balances for " + uuid, e);
-        }
-        return balances;
-    }
-
-    @Override
-    public void setBalance(UUID uuid, String currencyKey, double amount) {
-        String column = getBalanceColumn(currencyKey);
-        if (column == null) return;
-        try (Connection connection = getConnection();
-             PreparedStatement stmt = connection.prepareStatement(
-                "INSERT INTO dze_players (uuid, " + column + ") VALUES (?, ?) " +
-                "ON CONFLICT(uuid) DO UPDATE SET " + column + " = excluded." + column)) {
-            stmt.setString(1, uuid.toString());
-            stmt.setDouble(2, amount);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to set balance for " + uuid, e);
-        }
-    }
-
     @Override
     public List<Map.Entry<UUID, Double>> getTopBalances(String currencyKey, int limit) {
         String column = getBalanceColumn(currencyKey);

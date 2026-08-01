@@ -146,9 +146,15 @@ public class PlayerData {
     public long getLastSendTime(CurrencyType type) { return lastSendTimes.getOrDefault(type, 0L); }
     public void setLastSendTime(CurrencyType type, long timestamp) { lastSendTimes.put(type, timestamp); dirty = true; }
 
-    public void resetDailySent(CurrencyType type) { dailySendCounts.put(type, 0L); dailySentAmount.put(type, 0.0); dirty = true; }
-    public void resetDailyReceived(CurrencyType type) { dailyRequestCounts.put(type, 0L); moneyReceived.put(type, 0.0); dirty = true; }
-    public void resetDailyTransactions(CurrencyType type) { resetDailySent(type); resetDailyReceived(type); }
+    // Load-time setter (does NOT mark dirty — called during load)
+    public void setDailySent(CurrencyType type, double amount) { dailySentAmount.put(type, amount); }
+
+    public void resetDailyTransactions(CurrencyType type) {
+        dailySendCounts.put(type, 0L);
+        dailySentAmount.put(type, 0.0);
+        dailyRequestCounts.put(type, 0L);
+        dirty = true;
+    }
 
     private volatile boolean dirty = false;
     public boolean isDirty() { return dirty; }

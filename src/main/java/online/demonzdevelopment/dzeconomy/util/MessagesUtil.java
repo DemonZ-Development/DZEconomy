@@ -31,11 +31,36 @@ public class MessagesUtil {
         if (lower.equals("request-already-pending")) return "request.max-pending";
         if (lower.equals("no-request-found")) return "request.not-found";
         if (lower.equals("request-expired")) return "request.expired";
+        if (lower.equals("request-expired-timeout")) return "request.expired";
+        if (lower.equals("request-expired-notify")) return "request.expired-target";
         if (lower.equals("combat-tagged-request")) return "error.combat-tagged";
         if (lower.equals("combat-tagged-send")) return "error.combat-tagged";
+        if (lower.equals("combat-tagged")) return "combat-tag.tagged";
         if (lower.equals("player-only")) return "error.console-only-player";
         if (lower.equals("invalid-page")) return "error.invalid-amount";
+        if (lower.equals("invalid-currency-type")) return "error.invalid-currency-type";
+        if (lower.equals("invalid-currency-or-page")) return "error.invalid-currency-or-page";
         if (lower.equals("request-cancelled-quit")) return "request.cancelled-quit";
+        if (lower.equals("max-transaction-exceeded")) return "error.above-maximum";
+        if (lower.equals("welcome-new-player")) return "welcome.first-join";
+        if (lower.equals("welcome-back")) return "welcome.returning";
+        if (lower.equals("update-available")) return "update.notification";
+        if (lower.equals("unknown-subcommand")) return "error.unknown-subcommand";
+        if (lower.equals("reload-success")) return "economy.reload.success";
+        if (lower.equals("reload-failed")) return "economy.reload.failed";
+        if (lower.equals("same-currency-type")) return "economy.convert.same-currency";
+        if (lower.equals("convert-success")) return "economy.convert.success";
+        if (lower.equals("convert-failed")) return "economy.convert.insufficient";
+        if (lower.equals("usage-economy-convert")) return "economy.convert.usage";
+        if (lower.equals("usage-economy-migrate")) return "economy.migrate.usage";
+        if (lower.equals("usage-economy-payall")) return "economy.payall.usage";
+        if (lower.equals("migrate-same-storage")) return "economy.migrate.same-backend";
+        if (lower.equals("migrate-invalid-storage")) return "economy.migrate.invalid-storage";
+        if (lower.equals("migrate-start")) return "economy.migrate.start";
+        if (lower.equals("payall-success")) return "economy.payall.success";
+        if (lower.equals("payall-received")) return "economy.payall.broadcast";
+        if (lower.startsWith("pvp-lost-")) return "pvp.victim-loss";
+        if (lower.startsWith("pvp-gained-")) return "pvp.killer-gain";
         if (lower.endsWith("-earned")) return "mob-rewards.reward";
         
         String base = lower;
@@ -138,8 +163,9 @@ public class MessagesUtil {
                     finalReplacements.put("{target}", value);
                     break;
                 case "%balance%":
+                    // NOTE: must NOT fill {amount} — messages that use both {amount} and
+                    // {balance} would get one placeholder clobbered by the other
                     finalReplacements.put("{balance}", value);
-                    finalReplacements.put("{amount}", value);
                     break;
                 case "%amount%":
                     finalReplacements.put("{amount}", value);
@@ -147,11 +173,33 @@ public class MessagesUtil {
                 case "%currency%":
                     finalReplacements.put("{currency}", value);
                     break;
+                case "%symbol%":
+                    finalReplacements.put("{symbol}", value);
+                    break;
+                case "%command%":
+                    finalReplacements.put("{command}", value);
+                    break;
+                case "%money%":
+                    finalReplacements.put("{money}", value);
+                    break;
+                case "%mobcoins%":
+                    finalReplacements.put("{mobcoins}", value);
+                    break;
+                case "%gems%":
+                    finalReplacements.put("{gems}", value);
+                    break;
+                case "%current%":
+                    finalReplacements.put("{current}", value);
+                    break;
+                case "%latest%":
+                    finalReplacements.put("{latest}", value);
+                    break;
                 case "%max%":
                     finalReplacements.put("{max}", value);
                     break;
                 case "%time%":
                 case "%cooldown%":
+                case "%duration%":
                     finalReplacements.put("{time}", value);
                     finalReplacements.put("{cooldown}", value);
                     break;
@@ -164,6 +212,21 @@ public class MessagesUtil {
                     break;
                 case "%permission%":
                     finalReplacements.put("{permission}", value);
+                    break;
+                case "%from%":
+                    finalReplacements.put("{from}", value);
+                    break;
+                case "%to%":
+                    finalReplacements.put("{to}", value);
+                    break;
+                case "%from_balance%":
+                    finalReplacements.put("{from_balance}", value);
+                    break;
+                case "%to_balance%":
+                    finalReplacements.put("{to_balance}", value);
+                    break;
+                case "%count%":
+                    finalReplacements.put("{count}", value);
                     break;
             }
         }

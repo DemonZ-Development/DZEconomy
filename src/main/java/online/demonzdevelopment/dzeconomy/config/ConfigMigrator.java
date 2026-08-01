@@ -66,29 +66,11 @@ public class ConfigMigrator {
         if (!config.contains("updates.modrinth-project-id")) {
             config.set("updates.modrinth-project-id", "dzeconomy");
         }
-        if (!config.contains("updates.notify.on-join")) {
-            config.set("updates.notify.on-join", true);
-        }
-        if (!config.contains("updates.notify.permission")) {
-            config.set("updates.notify.permission", "dzeconomy.admin.update");
-        }
-        if (!config.contains("updates.notify.console-log")) {
-            config.set("updates.notify.console-log", true);
-        }
         if (!config.contains("combat-tag.enabled")) {
             config.set("combat-tag.enabled", true);
         }
         if (!config.contains("combat-tag.duration")) {
             config.set("combat-tag.duration", 15);
-        }
-        if (!config.contains("baltop.limit")) {
-            config.set("baltop.limit", 10);
-        }
-        if (!config.contains("baltop.cache-minutes")) {
-            config.set("baltop.cache-minutes", 5);
-        }
-        if (!config.contains("payall.enabled")) {
-            config.set("payall.enabled", true);
         }
         // Remove deprecated auto-update settings
         config.set("auto-update", null);

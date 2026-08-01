@@ -3,9 +3,7 @@ package online.demonzdevelopment.dzeconomy.currency;
 import online.demonzdevelopment.dzeconomy.DZEconomy;
 import online.demonzdevelopment.dzeconomy.data.CurrencyRequest;
 import online.demonzdevelopment.dzeconomy.data.PlayerData;
-import online.demonzdevelopment.dzeconomy.data.TransactionLogEntry;
 import online.demonzdevelopment.dzeconomy.storage.StorageProvider;
-import online.demonzdevelopment.dzeconomy.util.MessagesUtil;
 import online.demonzdevelopment.dzeconomy.util.MoneyUtil;
 
 import org.bukkit.Bukkit;
@@ -78,6 +76,7 @@ public class CurrencyManager {
             PlayerData data = storage.loadPlayerData(uuid);
             if (data == null) {
                 data = new PlayerData(uuid);
+                data.setNewPlayer(true);
             } else {
                 long lastSeen = data.getLastSeen();
                 if (lastSeen > 0) {
@@ -101,7 +100,9 @@ public class CurrencyManager {
     }
     
     public void unloadPlayerData(UUID uuid) {
-        withLock(uuid, () -> {
+        ReentrantLock lock = getLock(uuid);
+        lock.lock();
+        try {
             PlayerData data = playerDataCache.get(uuid);
             if (data != null) {
                 savePlayerData(uuid);
@@ -113,7 +114,14 @@ public class CurrencyManager {
             if (plugin.getRankManager() != null) {
                 plugin.getRankManager().removePlayerRank(uuid);
             }
-        });
+        } finally {
+            // Release the per-player lock map entry when safe to do so,
+            // preventing a memory leak on servers with many join/quit cycles.
+            if (!lock.hasQueuedThreads()) {
+                playerLocks.remove(uuid, lock);
+            }
+            lock.unlock();
+        }
     }
     
     public PlayerData getPlayerData(UUID uuid) {
@@ -344,7 +352,10 @@ public class CurrencyManager {
             PlayerData data = playerDataCache.get(uuid);
             if (data != null && data.isDirty()) {
                 try {
-                    plugin.getStorageProvider().savePlayerData(data);
+                    boolean saved = plugin.getStorageProvider().savePlayerData(data);
+                    if (!saved) {
+                        plugin.getLogger().severe("Failed to save player data for " + uuid);
+                    }
                 } catch (Exception e) {
                     plugin.getLogger().severe("Failed to save player data for " + uuid + ": " + e.getMessage());
                 }
@@ -362,10 +373,6 @@ public class CurrencyManager {
         }
     }
     
-    public void saveAllPlayersAsync() {
-        online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTaskAsynchronously(plugin, this::saveAllPlayersSync);
-    }
-    
     // ━━ Leaderboard ━━
     public java.util.concurrent.CompletableFuture<List<Map.Entry<UUID, Double>>> getBalanceTopAsync(CurrencyType type, int limit) {
         return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
@@ -373,19 +380,6 @@ public class CurrencyManager {
         });
     }
     
-    // ━━ Utility ━━
-    public Collection<PlayerData> getAllPlayerData() {
-        return Collections.unmodifiableCollection(playerDataCache.values());
-    }
-    
-    public Collection<UUID> getAllLoadedPlayers() {
-        return Collections.unmodifiableSet(playerDataCache.keySet());
-    }
-    
-    public int getLoadedPlayerCount() {
-        return playerDataCache.size();
-    }
-
     // ━━ Stub methods used by EconomyCommand ━━
 
     public int getPendingRequestCount() {
@@ -439,12 +433,6 @@ public class CurrencyManager {
 
     public java.util.Set<UUID> getRequestHolders() {
         return new java.util.HashSet<>(pendingRequests.keySet());
-    }
-
-    public CurrencyManager getRequestManager() { return this; }
-
-    public online.demonzdevelopment.dzeconomy.util.MessagesUtil getMessagesUtil() {
-        return new online.demonzdevelopment.dzeconomy.util.MessagesUtil(plugin);
     }
 
     public void reloadConfig() {

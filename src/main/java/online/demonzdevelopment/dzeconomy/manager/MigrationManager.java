@@ -59,6 +59,11 @@ public class MigrationManager {
             Files.createDirectories(backupDir);
             Path backupFile = backupDir.resolve("backup_" + timestamp + ".zip");
             
+            // Flush any pending writes (e.g. SQLite WAL) so the copied files are consistent
+            if (plugin.getStorageProvider() != null) {
+                plugin.getStorageProvider().checkpoint();
+            }
+            
             try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(backupFile))) {
                 Path dataFolder = plugin.getDataFolder().toPath();
                 backupDirectory(dataFolder, dataFolder, zos);
@@ -142,8 +147,14 @@ public class MigrationManager {
             }
             
             // Initialize both providers
-            sourceProvider.initialize();
-            targetProvider.initialize();
+            if (!sourceProvider.initialize()) {
+                sendMessageSafe(sender, "&cFailed to initialize source storage provider: " + fromType);
+                return false;
+            }
+            if (!targetProvider.initialize()) {
+                sendMessageSafe(sender, "&cFailed to initialize target storage provider: " + toType);
+                return false;
+            }
             
             // Get ALL player UUIDs from source database (not just online players)
             sendMessageSafe(sender, "&7Querying all player data from source...");
@@ -165,9 +176,16 @@ public class MigrationManager {
                     online.demonzdevelopment.dzeconomy.data.PlayerData data = sourceProvider.loadPlayerData(uuid);
                     if (data != null) {
                         data.setDirty(true); // force saving all related components in SQLite/MySQL Providers
-                        targetProvider.savePlayerData(data);
+                        if (targetProvider.savePlayerData(data)) {
+                            migrated++;
+                        } else {
+                            failed++;
+                            plugin.getLogger().warning("Failed to save player " + uuid + " to target storage");
+                        }
+                    } else {
+                        failed++;
+                        plugin.getLogger().warning("Failed to load player " + uuid + " from source storage");
                     }
-                    migrated++;
                     
                     if (migrated % 50 == 0) {
                         sendMessageSafe(sender, "&7Migrated &e" + migrated + "&7/" + allUUIDs.size() + " players...");

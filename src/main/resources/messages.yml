@@ -1,5 +1,5 @@
 # ╔══════════════════════════════════════════════════════════════╗
-# ║                    DZEconomy v2.1.1                        ║
+# ║                    DZEconomy v26.2.0                        ║
 # ║              Messages & Language Configuration              ║
 # ║                                                            ║
 # ║   Wiki: https://wiki.demonzdevelopment.online/dzeconomy                 ║
@@ -43,8 +43,6 @@ balance:
   self: "&aYour {currency} balance&7: &e{symbol}{amount}"
   # Shown when checking another player's balance.
   others: "&a{name}'s {currency} balance&7: &e{symbol}{amount}"
-  # Shown when a disabled currency's balance is checked.
-  currency-disabled: "&cThe {currency} currency is currently disabled."
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                  SEND / RECEIVE MESSAGES                    ║
@@ -62,8 +60,6 @@ send:
   sender: "&aYou sent &e{symbol}{amount} {currency} &ato &f{receiver}&7. &8(New balance: {symbol}{balance})"
   # Shown to the receiver when they receive currency.
   receiver: "&aYou received &e{symbol}{amount} {currency} &afrom &f{sender}&7. &8(New balance: {symbol}{balance})"
-  # Confirmation message (if confirmation mode is enabled).
-  confirm: "&eType &a/{command} send {receiver} {amount} &eagain within 10 seconds to confirm."
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                 REQUEST MESSAGES                            ║
@@ -81,7 +77,7 @@ request:
   # Shown to the sender when a request is sent.
   sent: "&aRequest sent to &f{target} &afor &e{symbol}{amount} {currency}&7. &8(Expires in {timeout}s)"
   # Shown to the target when they receive a request.
-  received: "&f{sender} &ais requesting &e{symbol}{amount} {currency}&a. &7Use &a/{command} accept {id} &7or &c/{command} deny {id}"
+  received: "&f{sender} &ais requesting &e{symbol}{amount} {currency}&a. &7Use &a/{command} accept {sender} &7or &c/{command} deny {sender}"
   # Shown to the sender when their request is accepted.
   accepted-sender: "&a{target} &aaccepted your request for &e{symbol}{amount} {currency}&7."
   # Shown to the target when they accept a request.
@@ -98,8 +94,6 @@ request:
   max-pending: "&cYou have too many pending requests! Wait for some to expire or be resolved."
   # Shown when trying to accept/deny a request that doesn't exist or has expired.
   not-found: "&cRequest not found. It may have expired or been resolved."
-  # Shown when trying to accept your own request.
-  cannot-accept-own: "&cYou cannot accept your own request!"
   # Shown when a request is cancelled because a player quit.
   cancelled-quit: "&cThe payment request involving &f{player} &chas been cancelled because they disconnected."
 
@@ -175,6 +169,10 @@ error:
   usage: "&cUsage: {usage}"
   # Unknown sub-command.
   unknown-subcommand: "&cUnknown sub-command. Use &e/{command} help &cfor a list of commands."
+  # Shown when a currency type in a command is invalid.
+  invalid-currency-type: "&cInvalid currency type! &7Valid: money, mobcoin, gem."
+  # Shown when a baltop currency or page argument is invalid.
+  invalid-currency-or-page: "&cInvalid currency or page number!"
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║               ECONOMY COMMAND MESSAGES                      ║
@@ -186,81 +184,28 @@ economy:
     success: "&aConfiguration reloaded successfully!"
     failed: "&cFailed to reload configuration! Check the console for errors."
 
-  # ── Version ─────────────────────────────────────────────────
-  version: "&6DZEconomy &7v&e{version} &7by &6DemonZ Development"
-
-  # ── Info ────────────────────────────────────────────────────
-  # Placeholders: {version}, {storage}, {currencies}, {players}, {uptime}
-  info:
-    - "&8&m────────────────────────────────────"
-    - "&6&l  DZEconomy &7v&e{version}"
-    - "&8&m────────────────────────────────────"
-    - "&7  Storage: &f{storage}"
-    - "&7  Currencies: &f{currencies}"
-    - "&7  Tracked Players: &f{players}"
-    - "&7  Uptime: &f{uptime}"
-    - "&8&m────────────────────────────────────"
-
-  # ── Status ──────────────────────────────────────────────────
-  # Placeholders: {storage}, {storage_latency}, {cache_size}, {auto_save}, {last_save}
-  status:
-    - "&8&m────────────────────────────────────"
-    - "&6&l  Plugin Status"
-    - "&8&m────────────────────────────────────"
-    - "&7  Storage: &f{storage} &7(&a{storage_latency}ms&7)"
-    - "&7  Cache Size: &f{cache_size} players"
-    - "&7  Auto-Save: &f{auto_save}s"
-    - "&7  Last Save: &f{last_save}"
-    - "&8&m────────────────────────────────────"
-
   # ── Convert ─────────────────────────────────────────────────
-  # Placeholders: {from_currency}, {to_currency}, {from_amount}, {to_amount}, {fee}, {rate}
+  # Placeholders: {from}, {to}, {amount}
   convert:
-    success: "&aConverted &e{from_amount} {from_currency} &ato &e{to_amount} {to_currency}&7. &8(Fee: {fee}%)"
-    insufficient: "&cYou don't have enough {from_currency} to convert!"
-    disabled: "&cCurrency conversion is not enabled."
-    same-currency: "&cYou can't convert {currency} to itself!"
+    success: "&aConverted &e{amount} {from} &ato &e{amount} {to}&7."
+    insufficient: "&cYou don't have enough {from} to convert!"
+    same-currency: "&cYou can't convert a currency to itself!"
+    usage: "&cUsage: &e/economy convert <player> <from_currency> <to_currency> <amount>"
 
   # ── Migrate ─────────────────────────────────────────────────
   # Placeholders: {from}, {to}, {count}
   migrate:
     start: "&eStarting migration from &f{from} &eto &f{to}&e..."
-    success: "&aMigration complete! &7Migrated &f{count} &7player records."
-    failed: "&cMigration failed! Check the console for details."
-    in-progress: "&cA migration is already in progress! Please wait."
+    usage: "&cUsage: &e/economy migrate <from_storage> <to_storage>"
+    invalid-storage: "&cInvalid storage type: &f{from} → {to}&c. Valid: sqlite, mysql, flatfile, yaml."
     same-backend: "&cYou're already using {backend} storage!"
-
-  # ── Baltop (Admin) ──────────────────────────────────────────
-  baltop:
-    header: "&6&l  Global Balance Leaderboard"
-    entry: "&e#{rank} &7- &f{name} &8» &a{total}"
-    footer: "&7Page &f{page}&7/&f{pages}"
 
   # ── Payall ──────────────────────────────────────────────────
   # Placeholders: {amount}, {currency}, {symbol}, {count}
   payall:
     success: "&aPaid &e{symbol}{amount} {currency} &ato &f{count} &aplayers!"
     broadcast: "&aYou received &e{symbol}{amount} {currency} &afrom a server payout!"
-    cooldown: "&cPayall is on cooldown! Please wait &e{time}s&c."
-    no-players: "&cNo online players to pay!"
-
-  # ── Credits ─────────────────────────────────────────────────
-  credits:
-    - "&8&m────────────────────────────────────"
-    - "&6&l  DZEconomy Credits"
-    - "&8&m────────────────────────────────────"
-    - "&7  Developed by: &6DemonZ Development"
-    - "&7  Version: &e{version}"
-    - "&7  Wiki: &bhttps://wiki.demonzdevelopment.online/dzeconomy"
-    - "&7  Discord: &bhttps://discord.com/invite/GYsTt96ypf"
-    - "&7  Modrinth: &bhttps://modrinth.com/plugin/dzeconomy"
-    - "&8&m────────────────────────────────────"
-
-  # ── Backup ──────────────────────────────────────────────────
-  # Placeholders: {file}
-  backup:
-    success: "&aBackup created successfully! &7({file})"
-    failed: "&cBackup failed! Check the console for details."
+    usage: "&cUsage: &e/economy payall <currency> <amount>"
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                 COMBAT TAG MESSAGES                         ║
@@ -273,10 +218,6 @@ economy:
 combat-tag:
   # Shown when a player gets combat tagged.
   tagged: "&cYou have been combat-tagged! &7Do not log out for {time}s."
-  # Shown when combat tag expires.
-  expired: "&aYou are no longer combat-tagged."
-  # Action bar format (also set in config.yml).
-  action-bar: "&c&l⚔ &eCombat Tag &7- &c{time}s remaining"
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                   PVP MESSAGES                              ║
@@ -307,12 +248,6 @@ pvp:
 update:
   # Shown to admins on join when an update is available.
   notification: "&6[DZEconomy] &eA new version is available! &7v{current} → v{latest}"
-  # Hover/click prompt.
-  download: "&7Click here to download: &b{link}"
-  # Console log format.
-  console: "[DZEconomy] New version available! Current: v{current}, Latest: v{latest}. Download: {link}"
-  # Shown when already on the latest version.
-  up-to-date: "&aDZEconomy is up to date! &7(v{current})"
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                  WELCOME MESSAGES                           ║
@@ -325,102 +260,10 @@ update:
 
 welcome:
   # Shown when a player joins for the very first time.
-  first-join: "&aWelcome &f{name} &ato the server! You started with &e{symbol}{amount} {currency}&a."
+  # Placeholders: {name}, {money}, {mobcoins}, {gems} (starting balances)
+  first-join: "&aWelcome &f{name} &ato the server! You started with &e{money} Money&a, &e{mobcoins} MobCoins &7and &e{gems} Gems&a."
   # Shown when a returning player joins (optional).
   returning: "&aWelcome back, &f{name}&a! Your balances are ready."
-
-# ╔══════════════════════════════════════════════════════════════╗
-# ║                     GUI MESSAGES                            ║
-# ╚══════════════════════════════════════════════════════════════╝
-# Placeholders:
-#   {currency}  – Currency display name
-#   {symbol}    – Currency symbol
-#   {amount}    – Balance amount
-#   {page}      – Current page number
-#   {pages}     – Total pages
-
-gui:
-  # Main economy GUI title.
-  title: "&6DZEconomy"
-  # Balance display item name.
-  balance-item: "&a{currency} Balance: &e{symbol}{amount}"
-  # Baltop GUI title.
-  baltop-title: "&6Top {currency} Balances"
-  # Previous page button.
-  previous-page: "&a← Previous Page"
-  # Next page button.
-  next-page: "&aNext Page →"
-  # Current page indicator.
-  page-indicator: "&7Page {page}/{pages}"
-  # Close button.
-  close: "&cClose"
-  # Back button.
-  back: "&a← Back"
-
-# ╔══════════════════════════════════════════════════════════════╗
-# ║                  BALTOP FORMATTING                          ║
-# ╚══════════════════════════════════════════════════════════════╝
-# Placeholders:
-#   {rank}      – Player's position (1, 2, 3, ...)
-#   {name}      – Player's name
-#   {amount}    – Formatted balance
-#   {currency}  – Currency display name
-#   {symbol}    – Currency symbol
-#   {page}      – Current page
-#   {pages}     – Total pages
-#   {command}   – Command used to access baltop
-#   {next_page} – Next page number
-
-baltop:
-  header: "&8&m────────────────────────────────────&r\n&6&l  Top {currency} Balances\n&8&m────────────────────────────────────&r"
-  # Format for top 3 players (special highlighting).
-  entry-top: "&6#{rank} &7- &f{name} &8» &e{symbol}{amount}"
-  # Format for all other entries.
-  entry: "&7#{rank} &8- &7{name} &8» &a{symbol}{amount}"
-  # Shown for the player's own ranking (appended at the bottom).
-  own-rank: "&7Your rank: &e#{rank} &7with &a{symbol}{amount} {currency}"
-  footer: "&8&m────────────────────────────────────&r\n&7Page &f{page}&7/&f{pages} &8| &7Use &f/{command} top {next_page} &7for next page"
-  # When no players have balances.
-  empty: "&7No balances to display yet."
-
-# ╔══════════════════════════════════════════════════════════════╗
-# ║                   HELP MESSAGES                             ║
-# ╚══════════════════════════════════════════════════════════════╝
-# Placeholders:
-#   {command}   – Base command name (money, mobcoin, gem, economy)
-#   {currency}  – Currency display name
-
-help:
-  # ── Currency Command Help ───────────────────────────────────
-  currency:
-    - "&8&m────────────────────────────────────"
-    - "&6&l  {currency} Commands"
-    - "&8&m────────────────────────────────────"
-    - "&e/{command} balance &7- Check your balance"
-    - "&e/{command} balance <player> &7- Check another player's balance"
-    - "&e/{command} send <player> <amount> &7- Send {currency}"
-    - "&e/{command} request <player> <amount> &7- Request {currency}"
-    - "&e/{command} accept <id> &7- Accept a request"
-    - "&e/{command} deny <id> &7- Deny a request"
-    - "&e/{command} top [page] &7- View leaderboard"
-    - "&8&m────────────────────────────────────"
-
-  # ── Admin Command Help ──────────────────────────────────────
-  admin:
-    - "&8&m────────────────────────────────────"
-    - "&6&l  Economy Admin Commands"
-    - "&8&m────────────────────────────────────"
-    - "&e/economy info &7- View plugin information"
-    - "&e/economy version &7- View plugin version"
-    - "&e/economy reload &7- Reload configuration"
-    - "&e/economy status &7- View plugin status"
-    - "&e/economy baltop [page] &7- Global leaderboard"
-    - "&e/economy payall <currency> <amount> &7- Pay all online players"
-    - "&e/economy convert <from> <to> <amount> &7- Convert currencies"
-    - "&e/economy migrate <backend> &7- Migrate storage"
-    - "&e/economy backup &7- Create a data backup"
-    - "&e/economy credits &7- View credits"
-    - "&8&m────────────────────────────────────"
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                  MOB REWARD MESSAGES                        ║
@@ -429,42 +272,7 @@ help:
 #   {amount}    – Reward amount
 #   {currency}  – Currency display name
 #   {mob}       – Mob type name
-#   {multiplier} – Active multiplier
 
 mob-rewards:
   # Shown when a player earns a mob reward.
   reward: "&a+{amount} {currency} &7(from killing {mob})"
-  # Shown when a multi-kill bonus is applied.
-  bonus: "&a+{amount} {currency} &7(multi-kill bonus! x{multiplier})"
-  # Shown when a mob is killed in a blacklisted world.
-  blacklisted-world: ""
-  # Shown when a spawner mob is killed and rewards are disabled.
-  spawner-mob: ""
-
-# ╔══════════════════════════════════════════════════════════════╗
-# ║                    RANK MESSAGES                            ║
-# ╚══════════════════════════════════════════════════════════════╝
-# Placeholders:
-#   {rank}        – Rank display name
-#   {multiplier}  – Rank multiplier
-#   {currency}    – Currency display name
-
-rank:
-  # Shown when a player's rank multiplier is applied.
-  multiplier-applied: "&7Rank bonus: &ax{multiplier} {currency} multiplier (&f{rank}&7)"
-  # Shown in balance display for rank info.
-  info-line: "&7Rank: &6{rank} &7(&ax{multiplier} multiplier&7)"
-
-# ╔══════════════════════════════════════════════════════════════╗
-# ║                  MISC MESSAGES                              ║
-# ╚══════════════════════════════════════════════════════════════╝
-
-misc:
-  # Shown when data is being saved on shutdown.
-  saving: "&7Saving economy data..."
-  # Shown when data save is complete.
-  saved: "&aEconomy data saved successfully."
-  # Shown when a feature is not yet implemented.
-  not-implemented: "&cThis feature is not yet implemented."
-  # Shown when the plugin is disabled.
-  plugin-disabled: "&cDZEconomy is currently disabled."

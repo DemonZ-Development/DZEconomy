@@ -68,9 +68,9 @@ class IntegrationTest {
         assertThat(data.getUsername()).isEqualTo("CyrusDev");
 
         // Verify initial balances matching the default config.yml
-        double initialMoney = plugin.getConfigManager().getConfig().getDouble("currency.money.starting-balance", 0.0);
-        double initialMobcoin = plugin.getConfigManager().getConfig().getDouble("currency.mobcoin.starting-balance", 0.0);
-        double initialGem = plugin.getConfigManager().getConfig().getDouble("currency.gem.starting-balance", 0.0);
+        double initialMoney = plugin.getConfigManager().getConfig().getDouble("currencies.money.starting-balance", 0.0);
+        double initialMobcoin = plugin.getConfigManager().getConfig().getDouble("currencies.mobcoin.starting-balance", 0.0);
+        double initialGem = plugin.getConfigManager().getConfig().getDouble("currencies.gem.starting-balance", 0.0);
 
         assertThat(plugin.getCurrencyManager().getBalance(player.getUniqueId(), CurrencyType.MONEY)).isEqualTo(initialMoney);
         assertThat(plugin.getCurrencyManager().getBalance(player.getUniqueId(), CurrencyType.MOBCOIN)).isEqualTo(initialMobcoin);
@@ -162,9 +162,11 @@ class IntegrationTest {
 
         // Configure PvP death loss: 10% money loss on death
         plugin.getConfigManager().getConfig().set("pvp.enabled", true);
-        plugin.getConfigManager().getConfig().set("pvp.money.enabled", true);
-        plugin.getConfigManager().getConfig().set("pvp.money.loss-percentage", 0.10);
-        plugin.getConfigManager().getConfig().set("pvp.money.broadcast-threshold", 0.0);
+        plugin.getConfigManager().getConfig().set("pvp.loss-percent.money", 10.0);
+        plugin.getConfigManager().getConfig().set("pvp.minimum-balance.money", 0.0);
+        plugin.getConfigManager().getConfig().set("pvp.broadcast.enabled", false);
+        plugin.getConfigManager().getConfig().set("pvp.broadcast.threshold", 0.0);
+        plugin.getConfigManager().getConfig().set("pvp.world-blacklist", new ArrayList<String>());
         plugin.getConfigManager().saveConfig();
 
         // Fire a PlayerDeathEvent simulating PvPKiller killing PvPVictim

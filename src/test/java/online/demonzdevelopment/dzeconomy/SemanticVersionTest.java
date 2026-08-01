@@ -1,5 +1,6 @@
 package online.demonzdevelopment.dzeconomy.update;
 
+import online.demonzdevelopment.dzeconomy.update.SemanticVersion;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

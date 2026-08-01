@@ -56,23 +56,12 @@ public class Rank {
         return getMultiplier(type.getId());
     }
 
-    public Map<String, Double> getAllMultipliers() {
-        return multipliers;
-    }
-    
     /**
      * Get currency settings for a specific currency type.
      * Returns null if no settings defined for this currency.
      */
     public RankCurrencySettings getCurrencySettings(String currencyKey) {
         return currencySettings.get(currencyKey);
-    }
-    
-    /**
-     * Get all currency settings. Returned map is unmodifiable.
-     */
-    public Map<String, RankCurrencySettings> getAllCurrencySettings() {
-        return currencySettings;
     }
     
     @Override
@@ -135,10 +124,6 @@ public class Rank {
         
         public int getCooldown() {
             return cooldown;
-        }
-        
-        public double getDailyLimit() {
-            return dailyLimit;
         }
         
         public int getRequestCooldown() {

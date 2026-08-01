@@ -2,7 +2,6 @@ package online.demonzdevelopment.dzeconomy.manager;
 
 import online.demonzdevelopment.dzeconomy.DZEconomy;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.EntityType;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,36 +15,21 @@ public class CombatTagManager {
     
     private final DZEconomy plugin;
     private final ConcurrentHashMap<UUID, Long> combatTags = new ConcurrentHashMap<>();
-    private final Set<EntityType> dangerousMobs = ConcurrentHashMap.newKeySet();
     private int combatTagDurationSeconds = 30;
     
     public CombatTagManager(DZEconomy plugin) {
         this.plugin = plugin;
-        loadDangerousMobs();
+        loadSettings();
     }
     
     /**
-     * Load dangerous mobs and settings from config.
+     * Load settings from config.
      */
-    public void loadDangerousMobs() {
-        dangerousMobs.clear();
-        
+    public void loadSettings() {
         FileConfiguration config = plugin.getConfigManager().getConfig();
         if (config == null) return;
         
         combatTagDurationSeconds = config.getInt("combat-tag.duration", 15);
-        
-        List<String> mobList = config.getStringList("combat-tag.dangerous-mobs");
-        for (String mobName : mobList) {
-            try {
-                EntityType type = EntityType.valueOf(mobName.toUpperCase());
-                dangerousMobs.add(type);
-            } catch (IllegalArgumentException e) {
-                plugin.getLogger().warning("Invalid entity type in combat-tag dangerous-mobs: " + mobName);
-            }
-        }
-        
-        plugin.getLogger().info("Loaded " + dangerousMobs.size() + " dangerous mob types for combat tagging.");
     }
     
     /**
@@ -86,20 +70,6 @@ public class CombatTagManager {
     }
     
     /**
-     * Check if an entity type is a dangerous mob.
-     */
-    public boolean isDangerousMob(EntityType type) {
-        return dangerousMobs.contains(type);
-    }
-    
-    /**
-     * Get the combat tag duration in seconds.
-     */
-    public int getCombatTagDurationSeconds() {
-        return combatTagDurationSeconds;
-    }
-    
-    /**
      * Clean expired combat tags.
      * Called by CombatTagCleanupTask.
      */
@@ -120,7 +90,7 @@ public class CombatTagManager {
      * Reload settings from config.
      */
     public void reload() {
-        loadDangerousMobs();
+        loadSettings();
     }
     
     /**

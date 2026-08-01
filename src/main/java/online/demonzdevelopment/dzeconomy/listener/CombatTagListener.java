@@ -10,7 +10,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.UUID;
@@ -101,26 +100,5 @@ public class CombatTagListener implements Listener {
             plugin.getLogger().info(player.getName() + " logged out while combat tagged and was killed.");
         }
         cm.removeCombatTag(player.getUniqueId());
-    }
-
-    /**
-     * Block request GUI when the player is combat tagged.
-     */
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    public void onInventoryOpen(InventoryOpenEvent event) {
-        if (!(event.getPlayer() instanceof Player)) {
-            return;
-        }
-
-        Player player = (Player) event.getPlayer();
-
-        // Check if this is a request-related GUI using the inventory holder
-        if (event.getInventory() != null && event.getInventory().getHolder() instanceof online.demonzdevelopment.dzeconomy.gui.RequestGUIManager.RequestInventoryHolder) {
-            CurrencyManager cm = plugin.getCurrencyManager();
-            if (cm.isCombatTagged(player.getUniqueId())) {
-                event.setCancelled(true);
-                MessagesUtil.sendMessage(player, "combat-tagged-gui");
-            }
-        }
     }
 }

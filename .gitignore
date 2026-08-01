@@ -59,3 +59,8 @@ data.db
 playerdata/
 backups/
 transactions.log
+
+# === Branding (local-only, not pushed) ===
+assets/generate_branding.py
+assets/fonts/
+assets/__pycache__/

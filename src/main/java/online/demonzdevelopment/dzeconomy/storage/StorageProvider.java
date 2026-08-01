@@ -1,7 +1,6 @@
 package online.demonzdevelopment.dzeconomy.storage;
 
 import online.demonzdevelopment.dzeconomy.data.PlayerData;
-import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -9,25 +8,25 @@ import java.util.UUID;
 public interface StorageProvider {
     boolean initialize();
     PlayerData loadPlayerData(UUID uuid);
-    void savePlayerData(PlayerData data);
+
+    /**
+     * Persist player data to storage.
+     *
+     * @param data the player data to save
+     * @return true if the data was written successfully, false otherwise
+     */
+    boolean savePlayerData(PlayerData data);
     boolean playerDataExists(UUID uuid);
     void deletePlayerData(UUID uuid);
     List<UUID> getAllPlayerUUIDs();
     void close();
 
     /**
-     * Get all balances for a player across all currencies.
-     * Used for migration between storage backends.
+     * Flush any pending writes so the underlying files can be safely
+     * copied for backup (e.g. WAL checkpoint for SQLite).
+     * No-op for storage backends that don't need it.
      */
-    default Map<String, Double> getAllBalances(UUID uuid) {
-        return Map.of();
-    }
-
-    /**
-     * Set a specific currency balance for a player.
-     * Used for migration between storage backends.
-     */
-    default void setBalance(UUID uuid, String currencyKey, double amount) {
+    default void checkpoint() {
     }
 
     /**

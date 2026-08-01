@@ -63,9 +63,9 @@ class ConfigMigratorTest {
         assertThat(config.contains("updates.modrinth-project-id")).isTrue();
         assertThat(config.contains("combat-tag.enabled")).isTrue();
         assertThat(config.contains("combat-tag.duration")).isTrue();
-        assertThat(config.contains("baltop.limit")).isTrue();
-        assertThat(config.contains("baltop.cache-minutes")).isTrue();
-        assertThat(config.contains("payall.enabled")).isTrue();
+        assertThat(config.contains("baltop.limit")).isFalse();
+        assertThat(config.contains("baltop.cache-minutes")).isFalse();
+        assertThat(config.contains("payall.enabled")).isFalse();
     }
 
     @Test

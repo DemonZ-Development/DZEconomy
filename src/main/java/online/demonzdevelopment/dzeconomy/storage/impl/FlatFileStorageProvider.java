@@ -102,6 +102,7 @@ public class FlatFileStorageProvider implements StorageProvider {
             String path = "daily-limits." + type.getId();
             data.setDailySendCount(type, yaml.getLong(path + ".send-count", 0L));
             data.setDailyRequestCount(type, yaml.getLong(path + ".request-count", 0L));
+            data.setDailySent(type, yaml.getDouble(path + ".sent-amount", 0.0));
         }
         
         // Load cooldowns
@@ -109,6 +110,7 @@ public class FlatFileStorageProvider implements StorageProvider {
             String path = "cooldowns." + type.getId();
             data.setSendCooldown(type, yaml.getLong(path + ".send-cooldown", 0L));
             data.setRequestCooldown(type, yaml.getLong(path + ".request-cooldown", 0L));
+            data.setLastSendTime(type, yaml.getLong(path + ".send-time", 0L));
         }
         
         data.setDirty(false);
@@ -123,7 +125,7 @@ public class FlatFileStorageProvider implements StorageProvider {
     }
     
     @Override
-    public void savePlayerData(PlayerData data) {
+    public boolean savePlayerData(PlayerData data) {
         UUID uuid = data.getUuid();
         File file = getPlayerFile(uuid);
         File tempFile = getTempFile(uuid);
@@ -148,6 +150,7 @@ public class FlatFileStorageProvider implements StorageProvider {
             String path = "daily-limits." + type.getId();
             yaml.set(path + ".send-count", data.getDailySendCount(type));
             yaml.set(path + ".request-count", data.getDailyRequestCount(type));
+            yaml.set(path + ".sent-amount", data.getDailySent(type));
         }
         
         // Save cooldowns
@@ -155,6 +158,7 @@ public class FlatFileStorageProvider implements StorageProvider {
             String path = "cooldowns." + type.getId();
             yaml.set(path + ".send-cooldown", data.getSendCooldown(type));
             yaml.set(path + ".request-cooldown", data.getRequestCooldown(type));
+            yaml.set(path + ".send-time", data.getLastSendTime(type));
         }
         
         // Atomic write: write to .tmp file first, then atomically move into place
@@ -163,7 +167,7 @@ public class FlatFileStorageProvider implements StorageProvider {
         } catch (IOException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to write temp file for " + uuid, e);
             deleteTempFile(tempFile);
-            return;
+            return false;
         }
         
         try {
@@ -181,6 +185,8 @@ public class FlatFileStorageProvider implements StorageProvider {
                     data.setDirty(false);
                 } catch (IOException ex2) {
                     plugin.getLogger().log(Level.SEVERE, "Fallback save also failed for " + uuid, ex2);
+                    deleteTempFile(tempFile);
+                    return false;
                 }
                 deleteTempFile(tempFile);
             }
@@ -191,6 +197,7 @@ public class FlatFileStorageProvider implements StorageProvider {
         balances.put("money", data.getBalance(CurrencyType.MONEY));
         balances.put("mobcoin", data.getBalance(CurrencyType.MOBCOIN));
         balances.put("gem", data.getBalance(CurrencyType.GEM));
+        return true;
     }
     
     @Override
@@ -226,61 +233,6 @@ public class FlatFileStorageProvider implements StorageProvider {
         if (tempFile.exists() && !tempFile.delete()) {
             plugin.getLogger().warning("Failed to delete temp file: " + tempFile.getAbsolutePath());
         }
-    }
-
-    @Override
-    public Map<String, Double> getAllBalances(UUID uuid) {
-        ensureInitialLoad();
-        Map<String, Double> balances = allBalancesCache.get(uuid);
-        if (balances != null) {
-            return new java.util.concurrent.ConcurrentHashMap<>(balances);
-        }
-        
-        File file = getPlayerFile(uuid);
-        if (!file.exists()) return Map.of();
-        
-        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-        Map<String, Double> result = new java.util.concurrent.ConcurrentHashMap<>();
-        result.put("money", yaml.getDouble("balances.money", 0.0));
-        result.put("mobcoin", yaml.getDouble("balances.mobcoin", 0.0));
-        result.put("gem", yaml.getDouble("balances.gem", 0.0));
-        
-        allBalancesCache.put(uuid, result);
-        return result;
-    }
-
-    @Override
-    public void setBalance(UUID uuid, String currencyKey, double amount) {
-        if (currencyKey == null) return;
-        
-        File file = getPlayerFile(uuid);
-        YamlConfiguration yaml;
-        if (file.exists()) {
-            yaml = YamlConfiguration.loadConfiguration(file);
-        } else {
-            yaml = new YamlConfiguration();
-        }
-        String path;
-        String key = currencyKey.toLowerCase();
-        if (key.equals("mobcoins")) key = "mobcoin";
-        if (key.equals("gems")) key = "gem";
-        
-        switch (key) {
-            case "money": path = "balances.money"; break;
-            case "mobcoin": path = "balances.mobcoin"; break;
-            case "gem": path = "balances.gem"; break;
-            default: return;
-        }
-        yaml.set(path, amount);
-        try {
-            yaml.save(file);
-        } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to save balance for " + uuid, e);
-        }
-        
-        // Update cache
-        Map<String, Double> balances = allBalancesCache.computeIfAbsent(uuid, k -> new java.util.concurrent.ConcurrentHashMap<>());
-        balances.put(key, amount);
     }
 
     @Override

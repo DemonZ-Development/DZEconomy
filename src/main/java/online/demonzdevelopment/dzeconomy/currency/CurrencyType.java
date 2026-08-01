@@ -3,37 +3,26 @@ package online.demonzdevelopment.dzeconomy.currency;
 import org.jetbrains.annotations.Nullable;
 
 public enum CurrencyType {
-    MONEY("money", "Money", "$", 0.0, 'a'),
-    MOBCOIN("mobcoin", "MobCoin", "\u2605", 0.0, 'e'),
-    GEM("gem", "Gem", "\u2666", 0.0, 'b');
+    MONEY("money", "Money", "$", 0.0),
+    MOBCOIN("mobcoin", "MobCoin", "\u2605", 0.0),
+    GEM("gem", "Gem", "\u2666", 0.0);
     
     private final String id;
     private final String displayName;
     private final String defaultSymbol;
     private final double defaultBalance;
-    private final char colorCode;
     
-    CurrencyType(String id, String displayName, String defaultSymbol, double defaultBalance, char colorCode) {
+    CurrencyType(String id, String displayName, String defaultSymbol, double defaultBalance) {
         this.id = id;
         this.displayName = displayName;
         this.defaultSymbol = defaultSymbol;
         this.defaultBalance = defaultBalance;
-        this.colorCode = colorCode;
     }
     
     public String getId() { return id; }
     public String getDisplayName() { return displayName; }
     public String getDefaultSymbol() { return defaultSymbol; }
     public double getDefaultBalance() { return defaultBalance; }
-    public char getColorCode() { return colorCode; }
-    
-    public String getColor() {
-        return "\u00a7" + colorCode;
-    }
-    
-    public String getColoredDisplayName() {
-        return getColor() + displayName;
-    }
     
     @Nullable
     public static CurrencyType fromString(String name) {

@@ -1,5 +1,5 @@
 # ╔══════════════════════════════════════════════════════════════╗
-# ║                    DZEconomy v2.1.1                        ║
+# ║                    DZEconomy v26.2.0                        ║
 # ║           Multi-Currency Economy Plugin                    ║
 # ║                                                            ║
 # ║   Wiki: https://wiki.demonzdevelopment.online/dzeconomy                 ║
@@ -38,13 +38,8 @@ storage:
     database: dzeconomy
     username: root
     password: changeme
-    # Additional connection parameters appended to the JDBC URL.
-    # Default enables SSL-free local connections & UTF-8 encoding.
-    parameters: "?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=UTF-8"
     # Connection pool size (HikariCP).
     pool-size: 10
-    # Maximum time (in seconds) to wait for a connection from the pool.
-    connection-timeout: 30
 
   # ── SQLite Settings ─────────────────────────────────────────
   # Only used when type is set to SQLITE.
@@ -63,9 +58,6 @@ storage:
 auto-save:
   # Interval in seconds. Minimum recommended: 60
   interval: 300
-  # Whether to save on every transaction (guarantees no data loss on crash).
-  # WARNING: Can significantly reduce performance on busy servers.
-  save-on-transaction: false
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                     CURRENCIES                              ║
@@ -101,7 +93,6 @@ currencies:
     starting-balance: 500.00
     max-balance: -1
     min-transaction: 0.01
-    display-format: "{symbol}{amount}"
 
   # ── MobCoins (Secondary Currency) ───────────────────────────
   mobcoin:
@@ -113,7 +104,6 @@ currencies:
     starting-balance: 0
     max-balance: -1
     min-transaction: 1
-    display-format: "{symbol}{amount}"
 
   # ── Gems (Premium Currency) ─────────────────────────────────
   gem:
@@ -125,7 +115,6 @@ currencies:
     starting-balance: 0
     max-balance: -1
     min-transaction: 1
-    display-format: "{symbol}{amount}"
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                    TRANSFER SETTINGS                        ║
@@ -182,10 +171,6 @@ transfer:
 # └────────────────────────────────────────────────────────────┘
 
 conversion:
-  # Whether currency conversion is enabled for players.
-  # If false, only admins with dzeconomy.admin.convert can convert.
-  player-convert: false
-
   # Conversion fee (percentage deducted from the result).
   # Set to 0 for no fee. Range: 0.0 – 100.0
   fee-percent: 5.0
@@ -259,24 +244,6 @@ combat-tag:
   # the last hit.
   duration: 15
 
-  # ── Blocked Actions ─────────────────────────────────────────
-  # Economy actions that are blocked while combat-tagged.
-  blocked-actions:
-    - send
-    - request
-    - accept
-
-  # ── PVE Combat ──────────────────────────────────────────────
-  # Whether combat tagging also applies to mob attacks.
-  include-pve: false
-
-  # ── Action Bar ──────────────────────────────────────────────
-  # Show a combat tag indicator on the action bar.
-  action-bar:
-    enabled: true
-    # Display format. Placeholders: {time}
-    format: "&c&l⚔ &eCombat Tag &7- &c{time}s remaining"
-
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                    MOB REWARDS                              ║
 # ╚══════════════════════════════════════════════════════════════╝
@@ -332,85 +299,11 @@ mob-rewards:
 # or deny the request.
 
 request:
-  # Whether the request system is enabled.
-  enabled: true
-
   # How long (in seconds) before a pending request expires.
   timeout: 120
 
   # Maximum number of pending requests a player can have at once.
   max-pending: 5
-
-  # Whether a request auto-accepts if the sender has the
-  # "dzeconomy.request.autoaccept" permission.
-  # (Useful for admin/NPC payments.)
-  auto-accept-permission: false
-
-  # ── Notification ────────────────────────────────────────────
-  # How to notify players about incoming requests.
-  notification:
-    # Options: MESSAGE, ACTION_BAR, TITLE, BOSS_BAR
-    type: MESSAGE
-    # Play a sound when a request is received.
-    # Format: SOUND_NAME:VOLUME:PITCH
-    sound: "ENTITY_EXPERIENCE_ORB_PICKUP:1.0:1.0"
-
-# ╔══════════════════════════════════════════════════════════════╗
-# ║                    BALTOP SETTINGS                          ║
-# ╚══════════════════════════════════════════════════════════════╝
-#
-# Configure the balance leaderboard (baltop) system.
-
-baltop:
-  # Whether baltop is enabled.
-  enabled: true
-
-  # Number of players shown per page.
-  entries-per-page: 10
-
-  # How often (in seconds) the baltop cache is refreshed.
-  # Lower values give more up-to-date rankings but use more resources.
-  refresh-interval: 300
-
-  # Whether to include offline players in the leaderboard.
-  include-offline: true
-
-  # ── Formatting ──────────────────────────────────────────────
-  # Format for each entry. Placeholders:
-  #   {rank}  – Player's position (1, 2, 3, ...)
-  #   {name}  – Player's name
-  #   {amount} – Formatted balance
-  #   {currency} – Currency display name
-  entry-format: "&e#{rank} &7- &f{name} &8» &a{amount} {currency}"
-
-  # ── Header ──────────────────────────────────────────────────
-  header: "&8&m────────────────────────────────────&r\n&6&l  Top {currency} Balances\n&8&m────────────────────────────────────&r"
-
-  # ── Footer ──────────────────────────────────────────────────
-  footer: "&8&m────────────────────────────────────&r\n&7Page &f{page}&7/&f{pages} &8| &7Use &f/{command} top {next_page} &7for next page"
-
-# ╔══════════════════════════════════════════════════════════════╗
-# ║                    PAYALL SETTINGS                          ║
-# ╚══════════════════════════════════════════════════════════════╝
-#
-# Configure the /economy payall command, which distributes
-# currency to all online players.
-
-payall:
-  # Whether payall is enabled.
-  enabled: true
-
-  # ── Rate Limiting ───────────────────────────────────────────
-  # Minimum time (in seconds) between payall commands.
-  cooldown: 60
-
-  # ── Broadcast ───────────────────────────────────────────────
-  # Broadcast a message to all online players when payall is used.
-  broadcast: true
-
-  # ── Console ─────────────────────────────────────────────────
-  # Whether the console can execute payall.
-  allow-console: true
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                    UPDATE SETTINGS                          ║
@@ -425,16 +318,6 @@ updates:
   # How often (in seconds) to check for updates.
   # Minimum: 3600 (1 hour). Recommended: 21600 (6 hours).
   check-interval: 21600
-
-  # ── Notification ────────────────────────────────────────────
-  # How to notify admins about available updates.
-  notify:
-    # Notify admins on join when an update is available.
-    on-join: true
-    # Permission required to receive update notifications.
-    permission: "dzeconomy.admin.update"
-    # Console log when an update is found.
-    console-log: true
 
   # ── Modrinth ────────────────────────────────────────────────
   # The Modrinth project ID for DZEconomy.
@@ -452,43 +335,6 @@ updates:
 # │  See ranks.yml for full rank configuration.                │
 # └────────────────────────────────────────────────────────────┘
 
-ranks:
-  # Whether the rank system is enabled.
-  # Requires LuckPerms (soft-depend) for group detection.
-  enabled: true
-
-  # How rank multipliers stack with other multipliers.
-  # Options: MULTIPLY, ADD, HIGHEST
-  #   MULTIPLY – All multipliers multiply together (1.5 × 1.2 = 1.8)
-  #   ADD      – All multipliers add together (0.5 + 0.2 = 1.7)
-  #   HIGHEST  – Only the highest multiplier is used
-  multiplier-stacking: MULTIPLY
-
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                    MISC SETTINGS                            ║
 # ╚══════════════════════════════════════════════════════════════╝
-
-misc:
-  # ── Number Formatting ───────────────────────────────────────
-  # Format for displaying large numbers.
-  # Options: FULL, COMPACT, LOCALE
-  #   FULL    – Always show full number (1,000,000.00)
-  #   COMPACT – Abbreviate large numbers (1.0M, 1.0K)
-  #   LOCALE  – Use the server's locale formatting
-  number-format: FULL
-
-  # ── Debug Mode ──────────────────────────────────────────────
-  # Enable verbose console logging for troubleshooting.
-  # WARNING: Generates a LOT of log output. Only enable when needed.
-  debug: false
-
-  # ── Transaction Logging ─────────────────────────────────────
-  # Log all transactions to a file for auditing purposes.
-  transaction-log:
-    enabled: false
-    # File name inside the plugin's data folder.
-    file: transactions.log
-    # Maximum log file size in MB before rotation.
-    max-size: 10
-    # Number of rotated log files to keep.
-    max-files: 5

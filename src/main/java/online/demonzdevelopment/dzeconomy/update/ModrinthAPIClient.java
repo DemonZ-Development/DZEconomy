@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
 public class ModrinthAPIClient {
     
     private static final String API_BASE = "https://api.modrinth.com/v2";
-    private static final String USER_AGENT = "DZEconomy/2.1.1 (https://github.com/DemonZ-Development/DZEconomy)";
+    private static final String USER_AGENT = "DZEconomy/26.2.0 (https://github.com/DemonZ-Development/DZEconomy)";
     
     private final String projectId;
     
@@ -64,21 +64,8 @@ public class ModrinthAPIClient {
             
             String versionNumber = latest.get("version_number").getAsString();
             String versionId = latest.get("id").getAsString();
-            String changelog = latest.has("changelog") ? latest.get("changelog").getAsString() : "";
             
-            // Get download URL from first file
-            String downloadUrl = "";
-            String fileName = "";
-            if (latest.has("files")) {
-                JsonArray files = latest.getAsJsonArray("files");
-                if (files.size() > 0) {
-                    JsonObject file = files.get(0).getAsJsonObject();
-                    downloadUrl = file.has("url") ? file.get("url").getAsString() : "";
-                    fileName = file.has("filename") ? file.get("filename").getAsString() : "";
-                }
-            }
-            
-            return new ModrinthVersion(versionId, versionNumber, changelog, downloadUrl, fileName);
+            return new ModrinthVersion(versionId, versionNumber);
         } finally {
             conn.disconnect();
         }

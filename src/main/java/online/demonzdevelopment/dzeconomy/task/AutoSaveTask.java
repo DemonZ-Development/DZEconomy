@@ -4,7 +4,6 @@ import online.demonzdevelopment.dzeconomy.DZEconomy;
 import online.demonzdevelopment.dzeconomy.currency.CurrencyManager;
 import online.demonzdevelopment.dzeconomy.data.PlayerData;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;

@@ -40,9 +40,49 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
         if (this.suffix == null && other.suffix != null) return 1;
         if (this.suffix != null && other.suffix == null) return -1;
         if (this.suffix != null && other.suffix != null) {
-            return this.suffix.compareTo(other.suffix);
+            return comparePrerelease(this.suffix, other.suffix);
         }
         return 0;
+    }
+
+    /**
+     * Compare two semver pre-release identifiers (e.g. "beta.2" vs "rc.1").
+     * Identifiers are compared dot-separated: numeric identifiers compare
+     * numerically, alphanumeric identifiers compare lexically, and a set with
+     * more identifiers is greater if all preceding identifiers are equal.
+     */
+    private int comparePrerelease(String a, String b) {
+        String[] aParts = a.split("\\.");
+        String[] bParts = b.split("\\.");
+        int max = Math.min(aParts.length, bParts.length);
+        for (int i = 0; i < max; i++) {
+            int result = comparePrereleasePart(aParts[i], bParts[i]);
+            if (result != 0) return result;
+        }
+        return Integer.compare(aParts.length, bParts.length);
+    }
+
+    private int comparePrereleasePart(String a, String b) {
+        boolean aNumeric = isNumeric(a);
+        boolean bNumeric = isNumeric(b);
+        if (aNumeric && bNumeric) {
+            // Compare as numbers, avoiding overflow on long identifier values
+            java.math.BigInteger aNum = new java.math.BigInteger(a);
+            java.math.BigInteger bNum = new java.math.BigInteger(b);
+            return aNum.compareTo(bNum);
+        }
+        // Numeric identifiers always have lower precedence than alphanumeric ones
+        if (aNumeric) return -1;
+        if (bNumeric) return 1;
+        return a.compareTo(b);
+    }
+
+    private boolean isNumeric(String s) {
+        if (s.isEmpty()) return false;
+        for (int i = 0; i < s.length(); i++) {
+            if (!Character.isDigit(s.charAt(i))) return false;
+        }
+        return true;
     }
     
     @Override

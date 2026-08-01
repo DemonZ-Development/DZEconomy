@@ -81,6 +81,9 @@ public class PlayerJoinListener implements Listener {
                         "%mobcoins%", String.format("%,.2f", startingMobcoins),
                         "%gems%", String.format("%,.2f", startingGems));
             }
+
+            // The starting balance has now been granted — make sure it isn't granted again
+            data.setNewPlayer(false);
         } else {
             // Welcome back message
             if (config.getConfig().getBoolean("welcome-back-message.enabled", false)) {

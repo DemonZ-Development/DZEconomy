@@ -3,9 +3,6 @@ package online.demonzdevelopment.dzeconomy.integration;
 import online.demonzdevelopment.dzeconomy.DZEconomy;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.user.User;
-import net.luckperms.api.model.group.Group;
-import net.luckperms.api.node.NodeType;
-import net.luckperms.api.node.types.InheritanceNode;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
 

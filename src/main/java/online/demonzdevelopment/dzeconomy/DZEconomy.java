@@ -7,8 +7,6 @@ import online.demonzdevelopment.dzeconomy.config.ConfigManager;
 import online.demonzdevelopment.dzeconomy.config.ConfigMigrator;
 import online.demonzdevelopment.dzeconomy.currency.CurrencyManager;
 import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
-import online.demonzdevelopment.dzeconomy.data.PlayerData;
-import online.demonzdevelopment.dzeconomy.gui.RequestGUIManager;
 import online.demonzdevelopment.dzeconomy.integration.LuckPermsIntegration;
 import online.demonzdevelopment.dzeconomy.integration.PlaceholderAPIExpansion;
 import online.demonzdevelopment.dzeconomy.listener.*;
@@ -20,7 +18,6 @@ import online.demonzdevelopment.dzeconomy.storage.StorageType;
 import online.demonzdevelopment.dzeconomy.storage.impl.*;
 import online.demonzdevelopment.dzeconomy.task.*;
 import online.demonzdevelopment.dzeconomy.update.UpdateManager;
-import online.demonzdevelopment.dzeconomy.util.ColorUtil;
 import online.demonzdevelopment.dzeconomy.util.FoliaAdapter;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
@@ -38,14 +35,11 @@ public class DZEconomy extends JavaPlugin {
     private StorageProvider storageProvider;
     private CurrencyManager currencyManager;
     private RankManager rankManager;
-    private RequestGUIManager requestGUIManager;
     private CombatTagManager combatTagManager;
     private LuckPermsIntegration luckPermsIntegration;
     private UpdateManager updateManager;
     private MigrationManager migrationManager;
     private DZEconomyAPI api;
-    private online.demonzdevelopment.dzeconomy.util.MessagesUtil messagesUtil;
-    private EntityDeathListener entityDeathListener;
     private PlaceholderAPIExpansion placeholderExpansion;
 
     private long startupTime;
@@ -78,16 +72,12 @@ public class DZEconomy extends JavaPlugin {
         this.rankManager = new RankManager(this);
         this.rankManager.loadRanks();
         this.luckPermsIntegration = new LuckPermsIntegration(this);
-        this.requestGUIManager = new RequestGUIManager(this);
         this.combatTagManager = new CombatTagManager(this);
         this.migrationManager = new MigrationManager(this);
         
         // Initialize API
         this.api = new DZEconomyAPIImpl();
         Bukkit.getServicesManager().register(DZEconomyAPI.class, this.api, this, org.bukkit.plugin.ServicePriority.Normal);
-        
-        // Initialize cached utilities
-        this.messagesUtil = new online.demonzdevelopment.dzeconomy.util.MessagesUtil(this);
         
         // Register commands
         registerCommands();
@@ -114,7 +104,7 @@ public class DZEconomy extends JavaPlugin {
         this.updateManager = new UpdateManager(this);
         updateManager.checkForUpdates();
         
-        getLogger().info("DZEconomy v2.1.1 has been successfully enabled!");
+        getLogger().info("DZEconomy v" + getDescription().getVersion() + " has been successfully enabled!");
         getLogger().info("Running on " + (FoliaAdapter.isFolia() ? "Folia" : Bukkit.getName()) + " " + Bukkit.getVersion());
         getLogger().info("Support & Wiki: https://wiki.demonzdevelopment.online/dzeconomy");
         getLogger().info("Thank you for choosing DZEconomy!");
@@ -170,11 +160,11 @@ public class DZEconomy extends JavaPlugin {
         }
 
         instance = null;
-        getLogger().info("DZEconomy v2.1.1 has been disabled. Thank you for using DZEconomy!");
+        getLogger().info("DZEconomy v" + getDescription().getVersion() + " has been disabled. Thank you for using DZEconomy!");
     }
     
     private void printStartupBanner() {
-        getLogger().info("Starting DZEconomy v2.1.1 by DemonZ Development");
+        getLogger().info("Starting DZEconomy v" + getDescription().getVersion() + " by DemonZ Development");
     }
     
     private boolean initializeStorage() {
@@ -228,10 +218,8 @@ public class DZEconomy extends JavaPlugin {
         pm.registerEvents(new PlayerJoinListener(this), this);
         pm.registerEvents(new PlayerQuitListener(this), this);
         pm.registerEvents(new PlayerDeathListener(this), this);
-        this.entityDeathListener = new EntityDeathListener(this);
-        pm.registerEvents(entityDeathListener, this);
-        pm.registerEvents(new CombatTagListener(this), this);
-        pm.registerEvents(requestGUIManager, this);
+        EntityDeathListener entityDeathListener = new EntityDeathListener(this);
+        pm.registerEvents(entityDeathListener, this);        pm.registerEvents(new CombatTagListener(this), this);
     }
     
     private void registerIntegrations() {
@@ -277,20 +265,9 @@ public class DZEconomy extends JavaPlugin {
         }
         
         // Modrinth update check (every 6 hours = 4320000 ticks)
-        long updateInterval = configManager.getConfig().getLong("updates.check-interval", 21600) * 20L;
-        FoliaAdapter.runTaskTimer(this, () -> updateManager.checkForUpdates(), 1200L, updateInterval);
-    }
-    
-    public void reload() {
-        configManager.reloadAll();
-        if (rankManager != null) {
-            rankManager.reloadRanks();
-        }
-        if (combatTagManager != null) {
-            combatTagManager.reload();
-        }
-        if (entityDeathListener != null) {
-            entityDeathListener.reload();
+        if (configManager.getConfig().getBoolean("updates.check-enabled", true)) {
+            long updateInterval = configManager.getConfig().getLong("updates.check-interval", 21600) * 20L;
+            FoliaAdapter.runTaskTimer(this, () -> updateManager.checkForUpdates(), 1200L, updateInterval);
         }
     }
     
@@ -300,19 +277,13 @@ public class DZEconomy extends JavaPlugin {
     public StorageProvider getStorageProvider() { return storageProvider; }
     public CurrencyManager getCurrencyManager() { return currencyManager; }
     public RankManager getRankManager() { return rankManager; }
-    public RequestGUIManager getRequestGUIManager() { return requestGUIManager; }
     public CombatTagManager getCombatTagManager() { return combatTagManager; }
     public LuckPermsIntegration getLuckPermsIntegration() { return luckPermsIntegration; }
-    public UpdateManager getUpdateManager() { return updateManager; }
     public MigrationManager getMigrationManager() { return migrationManager; }
     public DZEconomyAPI getAPI() { return api; }
     public PlaceholderAPIExpansion getPlaceholderExpansion() { return placeholderExpansion; }
 
     public long getStartupTime() { return startupTime; }
-
-    public online.demonzdevelopment.dzeconomy.util.MessagesUtil getMessagesUtil() {
-        return messagesUtil;
-    }
 
     public boolean isUpdateAvailable() {
         return updateManager != null && updateManager.isUpdateAvailable();

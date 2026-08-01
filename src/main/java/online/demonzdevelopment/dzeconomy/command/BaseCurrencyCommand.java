@@ -117,7 +117,7 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
                     Runnable notifyTask = () -> {
                         MessagesUtil.sendMessage(sender, commandName + "-balance-other",
                                 "%player%", target.getName() != null ? target.getName() : targetName,
-                                "%balance%", String.format("%,.2f", balance),
+                                "%amount%", String.format("%,.2f", balance),
                                 "%currency%", commandName);
                     };
                     if (sender instanceof Player) {
@@ -135,7 +135,7 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             Player player = (Player) sender;
             double balance = cm.getBalance(player.getUniqueId(), currencyType);
             MessagesUtil.sendMessage(player, commandName + "-balance",
-                    "%balance%", String.format("%,.2f", balance),
+                    "%amount%", String.format("%,.2f", balance),
                     "%currency%", commandName);
         }
     }
@@ -167,11 +167,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             return;
         }
 
-        if (target.getUniqueId().equals(player.getUniqueId())) {
-            MessagesUtil.sendMessage(player, "cannot-send-self");
-            return;
-        }
-
         double amount;
         try {
             amount = Double.parseDouble(args[1]);
@@ -186,10 +181,18 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         }
 
         ConfigManager config = plugin.getConfigManager();
-        String currencyPath = "currencies." + commandName;
 
-        // Check max transaction limit
-        double maxTransaction = config.getConfig().getDouble(currencyPath + ".max-transaction", -1);
+        // Self-transfer check (honors transfer.allow-self-transfer)
+        if (!config.getConfig().getBoolean("transfer.allow-self-transfer", false)) {
+            if (target.getUniqueId().equals(player.getUniqueId())) {
+                MessagesUtil.sendMessage(player, "cannot-send-self");
+                return;
+            }
+        }
+
+        // Check max transaction limit (transfer.max-transaction, with legacy per-currency fallback)
+        double maxTransaction = config.getConfig().getDouble("transfer.max-transaction",
+                config.getConfig().getDouble("currencies." + commandName + ".max-transaction", -1));
         if (maxTransaction > 0 && amount > maxTransaction) {
             MessagesUtil.sendMessage(player, "max-transaction-exceeded",
                     "%max%", String.format("%,.2f", maxTransaction),
@@ -198,8 +201,11 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             return;
         }
 
-        // Check cooldown
-        long cooldownSeconds = config.getConfig().getLong(currencyPath + ".send-cooldown", 0);
+        // Check cooldown (transfer.cooldowns.enabled + transfer.cooldowns.<currency>)
+        long cooldownSeconds = 0;
+        if (config.getConfig().getBoolean("transfer.cooldowns.enabled", false)) {
+            cooldownSeconds = config.getConfig().getLong("transfer.cooldowns." + commandName, 0);
+        }
         if (cooldownSeconds > 0) {
             CurrencyManager cm = plugin.getCurrencyManager();
             PlayerData data = cm.loadPlayerData(player.getUniqueId());
@@ -216,15 +222,20 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             }
         }
 
-        // Check combat tag
+        // Check combat tag (honors transfer.block-during-combat)
         CurrencyManager cm = plugin.getCurrencyManager();
-        if (cm.isCombatTagged(player.getUniqueId())) {
+        if (config.getConfig().getBoolean("transfer.block-during-combat", true)
+                && cm.isCombatTagged(player.getUniqueId())) {
             MessagesUtil.sendMessage(player, "combat-tagged-send");
             return;
         }
 
-        // Atomic transfer with daily limit
-        double dailyLimit = config.getConfig().getDouble(currencyPath + ".daily-limit", -1);
+        // Atomic transfer with daily limit (transfer.daily-limit.enabled + transfer.daily-limit.<currency>)
+        double dailyLimit = -1;
+        if (config.getConfig().getBoolean("transfer.daily-limit.enabled", false)) {
+            dailyLimit = config.getConfig().getDouble("transfer.daily-limit." + commandName,
+                    config.getConfig().getDouble("currencies." + commandName + ".daily-limit", -1));
+        }
         boolean success = cm.transfer(player.getUniqueId(), target.getUniqueId(), currencyType, amount, dailyLimit);
         if (success) {
             // Update cooldown outside the lock
@@ -340,7 +351,8 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         MessagesUtil.sendMessage(target, commandName + "-request-received",
                 "%player%", player.getName(),
                 "%amount%", String.format("%,.2f", amount),
-                "%currency%", commandName);
+                "%currency%", commandName,
+                "%command%", commandName);
     }
 
     // ─── Accept ───────────────────────────────────────────────────────────────
@@ -395,11 +407,53 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             return;
         }
 
-        // Atomic transfer
+        // Apply the same transfer limits as /send (max transaction, cooldown, daily limit)
         double amount = request.getAmount();
-        boolean success = cm.transfer(player.getUniqueId(), requester.getUniqueId(), currencyType, amount);
+        ConfigManager config = plugin.getConfigManager();
+
+        double maxTransaction = config.getConfig().getDouble("transfer.max-transaction",
+                config.getConfig().getDouble("currencies." + commandName + ".max-transaction", -1));
+        if (maxTransaction > 0 && amount > maxTransaction) {
+            MessagesUtil.sendMessage(player, "max-transaction-exceeded",
+                    "%max%", String.format("%,.2f", maxTransaction),
+                    "%amount%", String.format("%,.2f", amount),
+                    "%currency%", commandName);
+            return;
+        }
+
+        long cooldownSeconds = 0;
+        if (config.getConfig().getBoolean("transfer.cooldowns.enabled", false)) {
+            cooldownSeconds = config.getConfig().getLong("transfer.cooldowns." + commandName, 0);
+        }
+        if (cooldownSeconds > 0) {
+            PlayerData data = cm.loadPlayerData(player.getUniqueId());
+            if (data != null) {
+                long lastSend = data.getLastSendTime(currencyType);
+                long elapsed = (System.currentTimeMillis() - lastSend) / 1000;
+                if (elapsed < cooldownSeconds) {
+                    long remaining = cooldownSeconds - elapsed;
+                    MessagesUtil.sendMessage(player, "send-cooldown",
+                            "%time%", String.valueOf(remaining),
+                            "%currency%", commandName);
+                    return;
+                }
+            }
+        }
+
+        double dailyLimit = -1;
+        if (config.getConfig().getBoolean("transfer.daily-limit.enabled", false)) {
+            dailyLimit = config.getConfig().getDouble("transfer.daily-limit." + commandName,
+                    config.getConfig().getDouble("currencies." + commandName + ".daily-limit", -1));
+        }
+        boolean success = cm.transfer(player.getUniqueId(), requester.getUniqueId(), currencyType, amount, dailyLimit);
 
         if (success) {
+            cm.executeWithPlayerLock(player.getUniqueId(), () -> {
+                PlayerData senderData = cm.loadPlayerData(player.getUniqueId());
+                if (senderData != null) {
+                    senderData.setLastSendTime(currencyType, System.currentTimeMillis());
+                }
+            });
             cm.removeRequest(player.getUniqueId(), request);
 
             double senderBalance = cm.getBalance(player.getUniqueId(), currencyType);

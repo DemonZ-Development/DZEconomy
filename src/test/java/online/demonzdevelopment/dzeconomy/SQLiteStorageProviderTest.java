@@ -162,15 +162,10 @@ class SQLiteStorageProviderTest {
 
         PlayerData loaded = storageProvider.loadPlayerData(uuid);
 
-        // SQLiteStorageProvider.loadPlayerData creates a new PlayerData even if not found,
-        // but leaves it with default values. Let's check the actual behavior.
-        // Looking at the code: it always creates new PlayerData(uuid) first, then populates from ResultSet.
-        // If no row found, the data will have default values (0 balances).
-        // However, the method returns the data object (not null) even if the player doesn't exist.
-        // Let's verify it doesn't throw and returns a usable object.
-        assertThat(loaded).isNotNull();
-        assertThat(loaded.getUuid()).isEqualTo(uuid);
-        assertThat(loaded.getBalance(CurrencyType.MONEY)).isEqualTo(0.0);
+        // loadPlayerData returns null when the player has no record yet,
+        // matching FlatFileStorageProvider semantics and allowing the
+        // CurrencyManager to detect first-time players.
+        assertThat(loaded).isNull();
     }
 
     // ━━ Delete Tests ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
