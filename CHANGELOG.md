@@ -37,6 +37,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Pre-release version ordering** — `SemanticVersion` compared suffixes as plain strings, so `1.0-rc10` sorted below `1.0-rc9` and `1.0-alpha` above `1.0-beta`; prerelease identifiers are now compared per semver rules
 - **FlatFile save error reporting** — `savePlayerData` returned void and hid write failures; all storage providers now return a boolean success flag that callers report on failure
 - **`{timeout}` rendered literally in request messages** — `Request sent ... (Expires in {timeout}s)` showed the raw placeholder because the sender notification never passed a timeout value; it now includes the configured `request.timeout`
+- **`{symbol}` rendered literally in payall messages** — `/economy payall` success/broadcast messages showed `{symbol}` because the symbol placeholder was never filled; it is now passed through
+- **Convert confirmation showed the wrong amount** — `/economy convert` reported the input amount for the target currency even when conversion rates/fees change it (e.g. rate 100x with 5% fee); the message now shows the actual amount received (`{to_amount}`)
+- **`/economy baltop` and `/money top` showing stale balances** — leaderboards read the storage backend directly, which lags behind the in-memory cache (writes flush on unload/autosave); cached balances are now overlaid so rankings are current
+- **New message keys invisible on existing installs** — `messages.yml` was read with a fallback that bypassed JAR defaults, so missing keys rendered "Message not found"; missing keys now fall back to the JAR default automatically
 
 ## [2.1.0] — 2026-05-28
 

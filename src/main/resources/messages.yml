@@ -185,9 +185,9 @@ economy:
     failed: "&cFailed to reload configuration! Check the console for errors."
 
   # ── Convert ─────────────────────────────────────────────────
-  # Placeholders: {from}, {to}, {amount}
+  # Placeholders: {from}, {to}, {amount}, {to_amount}
   convert:
-    success: "&aConverted &e{amount} {from} &ato &e{amount} {to}&7."
+    success: "&aConverted &e{amount} {from} &ato &e{to_amount} {to}&7."
     insufficient: "&cYou don't have enough {from} to convert!"
     same-currency: "&cYou can't convert a currency to itself!"
     usage: "&cUsage: &e/economy convert <player> <from_currency> <to_currency> <amount>"

@@ -120,7 +120,12 @@ public class MessagesUtil {
     public String getMessage(String path) {
         String resolvedPath = resolvePath(path);
         org.bukkit.configuration.file.FileConfiguration messages = plugin.getConfigManager().getMessages();
-        String message = messages.getString(resolvedPath, "&cMessage not found: " + resolvedPath);
+        String message = messages.getString(resolvedPath);
+        if (message == null) {
+            // No override in the on-disk messages.yml: fall back to the JAR default
+            // so new keys still work on existing installs
+            message = "&cMessage not found: " + resolvedPath;
+        }
         return ColorUtil.translate(message);
     }
     
@@ -228,6 +233,9 @@ public class MessagesUtil {
                     break;
                 case "%to_balance%":
                     finalReplacements.put("{to_balance}", value);
+                    break;
+                case "%to_amount%":
+                    finalReplacements.put("{to_amount}", value);
                     break;
                 case "%count%":
                     finalReplacements.put("{count}", value);

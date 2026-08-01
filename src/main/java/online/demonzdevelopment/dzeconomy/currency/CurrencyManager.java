@@ -376,7 +376,35 @@ public class CurrencyManager {
     // ━━ Leaderboard ━━
     public java.util.concurrent.CompletableFuture<List<Map.Entry<UUID, Double>>> getBalanceTopAsync(CurrencyType type, int limit) {
         return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-            return plugin.getStorageProvider().getTopBalances(type.getId(), limit);
+            List<Map.Entry<UUID, Double>> storageTop = plugin.getStorageProvider().getTopBalances(type.getId(), limit);
+
+            // The storage result lags behind the in-memory cache (writes happen on
+            // unload/autosave), so overlay cached balances so the leaderboard is fresh
+            Map<UUID, Double> cacheSnapshot = new HashMap<>();
+            for (PlayerData data : playerDataCache.values()) {
+                double balance = data.getBalance(type);
+                if (balance > 0) {
+                    cacheSnapshot.put(data.getUuid(), balance);
+                }
+            }
+            if (cacheSnapshot.isEmpty()) {
+                return storageTop;
+            }
+
+            List<Map.Entry<UUID, Double>> merged = new ArrayList<>();
+            Set<UUID> seen = new HashSet<>();
+            for (Map.Entry<UUID, Double> entry : storageTop) {
+                seen.add(entry.getKey());
+                Double cached = cacheSnapshot.get(entry.getKey());
+                merged.add(new java.util.AbstractMap.SimpleEntry<>(entry.getKey(), cached != null ? cached : entry.getValue()));
+            }
+            for (Map.Entry<UUID, Double> entry : cacheSnapshot.entrySet()) {
+                if (!seen.contains(entry.getKey())) {
+                    merged.add(new java.util.AbstractMap.SimpleEntry<>(entry.getKey(), entry.getValue()));
+                }
+            }
+            merged.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
+            return merged.size() > limit ? new ArrayList<>(merged.subList(0, limit)) : merged;
         });
     }
     

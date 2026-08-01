@@ -5,6 +5,7 @@ import online.demonzdevelopment.dzeconomy.currency.CurrencyManager;
 import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
 import online.demonzdevelopment.dzeconomy.config.ConfigManager;
 import online.demonzdevelopment.dzeconomy.util.MessagesUtil;
+import online.demonzdevelopment.dzeconomy.util.MoneyUtil;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -222,6 +223,7 @@ public class EconomyCommand implements TabExecutor {
 
             online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTaskAsynchronously(plugin, () -> {
                 UUID uuid = target.getUniqueId();
+                double oldToBalance = cm.getBalance(uuid, toType);
                 boolean success = cm.convert(uuid, fromType, toType, amount);
                 if (success) {
                     boolean isOnline = target.isOnline();
@@ -230,12 +232,14 @@ public class EconomyCommand implements TabExecutor {
                     }
                     double newFromBalance = cm.getBalance(uuid, fromType);
                     double newToBalance = cm.getBalance(uuid, toType);
+                    double received = MoneyUtil.subtract(newToBalance, oldToBalance);
                     Runnable notifyTask = () -> {
                         MessagesUtil.sendMessage(sender, "convert-success",
                                 "%player%", target.getName() != null ? target.getName() : targetName,
                                 "%from%", fromType.name().toLowerCase(),
                                 "%to%", toType.name().toLowerCase(),
                                 "%amount%", String.format("%,.2f", amount),
+                                "%to_amount%", String.format("%,.2f", received),
                                 "%from_balance%", String.format("%,.2f", newFromBalance),
                                 "%to_balance%", String.format("%,.2f", newToBalance));
                     };
@@ -445,6 +449,7 @@ public class EconomyCommand implements TabExecutor {
 
         CurrencyManager cm = plugin.getCurrencyManager();
         int count = 0;
+        String symbol = plugin.getConfigManager().getConfig().getString("currencies." + type.name().toLowerCase() + ".symbol", "$");
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             boolean success = cm.addBalance(player.getUniqueId(), type, amount);
@@ -452,14 +457,16 @@ public class EconomyCommand implements TabExecutor {
                 count++;
                 MessagesUtil.sendMessage(player, "payall-received",
                         "%currency%", type.name().toLowerCase(),
-                        "%amount%", String.format("%,.2f", amount));
+                        "%amount%", String.format("%,.2f", amount),
+                        "%symbol%", symbol);
             }
         }
 
         MessagesUtil.sendMessage(sender, "payall-success",
                 "%count%", String.valueOf(count),
                 "%currency%", type.name().toLowerCase(),
-                "%amount%", String.format("%,.2f", amount));
+                "%amount%", String.format("%,.2f", amount),
+                "%symbol%", symbol);
         return true;
     }
 
