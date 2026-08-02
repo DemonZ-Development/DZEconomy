@@ -185,7 +185,7 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         // Self-transfer check (honors transfer.allow-self-transfer)
         if (!config.getConfig().getBoolean("transfer.allow-self-transfer", false)) {
             if (target.getUniqueId().equals(player.getUniqueId())) {
-                MessagesUtil.sendMessage(player, "cannot-send-self");
+                MessagesUtil.sendMessage(player, "cannot-send-self", "%currency%", commandName);
                 return;
             }
         }
@@ -261,9 +261,10 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
                     "%balance%", String.format("%,.2f", receiverBalance),
                     "%currency%", commandName);
         } else {
+            double failedBalance = cm.getBalance(player.getUniqueId(), currencyType);
             MessagesUtil.sendMessage(player, commandName + "-send-failed",
                     "%player%", target.getName(),
-                    "%amount%", String.format("%,.2f", amount),
+                    "%amount%", String.format("%,.2f", failedBalance),
                     "%currency%", commandName);
         }
     }
