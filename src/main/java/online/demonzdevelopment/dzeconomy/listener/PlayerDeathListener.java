@@ -86,11 +86,14 @@ public class PlayerDeathListener implements Listener {
             }
 
             // Atomic transfer via CurrencyManager
+            double killerBalanceBefore = cm.getBalance(killerUuid, type);
             boolean success = cm.transfer(victimUuid, killerUuid, type, amount);
 
             if (success) {
                 double victimNewBalance = cm.getBalance(victimUuid, type);
                 double killerNewBalance = cm.getBalance(killerUuid, type);
+                // Transfer tax is deducted from the loot, so the killer nets less than the victim loses
+                double netReceived = Math.max(0.0, killerNewBalance - killerBalanceBefore);
                 String symbol = config.getConfig().getString("currencies." + currencyName + ".symbol", currencyName);
 
                 // Notify victim
@@ -102,10 +105,10 @@ public class PlayerDeathListener implements Listener {
                         "%currency%", currencyName,
                         "%symbol%", symbol);
 
-                // Notify killer
+                // Notify killer with the net amount actually received
                 MessagesUtil.sendMessage(killer, "pvp-gained-" + currencyName,
                         "%victim%", victim.getName(),
-                        "%amount%", String.format("%,.2f", amount),
+                        "%amount%", String.format("%,.2f", netReceived),
                         "%percentage%", String.format("%.0f", lossPercent),
                         "%balance%", String.format("%,.2f", killerNewBalance),
                         "%currency%", currencyName,

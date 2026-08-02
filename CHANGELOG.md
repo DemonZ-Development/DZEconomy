@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
-## [26.2.0] — 2026-08-01
+## [26.2.0] — 2026-08-02
 
 ### Removed
 
@@ -44,6 +44,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **PvP loss/gain messages showing literal `{killer}`/`{victim}`** — the placeholder replacement table never mapped `%killer%`/`%victim%`, so both players saw raw placeholders instead of names
 - **Mob reward messages showing literal `{mob}`** — `%mob%` was never mapped, so kill rewards showed `{mob}` instead of the mob name
 - **PvP high-value kill broadcast rendering "Message not found"** — the `pvp-broadcast` message key was not mapped to `pvp.broadcast` in `messages.yml`
+- **Insufficient-funds message showed the requested amount** — `%amount%` was filled with the sum the player asked to send instead of their actual balance; it now shows what the player really has
+- **Self-send message rendering `{currency}` literally** — `cannot-send-self` was sent without the currency placeholder; it now resolves to the currency name
+- **PvP kill message overstated the loot** — the killer-gain message reported the gross loot even though the transfer tax reduced what the killer received; it now shows the net amount credited
 
 ## [2.1.0] — 2026-05-28
 
