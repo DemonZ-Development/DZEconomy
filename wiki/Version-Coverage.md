@@ -1,6 +1,6 @@
 # 📊 Version Coverage
 
-Supported Minecraft versions and server software for DZEconomy v2.1.1.
+Supported Minecraft versions and server software for DZEconomy v26.2.0.
 
 ---
 
@@ -10,11 +10,11 @@ Supported Minecraft versions and server software for DZEconomy v2.1.1.
 
 | Server Software | Supported Versions | API Version | Status |
 |----------------|-------------------|-------------|--------|
-| **Bukkit** | 1.16 – 1.21.5 | `1.20` | ✅ Supported |
-| **Spigot** | 1.16 – 1.21.5 | `1.20` | ✅ Supported |
-| **Paper** | 1.16.5 – 1.21.5 | `1.20` | ✅ **Recommended** |
-| **Folia** | 1.19.4 – 1.21.5 | `1.20` | ✅ Supported |
-| **Purpur** | 1.16.5 – 1.21.5 | `1.20` | ✅ Supported |
+| **Bukkit** | 1.9 – 1.26.x | `1.13` | ✅ Supported |
+| **Spigot** | 1.9 – 1.26.x | `1.13` | ✅ Supported |
+| **Paper** | 1.9 – 1.26.x | `1.13` | ✅ **Recommended** |
+| **Folia** | 1.19.4 – 1.26.x | `1.13` | ✅ Supported |
+| **Purpur** | 1.9 – 1.26.x | `1.13` | ✅ Supported |
 
 > 💡 **Paper** is the recommended server software for best performance and compatibility.
 
@@ -24,12 +24,12 @@ Supported Minecraft versions and server software for DZEconomy v2.1.1.
 
 | Java Version | Status | Notes |
 |--------------|--------|-------|
-| Java 8 | ⚠️ Legacy (adapter) | Legacy server adapter provides Class.forName fallback |
-| Java 11 | ⚠️ Legacy (adapter) | Legacy adapter handles SPI classloader issues |
-| **Java 17** | ✅ Minimum for modern | Full modern adapter (SPI driver loading) |
+| **Java 8** | ✅ Supported | Minimum — compiled with Java 8 bytecode |
+| **Java 11** | ✅ Supported | |
+| **Java 17** | ✅ Supported | |
 | **Java 21** | ✅ **Recommended** | Best performance and features |
 
-DZEconomy v2.1.1 is compiled with Java 21. The built JAR requires Java 21+ to run. The **Server Adapter** system detects the Java version at runtime and provides appropriate driver loading behavior: legacy (pre-Java 17) uses explicit `Class.forName()`, modern (Java 17+) relies on SPI with fallback.
+DZEconomy v26.2.0 compiles to Java 8 bytecode (major version 52). The JAR loads on any server running Java 8+. The **Server Adapter** system detects the Java version at runtime and provides appropriate driver loading behavior: legacy (pre-Java 17) uses explicit `Class.forName()`, modern (Java 17+) relies on SPI with fallback.
 
 ### Checking Your Java Version
 
@@ -40,56 +40,58 @@ java -version
 
 ---
 
+## 🔌 Feature Adapters
+
+DZEconomy uses a **FeatureAdapter** layer to handle version-specific APIs:
+
+| Feature | Legacy (1.9–1.15) | Modern (1.16+) |
+|---------|-------------------|----------------|
+| `getOnlinePlayers()` | Reflection — handles both `Player[]` (1.9–1.11) and `Collection` (1.12+) | Direct `Collection` call |
+| `isBungeeCord()` | Pure reflection on `org.spigotmc.SpigotConfig#bungee` | Same — reflection-safe |
+| Hex colors `&#RRGGBB` | Nearest legacy color fallback | Full `§x§R§R§G§G§B§B` support |
+
+The adapter is selected at startup based on `Bukkit.getBukkitVersion()`.
+
+---
+
 ## 📋 Detailed Version Support
 
 ### Bukkit
 
 | Version Range | Support Level | Notes |
 |---------------|--------------|-------|
-| 1.16.x | ✅ Full | Minimum supported version |
-| 1.17.x | ✅ Full | |
-| 1.18.x | ✅ Full | |
-| 1.19.x | ✅ Full | |
-| 1.20.x | ✅ Full | API version `1.20` |
-| 1.21.x | ✅ Full | Latest supported |
-| 1.21.5 | ✅ Full | Latest tested |
+| 1.9.x – 1.15.x | ✅ Full | Legacy feature adapter, Java 8 bytecode |
+| 1.16.x | ✅ Full | Hex color support begins |
+| 1.17.x – 1.19.x | ✅ Full | |
+| 1.20.x | ✅ Full | API version `1.13` |
+| 1.21.x – 1.26.x | ✅ Full | Latest supported |
 
 ### Spigot
 
 | Version Range | Support Level | Notes |
 |---------------|--------------|-------|
-| 1.16.x | ✅ Full | Minimum supported version |
-| 1.17.x | ✅ Full | |
-| 1.18.x | ✅ Full | |
-| 1.19.x | ✅ Full | |
+| 1.9.x – 1.15.x | ✅ Full | Legacy feature adapter, Java 8 bytecode |
+| 1.16.x | ✅ Full | Hex color support begins |
+| 1.17.x – 1.19.x | ✅ Full | |
 | 1.20.x | ✅ Full | |
-| 1.21.x | ✅ Full | |
-| 1.21.5 | ✅ Full | Latest tested |
+| 1.21.x – 1.26.x | ✅ Full | Latest supported |
 
 ### Paper
 
 | Version Range | Support Level | Notes |
 |---------------|--------------|-------|
-| 1.16.5 | ✅ Full | Minimum supported version |
-| 1.17.x | ✅ Full | |
-| 1.18.x | ✅ Full | |
-| 1.19.x | ✅ Full | |
+| 1.9.x – 1.15.x | ✅ Full | Legacy feature adapter, Java 8 bytecode |
+| 1.16.x | ✅ Full | Hex color support begins, best performance |
+| 1.17.x – 1.19.x | ✅ Full | Best performance |
 | 1.20.x | ✅ Full | Best performance |
-| 1.21.x | ✅ Full | Best performance |
-| 1.21.5 | ✅ Full | Latest tested |
-
-> **Why does Paper support start at 1.16.5 instead of 1.16?**
-> Paper made significant API changes in 1.16.5 that DZEconomy depends on. Earlier 1.16 builds are not tested.
+| 1.21.x – 1.26.x | ✅ Full | Best performance, latest supported |
 
 ### Folia
 
 | Version Range | Support Level | Notes |
 |---------------|--------------|-------|
 | < 1.19.4 | ❌ Not supported | Folia's scheduler API not available |
-| 1.19.4 | ✅ Full | Minimum supported Folia version |
-| 1.20.x | ✅ Full | |
-| 1.21.x | ✅ Full | |
-| 1.21.5 | ✅ Full | Latest tested |
+| 1.19.4 – 1.26.x | ✅ Full | Folia adapter handles region-based scheduling |
 
 > **Why does Folia support start at 1.19.4?**
 > Folia's region-based scheduling API was introduced in 1.19.4. DZEconomy requires these APIs for its `FoliaAdapter` to function.
@@ -98,33 +100,30 @@ java -version
 
 | Version Range | Support Level | Notes |
 |---------------|--------------|-------|
-| 1.16.5 | ✅ Full | Minimum supported version |
-| 1.17.x | ✅ Full | |
-| 1.18.x | ✅ Full | |
-| 1.19.x | ✅ Full | |
+| 1.9.x – 1.15.x | ✅ Full | Legacy feature adapter, Java 8 bytecode |
+| 1.16.x | ✅ Full | Hex color support begins |
+| 1.17.x – 1.19.x | ✅ Full | |
 | 1.20.x | ✅ Full | |
-| 1.21.x | ✅ Full | |
-| 1.21.5 | ✅ Full | Latest tested |
+| 1.21.x – 1.26.x | ✅ Full | Latest supported |
 
 ---
 
 ## 🔧 API Version Requirements
 
-DZEconomy declares `api-version: '1.20'` in `plugin.yml`. This means:
+DZEconomy declares `api-version: '1.13'` in `plugin.yml`. This means:
 
-- The plugin uses the 1.20+ Bukkit API
-- Older server versions may not have all required API methods
+- The plugin loads on Minecraft 1.13+ servers
+- Pre-1.13 servers (1.9–1.12) ignore `api-version` and load the plugin anyway
 - Newer server versions maintain backward compatibility with this API version
 
-### What `api-version: 1.20` Means
+### What `api-version: 1.13` Means
 
 | Feature | Details |
 |---------|---------|
-| Text component API | Available |
-| Adventure API | Available (Paper) |
-| New event types | Available |
-| Config sections | Modern behavior |
-| Tab completion | Modern API |
+| Legacy color codes | Supported |
+| Hex color codes | Supported (1.16+ via FeatureAdapter) |
+| Action bar messages | Supported (1.9+ via Spigot API) |
+| Persistent data container | Optional (guarded — 1.14+ only) |
 
 ---
 
@@ -142,6 +141,9 @@ DZEconomy is tested on the following configurations:
 | Folia | 1.21.4 | 21 | MySQL | ✅ Pass |
 | Spigot | 1.20.4 | 21 | SQLite | ✅ Pass |
 | Purpur | 1.20.4 | 21 | SQLite | ✅ Pass |
+| Purpur | 1.21.1 | 21 | SQLite | ✅ Pass (E2E) |
+
+> **Note**: Java 8 bytecode (major version 52) is verified. Legacy servers (1.9–1.15) use the FeatureAdapter layer for version-specific APIs.
 
 ---
 
@@ -149,9 +151,9 @@ DZEconomy is tested on the following configurations:
 
 | Category | Support Level |
 |----------|--------------|
-| **Latest release** (1.21.x) | Full support — all features, bug fixes, and testing |
+| **Latest release** (1.21.x–1.26.x) | Full support — all features, bug fixes, and testing |
 | **Previous release** (1.20.x) | Full support — all features and critical bug fixes |
-| **Older releases** (1.16–1.19) | Best-effort support — features work, but less testing |
+| **Legacy releases** (1.9–1.19) | Full support — FeatureAdapter handles version differences |
 | **Future releases** | Supported as soon as Paper/Spigot publishes the API |
 
 ### Dropping Version Support
@@ -171,11 +173,12 @@ DZEconomy may drop support for Minecraft versions when:
 |------------|----------------|----------------|----------|
 | PlaceholderAPI | 2.11.0 | 2.11.6 | No (optional) |
 | LuckPerms | 5.0 | 5.4 | No (optional) |
-| HikariCP | 5.0 | 5.1.0 | Bundled (shaded) |
+| HikariCP | 4.0 | 4.0.3 | Bundled (shaded) |
 | SQLite JDBC | 3.40 | 3.45.0 | Bundled (shaded) |
 | Gson | 2.10 | 2.10.1 | Bundled (shaded) |
+| Caffeine | 2.9 | 2.9.3 | Bundled (shaded) |
 
-> **Note**: HikariCP, SQLite JDBC, and Gson are bundled (shaded) into the DZEconomy jar. No additional downloads are needed.
+> **Note**: HikariCP, SQLite JDBC, Gson, and Caffeine are bundled (shaded) into the DZEconomy jar. No additional downloads are needed.
 
 ---
 
@@ -183,11 +186,11 @@ DZEconomy may drop support for Minecraft versions when:
 
 ### Will DZEconomy work on Minecraft 1.22+?
 
-Yes, as long as the Bukkit API maintains backward compatibility. DZEconomy uses `api-version: 1.20`, which is supported by all newer server versions.
+Yes, as long as the Bukkit API maintains backward compatibility. DZEconomy uses `api-version: 1.13`, which is supported by all newer server versions.
 
-### Can I use DZEconomy on a 1.15 server?
+### Can I use DZEconomy on a 1.9 server?
 
-No. DZEconomy requires Minecraft 1.16+ due to API requirements. The hex color code support (`&#RRGGBB`) in messages also requires 1.16+.
+Yes. DZEconomy compiles to Java 8 bytecode and uses a FeatureAdapter layer to handle version-specific APIs. Legacy servers (1.9–1.15) use the legacy adapter for `getOnlinePlayers()` and color codes.
 
 ### Does DZEconomy work with Fabric/Forge?
 

@@ -342,7 +342,7 @@ public class SQLiteStorageProvider implements StorageProvider {
     @Override
     public List<Map.Entry<UUID, Double>> getTopBalances(String currencyKey, int limit) {
         String column = getBalanceColumn(currencyKey);
-        if (column == null) return List.of();
+        if (column == null) return Collections.emptyList();
         List<Map.Entry<UUID, Double>> result = new ArrayList<>();
         try (Connection connection = getConnection();
              PreparedStatement stmt = connection.prepareStatement(

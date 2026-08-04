@@ -1,6 +1,7 @@
 package online.demonzdevelopment.dzeconomy.storage;
 
 import online.demonzdevelopment.dzeconomy.data.PlayerData;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -34,7 +35,7 @@ public interface StorageProvider {
      * Used for leaderboard display.
      */
     default List<Map.Entry<UUID, Double>> getTopBalances(String currencyKey, int limit) {
-        return List.of();
+        return Collections.emptyList();
     }
 
     /**

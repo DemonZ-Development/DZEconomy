@@ -1,6 +1,7 @@
 package online.demonzdevelopment.dzeconomy.update;
 
 import online.demonzdevelopment.dzeconomy.DZEconomy;
+import online.demonzdevelopment.dzeconomy.adapter.FeatureAdapter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import java.util.concurrent.CompletableFuture;
@@ -54,7 +55,7 @@ public class UpdateManager {
         String msg = "\u00a7a[DZEconomy] \u00a7eA new version is available! \u00a7fv" + latestVersion.getVersionNumber();
         String msg2 = "\u00a7a[DZEconomy] \u00a77Download: \u00a7bhttps://modrinth.com/plugin/dzeconomy/versions";
         
-        for (Player player : Bukkit.getOnlinePlayers()) {
+        for (Player player : FeatureAdapter.get().getOnlinePlayers()) {
             if (player.isOp() || player.hasPermission("dzeconomy.admin.update")) {
                 online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, player, () -> {
                     player.sendMessage(msg);

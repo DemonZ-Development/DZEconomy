@@ -10,6 +10,7 @@ import online.demonzdevelopment.dzeconomy.util.NumberFormatter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -91,7 +92,7 @@ public class DZEconomyAPIImpl implements DZEconomyAPI {
     @Override
     public @NotNull List<Rank> getAllRanks() {
         RankManager rm = getPlugin().getRankManager();
-        return rm != null ? rm.getAllRanks() : List.of();
+        return rm != null ? rm.getAllRanks() : Collections.emptyList();
     }
     
     @Override

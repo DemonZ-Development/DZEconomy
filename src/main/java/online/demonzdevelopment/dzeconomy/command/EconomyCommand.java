@@ -1,6 +1,7 @@
 package online.demonzdevelopment.dzeconomy.command;
 
 import online.demonzdevelopment.dzeconomy.DZEconomy;
+import online.demonzdevelopment.dzeconomy.adapter.FeatureAdapter;
 import online.demonzdevelopment.dzeconomy.currency.CurrencyManager;
 import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
 import online.demonzdevelopment.dzeconomy.config.ConfigManager;
@@ -152,7 +153,7 @@ public class EconomyCommand implements TabExecutor {
         ConfigManager config = plugin.getConfigManager();
         String storageType = config.getConfig().getString("storage.type", "sqlite");
         int cachedPlayers = cm.getCachedPlayerCount();
-        int onlinePlayers = Bukkit.getOnlinePlayers().size();
+        int onlinePlayers = FeatureAdapter.get().getOnlinePlayers().size();
         long uptimeMillis = System.currentTimeMillis() - plugin.getStartupTime();
         long uptimeSeconds = uptimeMillis / 1000;
         long uptimeMinutes = uptimeSeconds / 60;
@@ -275,16 +276,7 @@ public class EconomyCommand implements TabExecutor {
         }
 
         boolean onlineMode = Bukkit.getOnlineMode();
-        boolean bungeecord = false;
-        try {
-            Class<?> spigotConfigClass = Class.forName("org.spigotmc.SpigotConfig");
-            java.lang.reflect.Field bungeeField = spigotConfigClass.getField("bungee");
-            bungeecord = bungeeField.getBoolean(null);
-        } catch (Exception ignored) {
-            try {
-                bungeecord = Bukkit.spigot().getSpigotConfig().getBoolean("settings.bungeecord", false);
-            } catch (Exception ignored2) {}
-        }
+        boolean bungeecord = FeatureAdapter.get().isBungeeCord();
 
         if (!onlineMode && !bungeecord) {
             java.util.UUID offlineUuid = java.util.UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -451,7 +443,7 @@ public class EconomyCommand implements TabExecutor {
         int count = 0;
         String symbol = plugin.getConfigManager().getConfig().getString("currencies." + type.name().toLowerCase() + ".symbol", "$");
 
-        for (Player player : Bukkit.getOnlinePlayers()) {
+        for (Player player : FeatureAdapter.get().getOnlinePlayers()) {
             boolean success = cm.addBalance(player.getUniqueId(), type, amount);
             if (success) {
                 count++;
@@ -648,7 +640,7 @@ public class EconomyCommand implements TabExecutor {
             switch (sub) {
                 case "convert":
                     if (!sender.hasPermission("dzeconomy.admin")) break;
-                    for (Player p : Bukkit.getOnlinePlayers()) {
+                    for (Player p : FeatureAdapter.get().getOnlinePlayers()) {
                         if (sender instanceof Player && !((Player) sender).canSee(p)) {
                             continue;
                         }
@@ -677,7 +669,7 @@ public class EconomyCommand implements TabExecutor {
                     break;
                 case "give":
                     if (!sender.hasPermission("dzeconomy.admin")) break;
-                    for (Player p : Bukkit.getOnlinePlayers()) {
+                    for (Player p : FeatureAdapter.get().getOnlinePlayers()) {
                         if (sender instanceof Player && !((Player) sender).canSee(p)) {
                             continue;
                         }

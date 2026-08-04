@@ -16,6 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -374,7 +375,7 @@ class CurrencyManagerTest {
         currencyManager.setBalance(player2, CurrencyType.MONEY, 100.0);
         currencyManager.setBalance(player3, CurrencyType.MONEY, 500.0);
 
-        when(mockStorage.getTopBalances(CurrencyType.MONEY.getId(), 3)).thenReturn(List.of(
+        when(mockStorage.getTopBalances(CurrencyType.MONEY.getId(), 3)).thenReturn(java.util.Arrays.asList(
                 new java.util.AbstractMap.SimpleEntry<>(player3, 500.0),
                 new java.util.AbstractMap.SimpleEntry<>(player1, 300.0),
                 new java.util.AbstractMap.SimpleEntry<>(player2, 100.0)
@@ -403,7 +404,7 @@ class CurrencyManagerTest {
         currencyManager.setBalance(player2, CurrencyType.MONEY, 100.0);
         currencyManager.setBalance(player3, CurrencyType.MONEY, 500.0);
 
-        when(mockStorage.getTopBalances(CurrencyType.MONEY.getId(), 2)).thenReturn(List.of(
+        when(mockStorage.getTopBalances(CurrencyType.MONEY.getId(), 2)).thenReturn(java.util.Arrays.asList(
                 new java.util.AbstractMap.SimpleEntry<>(player3, 500.0),
                 new java.util.AbstractMap.SimpleEntry<>(player1, 300.0)
         ));
@@ -418,7 +419,7 @@ class CurrencyManagerTest {
     @Test
     @DisplayName("getBalanceTop returns empty list for no players")
     void testGetBalanceTopEmptyWhenNoPlayers() {
-        when(mockStorage.getTopBalances(CurrencyType.MONEY.getId(), 10)).thenReturn(List.of());
+        when(mockStorage.getTopBalances(CurrencyType.MONEY.getId(), 10)).thenReturn(Collections.emptyList());
         List<Map.Entry<UUID, Double>> top = currencyManager.getBalanceTopAsync(CurrencyType.MONEY, 10).join();
 
         assertThat(top).isEmpty();

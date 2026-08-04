@@ -7,8 +7,16 @@ group = 'com.github.DemonZ-Development'
 version = '26.2.0'
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+configurations.all {
+    attributes {
+        attribute(
+            org.gradle.api.attributes.java.TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE,
+            21
+        )
     }
 }
 
@@ -26,11 +34,11 @@ dependencies {
     compileOnly 'net.luckperms:api:5.4'
     compileOnly 'org.jetbrains:annotations:24.1.0'
 
-    implementation 'com.zaxxer:HikariCP:5.1.0'
+    implementation 'com.zaxxer:HikariCP:4.0.3'
     implementation 'org.xerial:sqlite-jdbc:3.45.0.0'
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'org.bstats:bstats-bukkit:3.2.1'
-    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+    implementation 'com.github.ben-manes.caffeine:caffeine:2.9.3'
     implementation 'org.slf4j:slf4j-nop:1.7.36'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
@@ -68,8 +76,8 @@ shadowJar {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.release.set(17)
     options.encoding = 'UTF-8'
+    options.compilerArgs << '-Xlint:-options'
 }
 
 test {

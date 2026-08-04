@@ -1,6 +1,7 @@
 package online.demonzdevelopment.dzeconomy.command;
 
 import online.demonzdevelopment.dzeconomy.DZEconomy;
+import online.demonzdevelopment.dzeconomy.adapter.FeatureAdapter;
 import online.demonzdevelopment.dzeconomy.currency.CurrencyManager;
 import online.demonzdevelopment.dzeconomy.data.CurrencyRequest;
 import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
@@ -793,16 +794,7 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         }
 
         boolean onlineMode = Bukkit.getOnlineMode();
-        boolean bungeecord = false;
-        try {
-            Class<?> spigotConfigClass = Class.forName("org.spigotmc.SpigotConfig");
-            java.lang.reflect.Field bungeeField = spigotConfigClass.getField("bungee");
-            bungeecord = bungeeField.getBoolean(null);
-        } catch (Exception ignored) {
-            try {
-                bungeecord = Bukkit.spigot().getSpigotConfig().getBoolean("settings.bungeecord", false);
-            } catch (Exception ignored2) {}
-        }
+        boolean bungeecord = FeatureAdapter.get().isBungeeCord();
 
         if (!onlineMode && !bungeecord) {
             java.util.UUID offlineUuid = java.util.UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -996,7 +988,7 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
                             break;
                     }
                     if (hasPerm) {
-                        for (Player p : Bukkit.getOnlinePlayers()) {
+                        for (Player p : FeatureAdapter.get().getOnlinePlayers()) {
                             if (sender instanceof Player && !((Player) sender).canSee(p)) {
                                 continue;
                             }
