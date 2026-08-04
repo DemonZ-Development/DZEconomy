@@ -8,15 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [26.2.0] — 2026-08-02
 
+### Added
+
+- **FeatureAdapter layer** — new adapter system for version-specific APIs: `getOnlinePlayers()` (handles `Player[]` on 1.9–1.11 vs `Collection` on 1.12+), `isBungeeCord()` (pure reflection), `translateColors()` (hex `&#RRGGBB` → `§x` on 1.16+, nearest legacy fallback on 1.9–1.15)
+- **Java 8 bytecode** — compiled with `sourceCompatibility`/`targetCompatibility` 1.8 (major version 52); plugin now loads on Minecraft 1.9 through 1.26.x
+- **`storage.sqlite.file` option** — configurable SQLite database file name (defaults to `data.db`)
+- **`/economy give <player> <amount> [currency]`** — unified admin command to give any currency (defaults to money; aliases: `money`, `mobcoin(s)`, `gem(s)`) with success/target notifications and tab completion
+
 ### Removed
 
 - **Dead code** — deleted `UpdateCheckTask`, `RequestGUIManager` (and the `gui` package), `TransactionLogEntry`, and dozens of unused public methods, fields, and imports across `DZEconomy`, `CurrencyManager`, `StorageProvider` implementations, `UpdateManager`, `CombatTagManager`, `Rank`, `MoneyUtil`, `ColorUtil`, `ServerPlatform`, and `CurrencyType`; this also removes the now-unused `MessageUtil` integration that surfaced broken message wiring
 - **Dead config keys** — removed unused `display-format`, `auto-save.save-on-transaction`, `conversion.player-convert`, combat-tag `blocked-actions`/`include-pve`/`action-bar`, request, baltop, payall, updates-notify, ranks, and misc sections from `config.yml`; unused message keys stripped from `messages.yml`
-
-### Added
-
-- **`storage.sqlite.file` option** — configurable SQLite database file name (defaults to `data.db`)
-- **`/economy give <player> <amount> [currency]`** — unified admin command to give any currency (defaults to money; aliases: `money`, `mobcoin(s)`, `gem(s)`) with success/target notifications and tab completion
 
 ### Fixed
 
@@ -28,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Corrupt SQLite backups** — backups zipped the live WAL-mode database without checkpointing, producing torn files; a `wal_checkpoint(TRUNCATE)` is now issued before backup
 - **Dead config keys for transfer limits** — `/money send` etc. read nonexistent `currencies.<cur>.max-transaction/send-cooldown/daily-limit` keys, so limits and cooldowns were silently never enforced; the code now reads `transfer.max-transaction`, `transfer.cooldowns.*`, and `transfer.daily-limit.*` (with legacy per-currency fallback), and honors `transfer.allow-self-transfer` and `transfer.block-during-combat`
 - **Cooldown/daily-limit reset exploit** — send cooldowns and daily sent amounts were in-memory only, so relogging reset them; both are now persisted (SQLite/MySQL columns `sent_amount`/`send_time` added with a safe schema upgrade, FlatFile keys added)
+- **`spigot().getSpigotConfig()` throwing NoSuchMethodError** — the bungee-cord detection fallback now uses pure reflection on `org.spigotmc.SpigotConfig#bungee` (catches `Throwable`), preventing `NoSuchMethodError` on servers without that method
 - **Request accept bypassing limits** — `/money accept` transferred without max-transaction, cooldown, or daily-limit checks; it now applies the same limits as `/send`
 - **Dead config keys for PvP loss** — `PlayerDeathListener` read nonexistent `pvp.<currency>.enabled/loss-percentage/broadcast-threshold` keys, defaulting to 100% loss with stock config; it now reads `pvp.loss-percent.*` (percent), `pvp.minimum-balance.*`, `pvp.broadcast.*`, and honors `pvp.world-blacklist`
 - **New-player detection broken** — `isNewPlayer` was never set, so starting balances and first-join welcome messages never fired; SQLite/MySQL `loadPlayerData` now return null for players without a record (matching FlatFile), and new players get their configured starting balance once
