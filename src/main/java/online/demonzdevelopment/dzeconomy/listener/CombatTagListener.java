@@ -97,7 +97,6 @@ public class CombatTagListener implements Listener {
         CurrencyManager cm = plugin.getCurrencyManager();
         if (cm.isCombatTagged(player.getUniqueId())) {
             player.setHealth(0.0);
-            plugin.getLogger().info(player.getName() + " logged out while combat tagged and was killed.");
         }
         cm.removeCombatTag(player.getUniqueId());
     }

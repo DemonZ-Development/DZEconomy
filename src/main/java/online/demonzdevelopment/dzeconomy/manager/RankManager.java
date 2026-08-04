@@ -54,7 +54,6 @@ public class RankManager {
             try {
                 Rank rank = loadRankFromSection(rankName, rankSection);
                 ranks.put(rankName.toLowerCase(), rank);
-                plugin.getLogger().info("Loaded rank: " + rankName);
             } catch (Exception e) {
                 plugin.getLogger().warning("Failed to load rank '" + rankName + "': " + e.getMessage());
             }

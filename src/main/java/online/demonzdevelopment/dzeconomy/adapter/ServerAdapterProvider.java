@@ -18,7 +18,6 @@ public final class ServerAdapterProvider {
     public static synchronized ServerAdapter getAdapter() {
         if (adapter == null) {
             adapter = detectAdapter();
-            LOGGER.info("Detected Java runtime platform: " + adapter.getPlatform());
         }
         return adapter;
     }

@@ -18,7 +18,6 @@ public final class FeatureAdapterProvider {
     static FeatureAdapter detect() {
         int[] mc = parseMinecraftVersion();
         if (mc != null && (mc[0] < 1 || (mc[0] == 1 && mc[1] < 16))) {
-            LOGGER.info("Using legacy feature adapter for Minecraft " + mc[0] + "." + mc[1]);
             return new LegacyFeatureAdapter();
         }
         return new ModernFeatureAdapter();

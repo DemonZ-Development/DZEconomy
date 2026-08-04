@@ -92,9 +92,8 @@ public class DZEconomy extends JavaPlugin {
         try {
             int pluginId = 31625;
             Metrics metrics = new Metrics(this, pluginId);
-            getLogger().info("bStats metrics enabled.");
         } catch (IllegalStateException e) {
-            getLogger().info("bStats metrics skipped (likely running in a test environment).");
+            // Test environment, ignore
         }
         
         // Schedule tasks
@@ -104,10 +103,7 @@ public class DZEconomy extends JavaPlugin {
         this.updateManager = new UpdateManager(this);
         updateManager.checkForUpdates();
         
-        getLogger().info("DZEconomy v" + getDescription().getVersion() + " has been successfully enabled!");
-        getLogger().info("Running on " + (FoliaAdapter.isFolia() ? "Folia" : Bukkit.getName()) + " " + Bukkit.getVersion());
-        getLogger().info("Support & Wiki: https://wiki.demonzdevelopment.online/dzeconomy");
-        getLogger().info("Thank you for choosing DZEconomy!");
+        getLogger().info("DZEconomy v" + getDescription().getVersion() + " enabled on " + (FoliaAdapter.isFolia() ? "Folia" : Bukkit.getName()) + " " + Bukkit.getVersion());
     }
 
     @Override
@@ -231,19 +227,10 @@ public class DZEconomy extends JavaPlugin {
         }
         
         // LuckPerms
-        if (luckPermsIntegration.setup()) {
-            getLogger().info("LuckPerms integration enabled!");
-        } else {
-            getLogger().warning("LuckPerms not found. Rank detection will use config-based defaults.");
-        }
+        luckPermsIntegration.setup();
     }
     
     private void scheduleTasks() {
-        // Detect Folia and log accordingly
-        if (FoliaAdapter.isFolia()) {
-            getLogger().info("Folia detected! Using region-based scheduling.");
-        }
-        
         // Auto-save (default 5 minutes)
         long autoSaveInterval = configManager.getConfig().getLong("auto-save.interval", 300) * 20L;
         AutoSaveTask autoSaveTask = new AutoSaveTask(this);

@@ -22,7 +22,6 @@ public class AutoSaveTask implements Runnable {
         Set<UUID> cachedPlayers = new HashSet<>(cm.getCachedPlayerUUIDs());
 
         if (cachedPlayers.isEmpty()) {
-            plugin.getLogger().info("[AutoSave] No cached player data to save.");
             return;
         }
 
@@ -51,9 +50,8 @@ public class AutoSaveTask implements Runnable {
 
         long elapsed = System.currentTimeMillis() - startTime;
 
-        plugin.getLogger().info("[AutoSave] Save complete: " + savedCount + " saved, "
-                + failedCount + " failed, "
-                + (cachedPlayers.size() - savedCount - failedCount) + " unchanged, "
-                + "took " + elapsed + "ms");
+        if (savedCount > 0 || failedCount > 0) {
+            plugin.getLogger().info("[AutoSave] " + savedCount + " saved, " + failedCount + " failed (" + elapsed + "ms)");
+        }
     }
 }
