@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'com.github.DemonZ-Development'
-version = '26.2.0'
+version = '2.2.0'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
