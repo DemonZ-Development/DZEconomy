@@ -1,9 +1,9 @@
 # ╔══════════════════════════════════════════════════════════════╗
-# ║                    DZEconomy v26.2.0                        ║
-# ║                 Mob Rewards Configuration                  ║
-# ║                                                            ║
-# ║   Wiki: https://wiki.demonzdevelopment.online/dzeconomy/mob-rewards     ║
-# ║   Support: https://discord.com/invite/GYsTt96ypf                      ║
+# ║                       DZEconomy v2.1.2                       ║
+# ║                  Mob Rewards Configuration                   ║
+# ║                                                              ║
+# ║   Wiki: https://github.com/DemonZ-Development/DZEconomy/wiki/║
+# ║   Support: https://discord.com/invite/GYsTt96ypf             ║
 # ╚══════════════════════════════════════════════════════════════╝
 #
 # ┌──────────────────────────────────────────────────────────────┐
@@ -495,3 +495,4 @@ events:
   #     multiplier: 2.5
   #     currency: money
   #     message: "&cChristmas Bonus! &72.5x Money rewards!"
+

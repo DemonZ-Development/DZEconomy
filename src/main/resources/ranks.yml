@@ -1,9 +1,9 @@
 # ╔══════════════════════════════════════════════════════════════╗
-# ║                    DZEconomy v26.2.0                        ║
-# ║                   Rank Configuration                       ║
-# ║                                                            ║
-# ║   Wiki: https://wiki.demonzdevelopment.online/dzeconomy/ranks           ║
-# ║   Support: https://discord.com/invite/GYsTt96ypf                      ║
+# ║                       DZEconomy v2.1.2                       ║
+# ║                      Rank Configuration                      ║
+# ║                                                              ║
+# ║   Wiki: https://github.com/DemonZ-Development/DZEconomy/wiki/║
+# ║   Support: https://discord.com/invite/GYsTt96ypf             ║
 # ╚══════════════════════════════════════════════════════════════╝
 #
 # ┌──────────────────────────────────────────────────────────────┐
@@ -179,3 +179,4 @@ premium:
 # │  IMPORTANT: The rank key MUST match the LuckPerms group    │
 # │  name EXACTLY (case-sensitive).                            │
 # └────────────────────────────────────────────────────────────┘
+

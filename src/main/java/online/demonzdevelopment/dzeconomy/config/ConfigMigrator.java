@@ -11,7 +11,7 @@ import java.util.logging.Level;
 public class ConfigMigrator {
     
     private final DZEconomy plugin;
-    public static final int CURRENT_CONFIG_VERSION = 2;
+    public static final int CURRENT_CONFIG_VERSION = 3;
     
     public ConfigMigrator(DZEconomy plugin) {
         this.plugin = plugin;
@@ -30,10 +30,13 @@ public class ConfigMigrator {
         
         backupConfig();
         
-        for (int v = version; v < CURRENT_CONFIG_VERSION; v++) {
+for (int v = version; v < CURRENT_CONFIG_VERSION; v++) {
             switch (v) {
                 case 1:
                     migrateV1toV2();
+                    break;
+                case 2:
+                    migrateV2toV3();
                     break;
                 
             }
@@ -65,9 +68,13 @@ public class ConfigMigrator {
             config.set("combat-tag.duration", 15);
         }
         
-        config.set("auto-update", null);
+config.set("auto-update", null);
         config.set("runtime-auto-update", null);
         config.set("update", null); 
+    }
+    
+    private void migrateV2toV3() {
+        plugin.getLogger().info("  Migrating v2 -> v3: Refreshing config header and documentation links.");
     }
     
     private void backupConfig() {

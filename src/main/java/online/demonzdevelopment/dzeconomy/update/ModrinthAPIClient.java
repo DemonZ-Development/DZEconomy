@@ -14,12 +14,13 @@ import java.nio.charset.StandardCharsets;
 public class ModrinthAPIClient {
     
     private static final String API_BASE = "https://api.modrinth.com/v2";
-    private static final String USER_AGENT = "DZEconomy/26.2.0 (https://github.com/DemonZ-Development/DZEconomy)";
     
     private final String projectId;
+    private final String userAgent;
     
-    public ModrinthAPIClient(String projectId) {
+    public ModrinthAPIClient(String projectId, String pluginVersion) {
         this.projectId = projectId;
+        this.userAgent = "DZEconomy/" + pluginVersion + " (https://github.com/DemonZ-Development/DZEconomy)";
     }
     
     public ModrinthVersion fetchLatestVersion() throws Exception {
@@ -28,7 +29,7 @@ public class ModrinthAPIClient {
         
         HttpURLConnection conn = (HttpURLConnection) URI.create(url).toURL().openConnection();
         conn.setRequestMethod("GET");
-        conn.setRequestProperty("User-Agent", USER_AGENT);
+        conn.setRequestProperty("User-Agent", userAgent);
         conn.setConnectTimeout(10000);
         conn.setReadTimeout(10000);
         

@@ -4,7 +4,7 @@ main: online.demonzdevelopment.dzeconomy.DZEconomy
 api-version: '1.13'
 description: A powerful multi-currency economy plugin with ranks, combat tagging, and more.
 author: DemonZ Development
-website: https://wiki.demonzdevelopment.online/dzeconomy
+website: https://github.com/DemonZ-Development/DZEconomy/wiki
 folia-supported: true
 
 depend: []

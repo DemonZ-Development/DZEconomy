@@ -1,9 +1,9 @@
 # ╔══════════════════════════════════════════════════════════════╗
-# ║                    DZEconomy v26.2.0                        ║
-# ║              Messages & Language Configuration              ║
-# ║                                                            ║
-# ║   Wiki: https://wiki.demonzdevelopment.online/dzeconomy                 ║
-# ║   Support: https://discord.com/invite/GYsTt96ypf                      ║
+# ║                       DZEconomy v2.1.2                       ║
+# ║              Messages & Language Configuration               ║
+# ║                                                              ║
+# ║   Wiki: https://github.com/DemonZ-Development/DZEconomy/wiki/║
+# ║   Support: https://discord.com/invite/GYsTt96ypf             ║
 # ╚══════════════════════════════════════════════════════════════╝
 #
 # ┌──────────────────────────────────────────────────────────────┐
@@ -284,3 +284,4 @@ welcome:
 mob-rewards:
   # Shown when a player earns a mob reward.
   reward: "&a+{amount} {currency} &7(from killing {mob})"
+

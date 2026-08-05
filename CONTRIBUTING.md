@@ -77,7 +77,7 @@ cd DZEconomy
 ./gradlew shadowJar -x test
 ```
 
-The JAR will be in `build/libs/DZEconomy-2.1.0.jar`.
+The JAR will be in `build/libs/DZEconomy-2.1.2.jar`.
 
 ### Project Structure
 

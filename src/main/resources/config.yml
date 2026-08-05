@@ -1,9 +1,9 @@
 # ╔══════════════════════════════════════════════════════════════╗
-# ║                    DZEconomy v26.2.0                        ║
-# ║           Multi-Currency Economy Plugin                    ║
-# ║                                                            ║
-# ║   Wiki: https://wiki.demonzdevelopment.online/dzeconomy                 ║
-# ║   Support: https://discord.com/invite/GYsTt96ypf                         ║
+# ║                       DZEconomy v2.1.2                       ║
+# ║                Multi-Currency Economy Plugin                 ║
+# ║                                                              ║
+# ║   Wiki: https://github.com/DemonZ-Development/DZEconomy/wiki/║
+# ║   Support: https://discord.com/invite/GYsTt96ypf             ║
 # ╚══════════════════════════════════════════════════════════════╝
 #
 # ┌──────────────────────────────────────────────────────────────┐
@@ -11,7 +11,7 @@
 # │  It is used internally to handle configuration migrations.  │
 # └──────────────────────────────────────────────────────────────┘
 
-config-version: 2
+config-version: 3
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                      STORAGE                                ║
@@ -338,3 +338,4 @@ updates:
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                    MISC SETTINGS                            ║
 # ╚══════════════════════════════════════════════════════════════╝
+

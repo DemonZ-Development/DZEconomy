@@ -10,10 +10,10 @@
 
 ### Multi-Currency Economy Plugin for Minecraft
 
-[![Version](https://img.shields.io/badge/version-2.1.0-gold?style=for-the-badge)](https://github.com/DemonZ-Development/DZEconomy/releases)
+[![Version](https://img.shields.io/badge/version-2.1.2-gold?style=for-the-badge)](https://github.com/DemonZ-Development/DZEconomy/releases)
 [![License](https://img.shields.io/badge/license-GPL%20v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0.en.html)
-[![Java](https://img.shields.io/badge/java-21+-orange?style=for-the-badge)](https://adoptium.net/)
-[![Paper](https://img.shields.io/badge/paper-1.16+-green?style=for-the-badge)](https://papermc.io/)
+[![Java](https://img.shields.io/badge/java-8+-orange?style=for-the-badge)](https://adoptium.net/)
+[![Paper](https://img.shields.io/badge/paper-1.9+-green?style=for-the-badge)](https://papermc.io/)
 
 [![Modrinth](https://img.shields.io/badge/Modrinth-Download-brightgreen?style=for-the-badge&logo=modrinth)](https://modrinth.com/plugin/dzeconomy)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/invite/GYsTt96ypf)
@@ -115,7 +115,7 @@ See the [Configuration Wiki](https://github.com/DemonZ-Development/DZEconomy/wik
 ## Quick setup
 
 1. Download the latest release from [Modrinth](https://modrinth.com/plugin/dzeconomy) or [GitHub Releases](https://github.com/DemonZ-Development/DZEconomy/releases)
-2. Place `DZEconomy-2.1.0.jar` in `plugins/`
+2. Place `DZEconomy-2.1.2.jar` in `plugins/`
 3. Restart once
 4. Edit `plugins/DZEconomy/config.yml`
 5. Run `/economy reload`
@@ -136,7 +136,7 @@ Hook into DZEconomy from your own plugins with a clean API.
 <dependency>
     <groupId>com.github.DemonZ-Development</groupId>
     <artifactId>DZEconomy</artifactId>
-    <version>2.1.0</version>
+    <version>2.1.2</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -148,7 +148,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'com.github.DemonZ-Development:DZEconomy:2.1.0'
+    compileOnly 'com.github.DemonZ-Development:DZEconomy:2.1.2'
 }
 ```
 
@@ -193,7 +193,7 @@ Run tests with `./gradlew test`.
 
 ---
 
-DZEconomy v2.1.0 — Made with ❤️ by [DemonZ Development](https://github.com/DemonZ-Development)
+DZEconomy v2.1.2 — Made by [DemonZ Development](https://github.com/DemonZ-Development)
 
 [⬆ Back to Top](#dzeconomy)
 

@@ -17,7 +17,7 @@ public class UpdateManager {
     public UpdateManager(DZEconomy plugin) {
         this.plugin = plugin;
         String projectId = plugin.getConfigManager().getConfig().getString("updates.modrinth-project-id", "dzeconomy");
-        this.apiClient = new ModrinthAPIClient(projectId);
+        this.apiClient = new ModrinthAPIClient(projectId, plugin.getDescription().getVersion());
     }
     
     public CompletableFuture<Boolean> checkForUpdates() {
