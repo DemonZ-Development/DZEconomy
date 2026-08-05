@@ -2,136 +2,131 @@
 [IMG]https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/bannerv2-release.png[/IMG]
 
 [SIZE=7][COLOR=#FFA500][B]DZEconomy[/B][/COLOR][/SIZE]
-[SIZE=4][COLOR=#888888]Multi-Currency Economy Plugin | v2.1.1[/COLOR][/SIZE]
+[SIZE=4][COLOR=#888888]Multi-Currency Economy Plugin | v2.1.2[/COLOR][/SIZE]
 
-[SIZE=3][COLOR=#55FF55]A powerful economy plugin with 3 currencies, rank multipliers, combat tagging, mob rewards, and Folia support.[/COLOR][/SIZE]
+[SIZE=3][COLOR=#55FF55]Three currencies, rank multipliers, combat tagging, mob rewards, and full Folia support. Runs on Minecraft 1.9 through 1.26.x.[/COLOR][/SIZE]
 
 [COLOR=#444444]──────────────────────────────────────────────────────────────────────[/COLOR]
 
-[SIZE=5][B][COLOR=#FFA500]✦ Features ✦[/COLOR][/B][/SIZE]
+[SIZE=5][B][COLOR=#FFA500]Features[/COLOR][/B][/SIZE]
 
-[SPOILER="💵 Three Currencies"]
+[SPOILER="Three Currencies"]
 [LIST]
 [*][B]Money ($)[/B] — Primary currency with decimal support, starting balance, and transaction limits
 [*][B]MobCoins (⛃)[/B] — Earned by killing mobs, configurable per-mob rewards
 [*][B]Gems (◆)[/B] — Premium currency from boss kills and conversion
-[*]Each currency is independently configurable: symbol, decimal places, starting balance, max balance, min transaction, and display format
-[*]Disable any currency to hide its commands and GUI
+[*]Each currency is independently configurable: symbol, decimal places, starting balance, max balance, min transaction
+[*]Disable any currency to hide its commands
 [/LIST]
 [/SPOILER]
 
-[SPOILER="🏆 Rank Multipliers"]
+[SPOILER="Rank Multipliers"]
 [LIST]
-[*]LuckPerms integration — automatic group detection
-[*]Per-currency earning multipliers (1.5x Money, 2x MobCoins, etc.)
+[*]LuckPerms integration — automatic group detection with cached lookups
+[*]Per-currency earning multipliers (1.25x Money, 1.5x MobCoins, etc.)
 [*]Rank perks: reduced cooldowns, increased daily limits, combat tag bypass
 [*]Interest system — earn passive income on your balance
-[*]Priority system for players with multiple groups
-[*]Multiplier stacking: MULTIPLY, ADD, or HIGHEST mode
+[*]Fallback to the default rank when no group matches
 [/LIST]
 [/SPOILER]
 
-[SPOILER="⚔️ Combat Tagging"]
+[SPOILER="Combat Tagging"]
 [LIST]
-[*]Block economy actions (send, request, accept) during combat
+[*]Blocks economy actions (send, request, accept) during combat
 [*]Configurable tag duration (default: 15 seconds)
 [*]Action bar indicator with countdown timer
-[*]Optional PVE combat tag support
 [*]Rank perk to bypass combat tag restrictions
 [/LIST]
 [/SPOILER]
 
-[SPOILER="💀 PvP Loot"]
+[SPOILER="PvP Loot"]
 [LIST]
-[*]Kill players to steal a percentage of their balance
-[*]Per-currency loss percentages (5% Money, 2% MobCoins, 0% Gems)
+[*]Kill players to take a percentage of their balance
+[*]Per-currency loss percentages (5% Money, 2% MobCoins, 0% Gems by default)
 [*]Minimum balance protection after death
 [*]Broadcast high-value kills
 [*]World blacklist support
 [/LIST]
 [/SPOILER]
 
-[SPOILER="🐷 Mob Rewards"]
+[SPOILER="Mob Rewards"]
 [LIST]
 [*]4 mob categories: neutral, easy, hard, boss
 [*]Per-mob reward configuration with chance-based drops
 [*]Random range rewards (min/max amount)
-[*]Kill streak bonuses with configurable tiers
-[*]Global multipliers and time-based event multipliers
+[*]Kill streak bonuses
+[*]Rank multipliers apply on top
 [*]Spawner and spawn egg mob filtering
-[*]World whitelist/blacklist
+[*]World whitelist and blacklist
 [*]Custom reward messages per mob
 [/LIST]
 [/SPOILER]
 
-[SPOILER="🔄 Currency Conversion"]
+[SPOILER="Currency Conversion"]
 [LIST]
 [*]Convert between any two currencies
 [*]Configurable exchange rates for all currency pairs
-[*]Transaction fee support (percentage-based)
-[*]Admin-only or player-accessible (configurable)
+[*]Percentage-based transaction fee
 [/LIST]
 [/SPOILER]
 
-[SPOILER="📊 Leaderboards"]
+[SPOILER="Leaderboards"]
 [LIST]
 [*]Per-currency baltop with pagination
 [*]Global baltop across all currencies
-[*]Cached refresh for performance
-[*]Offline player inclusion (configurable)
-[*]Special formatting for top 3 players
+[*]Special formatting for top players
 [/LIST]
 [/SPOILER]
 
-[SPOILER="💸 Payment Requests"]
+[SPOILER="Payment Requests"]
 [LIST]
 [*]Request currency from other players
 [*]Accept or deny with simple commands
 [*]Configurable timeout (default: 120 seconds)
-[*]Max pending requests limit
-[*]Sound notifications
-[*]Request GUI manager
+[*]Max pending requests per player
+[*]Applies the same limits as regular sends
 [/LIST]
 [/SPOILER]
 
-[SPOILER="🗄️ Storage & Performance"]
+[SPOILER="Storage and Performance"]
 [LIST]
 [*][B]SQLite[/B] — Default, zero-config, file-based
-[*][B]MySQL[/B] — HikariCP connection pooling, remote database support
-[*][B]Flat File[/B] — YAML-based, for testing/small servers
+[*][B]MySQL[/B] — Connection pooling, remote database support
 [*]Live migration between backends: [CODE]/economy migrate sqlite mysql[/CODE]
 [*]Configurable auto-save intervals
 [*]Manual backup creation: [CODE]/economy backup[/CODE]
-[*]Optional transaction logging with file rotation
+[*]Fast async database operations with in-memory caching
 [/LIST]
 [/SPOILER]
 
-[SPOILER="🚀 Folia Support"]
+[SPOILER="Folia Support"]
 [LIST]
-[*]Full region-based scheduling compatibility
-[*]Automatic Folia detection on startup
-[*]Global, Region, and Entity scheduler support
-[*]Thread-safe balance operations with per-player locks
-[*]Transparent scheduler adaptation via FoliaAdapter
+[*]Drops into the plugins folder like any other plugin
+[*]Detects Folia automatically at startup
+[*]Economy actions stay fast and reliable on Folia's multithreaded model
+[*]Works on Folia 1.19.4+
+[*]No configuration changes needed
 [/LIST]
 [/SPOILER]
 
-[SPOILER="🌐 PlaceholderAPI"]
+[SPOILER="PlaceholderAPI"]
 [LIST]
-[*]15+ placeholders with 3-second caching
+[*]15+ placeholders with 5-second caching
 [*][CODE]%dz_money%[/CODE] — Money balance
+[*][CODE]%dz_money_short%[/CODE] — Money balance in short form (1.5K)
 [*][CODE]%dz_mobcoin%[/CODE] — MobCoin balance
 [*][CODE]%dz_gem%[/CODE] — Gem balance
-[*][CODE]%dz_money_short%[/CODE] — Short-form Money (1.5K)
 [*][CODE]%dz_rank%[/CODE] — Rank display name
+[*][CODE]%dz_rank_name%[/CODE] — Rank internal name
 [*][CODE]%dz_combat_tagged%[/CODE] — Combat tag status
-[*]And more...
+[*][CODE]%dz_combat_time%[/CODE] — Remaining combat tag seconds
+[*]Dynamic currency placeholders: [CODE]%dz_<currency>%[/CODE] and [CODE]%dz_<currency>_short%[/CODE]
 [/LIST]
 [/SPOILER]
 
 [COLOR=#444444]──────────────────────────────────────────────────────────────────────[/COLOR]
 
-[SIZE=5][B][COLOR=#FFA500]✦ Commands ✦[/COLOR][/B][/SIZE]
+[SIZE=5][B][COLOR=#FFA500]Commands[/COLOR][/B][/SIZE]
 
 [SIZE=3][B]Currency Commands[/B] ([COLOR=#55FF55]/money[/COLOR], [COLOR=#55FF55]/mobcoin[/COLOR], [COLOR=#55FF55]/gem[/COLOR])[/SIZE]
 
@@ -239,7 +234,7 @@
 [/TR]
 [TR]
 [TD]/economy status[/TD]
-[TD]Plugin status & stats[/TD]
+[TD]Plugin status and stats[/TD]
 [TD]dzeconomy.admin.status[/TD]
 [TD]op[/TD]
 [/TR]
@@ -247,6 +242,12 @@
 [TD]/economy convert <player> <from> <to> <amount>[/TD]
 [TD]Convert currency[/TD]
 [TD]dzeconomy.admin.convert[/TD]
+[TD]op[/TD]
+[/TR]
+[TR]
+[TD]/economy give <player> <amount> [currency][/TD]
+[TD]Give currency[/TD]
+[TD]dzeconomy.admin[/TD]
 [TD]op[/TD]
 [/TR]
 [TR]
@@ -277,7 +278,7 @@
 
 [COLOR=#444444]──────────────────────────────────────────────────────────────────────[/COLOR]
 
-[SIZE=5][B][COLOR=#FFA500]✦ Permissions ✦[/COLOR][/B][/SIZE]
+[SIZE=5][B][COLOR=#FFA500]Permissions[/COLOR][/B][/SIZE]
 
 [SPOILER="Full Permission List"]
 [TABLE]
@@ -486,12 +487,22 @@
 [TD]Create backup[/TD]
 [TD]op[/TD]
 [/TR]
+[TR]
+[TD]dzeconomy.mobreward.multiplier[/TD]
+[TD]Mob reward multiplier[/TD]
+[TD]true[/TD]
+[/TR]
+[TR]
+[TD]dzeconomy.request.autoaccept[/TD]
+[TD]Auto-accept requests[/TD]
+[TD]false[/TD]
+[/TR]
 [/TABLE]
 [/SPOILER]
 
 [COLOR=#444444]──────────────────────────────────────────────────────────────────────[/COLOR]
 
-[SIZE=5][B][COLOR=#FFA500]✦ Configuration Showcase ✦[/COLOR][/B][/SIZE]
+[SIZE=5][B][COLOR=#FFA500]Configuration[/COLOR][/B][/SIZE]
 
 [SPOILER="config.yml (excerpt)"]
 [CODE=yaml]# Storage
@@ -503,8 +514,10 @@ storage:
     database: dzeconomy
     username: root
     password: changeme
+    use-ssl: false
     pool-size: 10
-    connection-timeout: 30
+  sqlite:
+    file: data.db
 
 # Currencies
 currencies:
@@ -517,7 +530,6 @@ currencies:
     starting-balance: 500.00
     max-balance: -1
     min-transaction: 0.01
-    display-format: "{symbol}{amount}"
   mobcoin:
     enabled: true
     singular: "MobCoin"
@@ -546,15 +558,19 @@ pvp:
     gem: 0.0
   minimum-balance:
     money: 100.0
+    mobcoin: 0
+    gem: 0
+  broadcast:
+    enabled: true
+    threshold: 1000.0
+  world-blacklist:
+    - spawn
+    - creative
 
 # Combat Tag
 combat-tag:
   enabled: true
-  duration: 15
-  blocked-actions: [send, request, accept]
-  action-bar:
-    enabled: true
-    format: "&c&l⚔ &eCombat Tag &7- &c{time}s remaining"[/CODE]
+  duration: 15[/CODE]
 [/SPOILER]
 
 [SPOILER="ranks.yml (excerpt)"]
@@ -583,27 +599,21 @@ combat-tag:
 
 [COLOR=#444444]──────────────────────────────────────────────────────────────────────[/COLOR]
 
-[SIZE=5][B][COLOR=#FFA500]✦ Installation ✦[/COLOR][/B][/SIZE]
+[SIZE=5][B][COLOR=#FFA500]Installation[/COLOR][/B][/SIZE]
 
 [LIST=1]
-[*]Download the latest [B]DZEconomy-2.1.1.jar[/B]
+[*]Download the latest [B]DZEconomy-2.1.2.jar[/B]
 [*]Place it in your server's [B]plugins/[/B] folder
 [*]Restart your server
 [*]Configure [B]config.yml[/B], [B]ranks.yml[/B], and [B]mob-rewards.yml[/B]
 [*]Run [B]/economy reload[/B] to apply changes
 [/LIST]
 
-[SIZE=3][B]Requirements:[/B] Java 21+ | Minecraft 1.16+ | Bukkit/Spigot/Paper/Folia/Purpur[/SIZE]
+[SIZE=3][B]Requirements:[/B] Java 8+ | Minecraft 1.9+ | Bukkit/Spigot/Paper/Folia/Purpur[/SIZE]
 
 [COLOR=#444444]──────────────────────────────────────────────────────────────────────[/COLOR]
 
-[SIZE=5][B][COLOR=#FFA500]✦ bStats Live Graph ✦[/COLOR][/B][/SIZE]
-
-[URL='https://bstats.org/plugin/bukkit/DZEconomy/31625'][IMG]https://bstats.org/signatures/bukkit/DZEconomy.svg[/IMG][/URL]
-
-[COLOR=#444444]──────────────────────────────────────────────────────────────────────[/COLOR]
-
-[SIZE=5][B][COLOR=#FFA500]✦ Support ✦[/COLOR][/B][/SIZE]
+[SIZE=5][B][COLOR=#FFA500]Support[/COLOR][/B][/SIZE]
 
 [LIST]
 [*][B]Wiki:[/B] [URL]https://github.com/DemonZ-Development/DZEconomy/wiki[/URL]
@@ -614,5 +624,5 @@ combat-tag:
 
 [COLOR=#444444]──────────────────────────────────────────────────────────────────────[/COLOR]
 
-[SIZE=2][COLOR=#888888]DZEconomy v2.1.1 | Licensed under GNU GPLv3 | Made with ❤️ by DemonZ Development[/COLOR][/SIZE]
+[SIZE=2][COLOR=#888888]DZEconomy v2.1.2 | Licensed under GNU GPLv3 | Made by DemonZ Development[/COLOR][/SIZE]
 [/CENTER]

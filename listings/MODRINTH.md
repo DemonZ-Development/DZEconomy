@@ -1,73 +1,58 @@
 ![DZEconomy Banner](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/bannerv2-release.png)
 
-# 💰 DZEconomy — Multi-Currency Economy Plugin
+# DZEconomy — Multi-Currency Economy Plugin
 
-> **A powerful, feature-rich economy plugin with 3 currencies, ranks, combat tagging, mob rewards, and Folia support.**
-
----
-
-## ✨ Features
-
-💵 **Three Currencies** — Money ($), MobCoins (⛃), and Gems (◆), each fully configurable with custom symbols, decimal places, starting balances, and transaction limits.
-
-🏆 **Rank Multipliers** — LuckPerms integration with per-currency earning bonuses, reduced cooldowns, increased daily limits, combat tag bypass, and interest earnings.
-
-⚔️ **Combat Tagging** — Prevent economy abuse during PvP with configurable combat tag duration, action bar indicator, and blocked actions.
-
-💀 **PvP Loot** — Kill players to steal a configurable percentage of their balance, with minimum balance protection and world blacklists.
-
-🐷 **Mob Rewards** — Configurable rewards for killing mobs across 4 categories (neutral, easy, hard, boss) with kill streak bonuses and time-based event multipliers.
-
-🔄 **Currency Conversion** — Convert between currencies with configurable exchange rates and transaction fees.
-
-📊 **Balance Leaderboards** — Per-currency and global baltop with pagination, offline player support, and cached refresh.
-
-💸 **Payment Requests** — Request, accept, and deny payments with timeout, max pending limits, and sound notifications.
-
-🌐 **PlaceholderAPI Support** — 15+ placeholders with 3-second caching for scoreboards, chat, and tab lists.
-
-🗄️ **Multiple Storage Backends** — SQLite (default), MySQL with HikariCP pooling, and Flat File with live migration between backends.
-
-🚀 **Folia Compatible** — Full region-based scheduling support with automatic Folia detection and transparent scheduler adaptation.
-
-🔔 **Update Checker** — Automatic Modrinth API update notifications for admins.
-
-💾 **Auto-Save & Backups** — Configurable auto-save intervals and manual backup creation.
-
-🎯 **Daily Limits & Cooldowns** — Per-currency transfer limits and cooldowns to prevent economy abuse.
-
-📜 **Transaction Logging** — Optional audit log with file rotation for compliance and debugging.
-
-🔧 **Fully Configurable** — Every message, format, and behavior can be customized in `messages.yml`.
+**Three currencies, rank multipliers, combat tagging, mob rewards, and full Folia support. Runs on Minecraft 1.9 through 1.26.x.**
 
 ---
 
-## 📸 Screenshots
+## Features
 
-| | |
-|---|---|
-| ![Balance Display](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/balance_display.png) | ![Baltop Leaderboard](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/baltop_leaderboard.png) |
-| *Balance Display* | *Baltop Leaderboard* |
-| ![Combat Tag](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/combat_tag.png) | ![Mob Reward](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/mob_reward.png) |
-| *Combat Tag Indicator* | *Mob Reward Notification* |
-| ![Payment Request](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/payment_request.png) | ![Admin Status](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/admin_status.png) |
-| *Payment Request* | *Admin Status Panel* |
+**Three Currencies** — Money ($), MobCoins (⛃), and Gems (◆). Each fully configurable: symbol, decimal places, starting balance, max balance, and transaction limits. Disable any currency to hide its commands.
+
+**Rank Multipliers** — LuckPerms integration with per-currency earning bonuses. Ranks can grant reduced transfer cooldowns, higher daily limits, combat tag bypass, and interest on held balances.
+
+**Combat Tagging** — Economy actions lock while you are in combat, with a configurable tag duration and an action bar indicator.
+
+**PvP Loot** — Kill players to take a percentage of their balance, with per-currency loss rates, minimum balance protection, and world blacklists.
+
+**Mob Rewards** — Configurable rewards for killing mobs across four categories (neutral, easy, hard, boss), with kill streak bonuses and rank multipliers.
+
+**Currency Conversion** — Convert between any two currencies with configurable exchange rates and a transaction fee.
+
+**Balance Leaderboards** — Per-currency and global baltop with pagination.
+
+**Payment Requests** — Request, accept, and deny payments, with a timeout and a pending request cap.
+
+**PlaceholderAPI Support** — 15+ placeholders with 5-second caching for scoreboards, chat, and tab lists.
+
+**Two Storage Backends** — SQLite by default, or MySQL with connection pooling. Live migration between backends with `/economy migrate`.
+
+**Folia Compatible** — Works on Folia without any configuration. Full region-based scheduling with automatic detection at startup.
+
+**Update Checker** — Automatic Modrinth update notifications for admins.
+
+**Auto-Save and Backups** — Configurable save intervals and manual backup creation.
+
+**Daily Limits and Cooldowns** — Per-currency transfer limits and cooldowns to keep the economy stable.
+
+**Fully Configurable** — Every message, format, and behavior is editable in `messages.yml`.
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
-1. Download and place `DZEconomy-2.1.1.jar` in your `plugins/` folder
+1. Download and place `DZEconomy-2.1.2.jar` in your `plugins/` folder
 2. Restart your server
 3. Players can immediately use `/money`, `/mobcoin`, `/gem`
 4. Customize `config.yml`, `ranks.yml`, and `mob-rewards.yml`
 5. Run `/economy reload` to apply changes
 
-> New players start with **$500.00** by default (configurable)
+New players start with **$500.00** by default. That is configurable.
 
 ---
 
-## 📋 Commands Quick Reference
+## Commands Quick Reference
 
 ### Currency Commands (`/money`, `/mobcoin`, `/gem`)
 
@@ -80,9 +65,9 @@
 | `/<currency> accept <player>` | Accept a payment request |
 | `/<currency> deny <player>` | Deny a payment request |
 | `/<currency> top [page]` | View balance leaderboard |
-| `/<currency> add <player> <amount>` | ⚙️ Add currency (admin) |
-| `/<currency> remove <player> <amount>` | ⚙️ Remove currency (admin) |
-| `/<currency> set <player> <amount>` | ⚙️ Set balance (admin) |
+| `/<currency> add <player> <amount>` | Add currency (admin) |
+| `/<currency> remove <player> <amount>` | Remove currency (admin) |
+| `/<currency> set <player> <amount>` | Set balance (admin) |
 
 ### Admin Commands (`/economy`)
 
@@ -90,97 +75,38 @@
 |---------|-------------|
 | `/economy info` | View plugin information |
 | `/economy credits` | View credits |
-| `/economy reload` | ⚙️ Reload configuration |
-| `/economy version` | ⚙️ Version information |
-| `/economy status` | ⚙️ Plugin status & stats |
-| `/economy convert <player> <from> <to> <amount>` | ⚙️ Convert currency |
-| `/economy migrate <from> <to>` | ⚙️ Migrate storage backend |
-| `/economy baltop [currency] [page]` | ⚙️ Global leaderboard |
-| `/economy payall <currency> <amount>` | ⚙️ Pay all online players |
-| `/economy backup` | ⚙️ Create data backup |
+| `/economy reload` | Reload configuration |
+| `/economy version` | Version information |
+| `/economy status` | Plugin status and stats |
+| `/economy convert <player> <from> <to> <amount>` | Convert currency |
+| `/economy give <player> <amount> [currency]` | Give currency from console or chat |
+| `/economy migrate <from> <to>` | Migrate storage backend |
+| `/economy baltop [currency] [page]` | Global leaderboard |
+| `/economy payall <currency> <amount>` | Pay all online players |
+| `/economy backup` | Create data backup |
 
 ---
 
-## 🔧 Configuration Highlights
+## Requirements
 
-### Three Fully Configurable Currencies
+| Requirement | Minimum |
+|-------------|---------|
+| Java | 8 or newer (21 recommended) |
+| Minecraft | 1.9 or newer (1.20+ recommended) |
+| Server Software | Bukkit, Spigot, Paper, Folia, or Purpur |
 
-```yaml
-currencies:
-  money:
-    enabled: true
-    singular: "Dollar"
-    plural: "Dollars"
-    symbol: "$"
-    decimal-places: 2
-    starting-balance: 500.00
-    max-balance: -1
-    min-transaction: 0.01
-    display-format: "{symbol}{amount}"
-```
+The same jar runs on servers from Java 8 all the way up to Java 21+, and from Minecraft 1.9 through 1.26.x. A compatibility layer handles the version differences for you.
 
-### Rank Multipliers with LuckPerms
-
-```yaml
-premium:
-  display-name: "&6Premium"
-  priority: 2
-  multipliers:
-    money: 1.5
-    mobcoin: 2.0
-    gem: 1.5
-  perks:
-    reduced-cooldown: true
-    cooldown-reduction: 0.5
-    bypass-combat-tag: true
-    interest:
-      enabled: true
-      rate: 0.1
-      interval: 86400
-```
-
-### Combat Tagging
-
-```yaml
-combat-tag:
-  enabled: true
-  duration: 15
-  blocked-actions: [send, request, accept]
-  action-bar:
-    enabled: true
-    format: "&c&l⚔ &eCombat Tag &7- &c{time}s remaining"
-```
-
----
-
-## 🖥️ Server Compatibility
-
-| Software | Versions | Java |
-|----------|----------|------|
-| Bukkit | 1.16 – 1.21.5 | 17+ (21 recommended) |
-| Spigot | 1.16 – 1.21.5 | 17+ (21 recommended) |
-| Paper | 1.16.5 – 1.21.5 | 17+ (21 recommended) |
-| Folia | 1.19.4 – 1.21.5 | 17+ (21 recommended) |
-| Purpur | 1.16.5 – 1.21.5 | 17+ (21 recommended) |
-
----
-
-## 📦 Optional Dependencies
+## Optional Dependencies
 
 | Plugin | Purpose | Required? |
 |--------|---------|-----------|
 | [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi) | Placeholders for scoreboards, chat, etc. | No |
-| [LuckPerms](https://modrinth.com/plugin/luckperms) | Rank detection for multiplier system | No |
+| [LuckPerms](https://modrinth.com/plugin/luckperms) | Rank detection for the multiplier system | No |
 
 ---
 
-## 📊 bStats
-
-[![bStats](https://bstats.org/signatures/bukkit/DZEconomy.svg)](https://bstats.org/plugin/bukkit/DZEconomy/31625)
-
----
-
-## 🔗 Links
+## Links
 
 | Resource | URL |
 |----------|-----|
@@ -191,10 +117,10 @@ combat-tag:
 
 ---
 
-## 📜 License
+## License
 
 GNU General Public License v3.0
 
 ---
 
-*Made with ❤️ by DemonZ Development*
+*DZEconomy v2.1.2 by DemonZ Development*

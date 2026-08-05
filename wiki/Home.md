@@ -1,62 +1,64 @@
 ![DZEconomy Banner](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/bannerv2-release.png)
 
-# 🏦 DZEconomy Wiki
+# DZEconomy Wiki
 
-> **A powerful multi-currency economy plugin for Minecraft** — by [DemonZ Development](https://demonzdevelopment.online)
-
----
-
-## ✨ Overview
-
-DZEconomy is a feature-rich, high-performance economy plugin that introduces **three distinct currencies**, a **rank multiplier system**, **combat tagging**, **PVP loot**, and **mob rewards** — all in one plugin. Built from the ground up for modern servers, it supports **Bukkit, Spigot, Paper, Folia, and Purpur** with full Folia region-based scheduling compatibility.
-
-### 💰 Three Currencies
-
-| Currency | Symbol | Description |
-|----------|--------|-------------|
-| **Money** | `$` | Primary currency — starting balance, PVP loot, transfers |
-| **MobCoins** | `⛃` | Earned by killing mobs — secondary economy |
-| **Gems** | `◆` | Premium currency — rare boss drops, conversion |
-
-### 🌟 Key Features
-
-- 💵 **Multi-Currency System** — Money, MobCoins, and Gems, each independently configurable
-- 🏆 **Rank Multipliers** — LuckPerms integration with per-rank earning bonuses and perks
-- ⚔️ **Combat Tagging** — Block economy actions during combat with action bar indicator
-- 💀 **PVP Loot** — Kill players to steal a percentage of their balance
-- 🐷 **Mob Rewards** — Configurable rewards for killing mobs with kill streak bonuses
-- 🔄 **Currency Conversion** — Players or admins can convert between currencies with configurable rates and fees
-- 📊 **Balance Top** — Per-currency and global leaderboards with pagination
-- 💸 **Payment Requests** — Request, accept, and deny payments with timeout and GUI
-- 🌐 **PlaceholderAPI Support** — 15+ placeholders with 3-second caching
-- 🗄️ **Multiple Storage Backends** — SQLite, MySQL (HikariCP), and Flat File with live migration
-- 🚀 **Folia Compatible** — Full region-based scheduling support out of the box
-- 🔔 **Update Checker** — Automatic Modrinth API update notifications
-- 💾 **Auto-Save & Backups** — Configurable auto-save intervals and manual backups
-- 🎯 **Daily Limits & Cooldowns** — Per-currency transfer limits and cooldowns
-- 📜 **Transaction Logging** — Optional audit log with file rotation
-- 🔧 **Fully Configurable** — Every message, format, and behavior can be customized
+A multi-currency economy plugin for Minecraft. By [DemonZ Development](https://demonzdevelopment.online).
 
 ---
 
-## 🚀 Quick Start
+## Overview
 
-### 1. Install the Plugin
+DZEconomy gives you three currencies, a rank multiplier system, combat tagging, PVP loot, and mob rewards in one plugin. It runs on Bukkit, Spigot, Paper, Folia, and Purpur, from Minecraft 1.9 through 1.26.x.
 
-1. Download the latest **DZEconomy v2.1.1** jar from [Modrinth](https://modrinth.com/plugin/dzeconomy)
-2. Place it in your server's `plugins/` folder
-3. Restart your server (or use a plugin manager)
+### The Three Currencies
 
-### 2. Verify Installation
+| Currency | Symbol | What it does |
+|----------|--------|--------------|
+| **Money** | `$` | Primary currency. Starting balance, PVP loot, transfers. |
+| **MobCoins** | `⛃` | Earned by killing mobs. Secondary economy. |
+| **Gems** | `◆` | Premium currency. Rare boss drops, conversion. |
+
+### Key Features
+
+- **Multi-currency system** — Money, MobCoins, and Gems, each configured independently
+- **Rank multipliers** — LuckPerms integration with per-rank earning bonuses
+- **Combat tagging** — Blocks economy actions during combat, with action bar indicator
+- **PVP loot** — Kill players to take a percentage of their balance
+- **Mob rewards** — Configurable rewards per mob, with kill streak bonuses
+- **Currency conversion** — Convert between currencies with rates and fees
+- **Balance top** — Per-currency and global leaderboards with pagination
+- **Payment requests** — Request, accept, and deny payments
+- **PlaceholderAPI support** — 15+ placeholders with 3-second caching
+- **Three storage backends** — SQLite, MySQL (HikariCP), and Flat File, with live migration
+- **Folia compatible** — Region-based scheduling out of the box
+- **Update checker** — Automatic notifications from Modrinth
+- **Auto-save and backups** — Configurable intervals and manual backups
+- **Daily limits and cooldowns** — Per-currency transfer limits
+- **Fully configurable** — Every message, format, and behavior is changeable
+
+---
+
+## Quick Start
+
+### 1. Install
+
+1. Download the latest **DZEconomy v2.1.2** jar from [Modrinth](https://modrinth.com/plugin/dzeconomy)
+2. Drop it in your server's `plugins/` folder
+3. Restart the server
+
+### 2. Verify
+
+You should see this in the console:
 
 ```
-[INFO] DZEconomy v2.1.1 has been successfully enabled!
+[INFO] DZEconomy v2.1.2 has been successfully enabled!
 [INFO] Running on Paper 1.21.4-...
 ```
 
-### 3. Start Playing!
+### 3. Play
 
 Players can immediately use:
+
 ```
 /money          → Check their Money balance
 /mobcoin        → Check their MobCoin balance
@@ -64,11 +66,11 @@ Players can immediately use:
 /money send Steve 100  → Send $100 to Steve
 ```
 
-> 💡 **New players** start with **$500.00** by default (configurable in `config.yml`)
+> New players start with **$500.00** by default. Change it under `currencies.money.starting-balance` in `config.yml`.
 
 ---
 
-## 📖 Wiki Pages
+## Wiki Pages
 
 | Page | Description |
 |------|-------------|
@@ -84,44 +86,31 @@ Players can immediately use:
 
 ---
 
-## 📸 Screenshots
-
-| | |
-|---|---|
-| ![Balance Display](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/balance_display.png) | ![Baltop Leaderboard](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/baltop_leaderboard.png) |
-| *Balance Display* | *Baltop Leaderboard* |
-| ![Combat Tag Indicator](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/combat_tag.png) | ![Mob Reward Notification](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/mob_reward.png) |
-| *Combat Tag Indicator* | *Mob Reward Notification* |
-| ![Payment Request](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/payment_request.png) | ![Admin Status Panel](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/screenshots/admin_status.png) |
-| *Payment Request GUI* | *Admin Status Panel* |
-
----
-
-## 🔗 Links
+## Links
 
 | Resource | Link |
 |----------|------|
-| 📦 Download | [Modrinth](https://modrinth.com/plugin/dzeconomy) |
-| 📖 Wiki | [GitHub Wiki](https://github.com/DemonZ-Development/DZEconomy/wiki) |
-| 💬 Discord | [discord.com/invite/GYsTt96ypf](https://discord.com/invite/GYsTt96ypf) |
-| 🐛 Issue Tracker | [GitHub Issues](https://github.com/DemonZ-Development/DZEconomy/issues) |
-| 📝 Source Code | [GitHub](https://github.com/DemonZ-Development/DZEconomy) |
-| 🌐 Website | [demonzdevelopment.online](https://demonzdevelopment.online) |
+| Download | [Modrinth](https://modrinth.com/plugin/dzeconomy) |
+| Wiki | [GitHub Wiki](https://github.com/DemonZ-Development/DZEconomy/wiki) |
+| Discord | [discord.com/invite/GYsTt96ypf](https://discord.com/invite/GYsTt96ypf) |
+| Issue Tracker | [GitHub Issues](https://github.com/DemonZ-Development/DZEconomy/issues) |
+| Source Code | [GitHub](https://github.com/DemonZ-Development/DZEconomy) |
+| Website | [demonzdevelopment.online](https://demonzdevelopment.online) |
 
 ---
 
-## 📜 License
+## License
 
-DZEconomy is licensed under the **GNU General Public License v3.0**. See [LICENSE](https://www.gnu.org/licenses/gpl-3.0.txt) for details.
+DZEconomy is licensed under the GNU General Public License v3.0. See [LICENSE](https://www.gnu.org/licenses/gpl-3.0.txt).
 
 ---
 
 <p align="center">
-  <strong>DZEconomy v2.1.1</strong> — Made with ❤️ by <a href="https://demonzdevelopment.online">DemonZ Development</a>
+  DZEconomy v2.1.2 — by <a href="https://demonzdevelopment.online">DemonZ Development</a>
 </p>
 
 ---
-### 📖 Quick Links
+### Quick Links
 [**DZEconomy GitHub**](https://github.com/DemonZ-Development/DZEconomy) • [**Discord Support**](https://discord.com/invite/GYsTt96ypf) • [**Wiki Home**](https://github.com/DemonZ-Development/DZEconomy/wiki/Home)
 
 *Developed by **[DemonZ Development](https://github.com/DemonZ-Development)***

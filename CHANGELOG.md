@@ -6,50 +6,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
-## [26.2.0] — 2026-08-02
+## [2.1.2] — 2026-08-05
+
+DZEconomy now runs on almost any server. The jar targets Java 8 bytecode and ships with a feature adapter layer, so it loads on Minecraft 1.9 through 1.26.x. This update also quiets the console and fixes a pile of broken messages and config wiring.
 
 ### Added
 
-- **FeatureAdapter layer** — new adapter system for version-specific APIs: `getOnlinePlayers()` (handles `Player[]` on 1.9–1.11 vs `Collection` on 1.12+), `isBungeeCord()` (pure reflection), `translateColors()` (hex `&#RRGGBB` → `§x` on 1.16+, nearest legacy fallback on 1.9–1.15)
-- **Java 8 bytecode** — compiled with `sourceCompatibility`/`targetCompatibility` 1.8 (major version 52); plugin now loads on Minecraft 1.9 through 1.26.x
-- **`storage.sqlite.file` option** — configurable SQLite database file name (defaults to `data.db`)
-- **`/economy give <player> <amount> [currency]`** — unified admin command to give any currency (defaults to money; aliases: `money`, `mobcoin(s)`, `gem(s)`) with success/target notifications and tab completion
+- **Minecraft 1.9–1.26.x support.** A `FeatureAdapter` picks the right API for the server version: `getOnlinePlayers()` handles both the old `Player[]` and the newer `Collection`, bungee detection uses pure reflection, hex colors map to `§x` on 1.16+ and fall back to the nearest legacy color below that.
+- **Java 8 bytecode.** Compiled with `sourceCompatibility`/`targetCompatibility` 1.8 (major version 52). No more Java 21 requirement.
+- **`/economy give <player> <amount> [currency]`.** One admin command to credit any currency. Money is the default; `mobcoin(s)` and `gem(s)` work too. Includes notification messages and tab completion.
+- **`storage.sqlite.file` option.** Pick the SQLite database file name. Defaults to `data.db`.
 
 ### Removed
 
-- **Dead code** — deleted `UpdateCheckTask`, `RequestGUIManager` (and the `gui` package), `TransactionLogEntry`, and dozens of unused public methods, fields, and imports across `DZEconomy`, `CurrencyManager`, `StorageProvider` implementations, `UpdateManager`, `CombatTagManager`, `Rank`, `MoneyUtil`, `ColorUtil`, `ServerPlatform`, and `CurrencyType`; this also removes the now-unused `MessageUtil` integration that surfaced broken message wiring
-- **Dead config keys** — removed unused `display-format`, `auto-save.save-on-transaction`, `conversion.player-convert`, combat-tag `blocked-actions`/`include-pve`/`action-bar`, request, baltop, payall, updates-notify, ranks, and misc sections from `config.yml`; unused message keys stripped from `messages.yml`
+- **Dead code.** Deleted `UpdateCheckTask`, `RequestGUIManager` (and the `gui` package), `TransactionLogEntry`, and unused methods across the codebase.
+- **Dead config keys.** Unused sections stripped from `config.yml` and `messages.yml` so existing installs don't chase phantom settings.
 
 ### Fixed
 
-- **Broken message wiring** — ~20 messages (`reload-success`, `convert-success`, `migrate-*`, `payall-*`, `combat-tagged`, `unknown-subcommand`, `update-available`, ...) referenced nonexistent `messages.yml` keys and rendered "Message not found"; aliases and correct placeholder mappings (`{from}`, `{to}`, `{from_balance}`, `{to_balance}`, `{count}`) are now in place
-- **Update checker ignoring config** — the scheduled update check now honors `updates.check-enabled`
-- **Lifetime statistics being wiped daily** — `resetDailyReceived()` overwrote the lifetime `money_received` total with 0; the daily reset now only clears daily counters and daily sent amounts
-- **Per-player lock leak** — `CurrencyManager.playerLocks` entries were never removed, growing unbounded on servers with many join/quit cycles; locks are now released on player unload when safe
-- **Migration silently reporting success** — `MigrationManager` ignored `initialize()` results and counted players as migrated even when `savePlayerData` failed; failed saves are now counted and reported, and migrations abort if a storage backend fails to initialize
-- **Corrupt SQLite backups** — backups zipped the live WAL-mode database without checkpointing, producing torn files; a `wal_checkpoint(TRUNCATE)` is now issued before backup
-- **Dead config keys for transfer limits** — `/money send` etc. read nonexistent `currencies.<cur>.max-transaction/send-cooldown/daily-limit` keys, so limits and cooldowns were silently never enforced; the code now reads `transfer.max-transaction`, `transfer.cooldowns.*`, and `transfer.daily-limit.*` (with legacy per-currency fallback), and honors `transfer.allow-self-transfer` and `transfer.block-during-combat`
-- **Cooldown/daily-limit reset exploit** — send cooldowns and daily sent amounts were in-memory only, so relogging reset them; both are now persisted (SQLite/MySQL columns `sent_amount`/`send_time` added with a safe schema upgrade, FlatFile keys added)
-- **`spigot().getSpigotConfig()` throwing NoSuchMethodError** — the bungee-cord detection fallback now uses pure reflection on `org.spigotmc.SpigotConfig#bungee` (catches `Throwable`), preventing `NoSuchMethodError` on servers without that method
-- **Request accept bypassing limits** — `/money accept` transferred without max-transaction, cooldown, or daily-limit checks; it now applies the same limits as `/send`
-- **Dead config keys for PvP loss** — `PlayerDeathListener` read nonexistent `pvp.<currency>.enabled/loss-percentage/broadcast-threshold` keys, defaulting to 100% loss with stock config; it now reads `pvp.loss-percent.*` (percent), `pvp.minimum-balance.*`, `pvp.broadcast.*`, and honors `pvp.world-blacklist`
-- **New-player detection broken** — `isNewPlayer` was never set, so starting balances and first-join welcome messages never fired; SQLite/MySQL `loadPlayerData` now return null for players without a record (matching FlatFile), and new players get their configured starting balance once
-- **`%balance%` placeholder clobbering `{amount}`** — messages using both placeholders (e.g. send confirmations) could show the new balance as the transferred amount
-- **Broken message paths** — welcome messages (`welcome-new-player`/`welcome-back`), PvP loss/gain messages, `max-transaction-exceeded`, and update notifications mapped to nonexistent keys and rendered "Message not found"; all now resolve to the correct `messages.yml` entries, and missing placeholder mappings (`{command}`, `{symbol}`, `{money}`, `{mobcoins}`, `{gems}`, `{current}`, `{latest}`) were added
-- **Request notification misleading** — told players to `/accept <id>` although the command takes a player name; the message and help now say `<player>`
-- **Pre-release version ordering** — `SemanticVersion` compared suffixes as plain strings, so `1.0-rc10` sorted below `1.0-rc9` and `1.0-alpha` above `1.0-beta`; prerelease identifiers are now compared per semver rules
-- **FlatFile save error reporting** — `savePlayerData` returned void and hid write failures; all storage providers now return a boolean success flag that callers report on failure
-- **`{timeout}` rendered literally in request messages** — `Request sent ... (Expires in {timeout}s)` showed the raw placeholder because the sender notification never passed a timeout value; it now includes the configured `request.timeout`
-- **`{symbol}` rendered literally in payall messages** — `/economy payall` success/broadcast messages showed `{symbol}` because the symbol placeholder was never filled; it is now passed through
-- **Convert confirmation showed the wrong amount** — `/economy convert` reported the input amount for the target currency even when conversion rates/fees change it (e.g. rate 100x with 5% fee); the message now shows the actual amount received (`{to_amount}`)
-- **`/economy baltop` and `/money top` showing stale balances** — leaderboards read the storage backend directly, which lags behind the in-memory cache (writes flush on unload/autosave); cached balances are now overlaid so rankings are current
-- **New message keys invisible on existing installs** — `messages.yml` was read with a fallback that bypassed JAR defaults, so missing keys rendered "Message not found"; missing keys now fall back to the JAR default automatically
-- **PvP loss/gain messages showing literal `{killer}`/`{victim}`** — the placeholder replacement table never mapped `%killer%`/`%victim%`, so both players saw raw placeholders instead of names
-- **Mob reward messages showing literal `{mob}`** — `%mob%` was never mapped, so kill rewards showed `{mob}` instead of the mob name
-- **PvP high-value kill broadcast rendering "Message not found"** — the `pvp-broadcast` message key was not mapped to `pvp.broadcast` in `messages.yml`
-- **Insufficient-funds message showed the requested amount** — `%amount%` was filled with the sum the player asked to send instead of their actual balance; it now shows what the player really has
-- **Self-send message rendering `{currency}` literally** — `cannot-send-self` was sent without the currency placeholder; it now resolves to the currency name
-- **PvP kill message overstated the loot** — the killer-gain message reported the gross loot even though the transfer tax reduced what the killer received; it now shows the net amount credited
+- **Messages showed "Message not found".** Around twenty messages pointed at `messages.yml` keys that didn't exist. Aliases and placeholder mappings are now correct, so welcome, PvP, payall, convert, and reload messages render properly.
+- **New players never got a starting balance.** `isNewPlayer` was never set, so the welcome balance and messages never fired. New players now get their configured starting balance once.
+- **Relogging reset cooldowns and daily limits.** Both were kept in memory only. They now persist across restarts.
+- **Transfer limits and cooldowns did nothing.** `send`/`request`/`accept` read config keys that didn't exist. They now read `transfer.max-transaction`, `transfer.cooldowns.*`, and `transfer.daily-limit.*`, and honor `allow-self-transfer` and `block-during-combat`.
+- **`/money accept` skipped the limits.** Accepting a request now applies the same max-transaction, cooldown, and daily-limit checks as a normal send.
+- **PVP loot config was dead.** The death listener read keys that didn't exist and defaulted to wiping 100% of a victim's balance on a kill. It now reads `pvp.loss-percent.*`, `pvp.minimum-balance.*`, `pvp.broadcast.*`, and the world blacklist.
+- **Leaderboards showed stale balances.** Baltop read storage directly and lagged behind in-memory balances. Rankings now reflect live cached balances.
+- **Killer was told the wrong loot.** The PvP gain message reported the gross amount even though transfer tax reduced it. It now shows the net credited.
+- **`{killer}`, `{victim}`, `{mob}`, `{symbol}`, `{timeout}` printed literally.** These placeholders were missing from the replacement table. They now resolve to real values.
+- **Convert confirmation showed the wrong amount.** It displayed the input amount instead of what the player actually got after rates and fees. It now reports the received amount.
+- **Daily reset wiped lifetime stats.** `resetDailyReceived` zeroed the lifetime `money_received` total. Daily resets now only clear daily counters.
+- **Per-player locks leaked.** `playerLocks` entries grew with every join/quit. They now release on player unload.
+- **SQLite backups could be torn.** Backups zipped the live WAL file without a checkpoint. A `wal_checkpoint(TRUNCATE)` now runs first.
+- **Migration could lie about success.** Failed saves were counted as migrated. Failures are now counted, reported, and abort if a backend can't initialize.
+- **`getSpigotConfig()` threw `NoSuchMethodError`.** The bungee detection fallback now uses reflection and catches `Throwable`.
+- **Version comparison was wrong.** `1.0-rc10` sorted below `1.0-rc9`. Prerelease identifiers now compare per semver rules.
+- **FlatFile hid write failures.** Save methods now return success flags callers report on failure.
 
 ## [2.1.0] — 2026-05-28
 
@@ -120,7 +111,7 @@ DZEconomy v2.0.0 is a ground-up rewrite of the plugin with a modern architecture
 
 ---
 
-[26.2.0]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v26.2.0
+[2.1.2]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v2.1.2
 [2.1.0]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v2.1.0
 [2.0.0]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v2.0.0
 [1.0.0]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v1.0.0

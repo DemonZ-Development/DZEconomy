@@ -1,10 +1,12 @@
-# ⚙️ Configuration Reference
+![DZEconomy Banner](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/bannerv2-release.png)
 
-Complete configuration reference for DZEconomy v2.1.1. All configuration files are located in `plugins/DZEconomy/`.
+# Configuration Reference
+
+Configuration reference for DZEconomy v2.1.2. All config files live in `plugins/DZEconomy/`.
 
 ---
 
-## 📁 Configuration Files
+## Configuration Files
 
 | File | Purpose |
 |------|---------|
@@ -13,25 +15,19 @@ Complete configuration reference for DZEconomy v2.1.1. All configuration files a
 | `ranks.yml` | Rank definitions and multipliers |
 | `mob-rewards.yml` | Mob kill reward configuration |
 
-> ⚠️ **Do not manually change `config-version`!** It is used internally for automatic configuration migration.
+Do not change `config-version` by hand. The plugin uses it to run config migrations.
 
 ---
 
-## 📄 config.yml
-
-### General
-
-| Path | Type | Default | Description |
-|------|------|---------|-------------|
-| `config-version` | Integer | `2` | Internal version number for config migration. **Do not change manually!** |
-
----
+## config.yml
 
 ### Storage
 
 | Path | Type | Default | Description |
 |------|------|---------|-------------|
-| `storage.type` | String | `SQLITE` | Storage backend. Options: `SQLITE`, `MYSQL`, `FLATFILE` |
+| `storage.type` | String | `SQLITE` | Storage backend. Options: `SQLITE`, `MYSQL` |
+
+Changing the backend requires a migration. Use `/economy migrate` to move data between backends.
 
 #### MySQL Settings
 
@@ -42,9 +38,8 @@ Complete configuration reference for DZEconomy v2.1.1. All configuration files a
 | `storage.mysql.database` | String | `dzeconomy` | Database name |
 | `storage.mysql.username` | String | `root` | Database username |
 | `storage.mysql.password` | String | `changeme` | Database password |
-| `storage.mysql.parameters` | String | `?useSSL=false&autoReconnect=true&useUnicode=true&characterEncoding=UTF-8` | JDBC URL parameters |
+| `storage.mysql.use-ssl` | Boolean | `false` | Whether to connect with SSL |
 | `storage.mysql.pool-size` | Integer | `10` | HikariCP connection pool size |
-| `storage.mysql.connection-timeout` | Integer | `30` | Maximum wait time (seconds) for a pool connection |
 
 #### SQLite Settings
 
@@ -59,55 +54,25 @@ Complete configuration reference for DZEconomy v2.1.1. All configuration files a
 | Path | Type | Default | Description |
 |------|------|---------|-------------|
 | `auto-save.interval` | Integer | `300` | Save interval in seconds. Minimum recommended: `60`. Set to `-1` to disable. |
-| `auto-save.save-on-transaction` | Boolean | `false` | Save after every transaction. **Warning**: Can significantly reduce performance! |
 
 ---
 
 ### Currencies
 
-Each currency has identical configuration options.
-
-#### Money (Primary Currency)
+Each currency has identical settings.
 
 | Path | Type | Default | Description |
 |------|------|---------|-------------|
-| `currencies.money.enabled` | Boolean | `true` | Whether Money is active. Disabled currencies hide commands & GUI. |
-| `currencies.money.singular` | String | `Dollar` | Singular name |
-| `currencies.money.plural` | String | `Dollars` | Plural name |
-| `currencies.money.symbol` | String | `$` | Display symbol |
-| `currencies.money.decimal-places` | Integer | `2` | Number of decimal places. `0` = whole numbers only. |
-| `currencies.money.starting-balance` | Double | `500.00` | Balance given to new players |
-| `currencies.money.max-balance` | Double | `-1` | Maximum balance. `-1` = unlimited. |
-| `currencies.money.min-transaction` | Double | `0.01` | Minimum amount for any transaction |
-| `currencies.money.display-format` | String | `{symbol}{amount}` | Format string. Placeholders: `{symbol}`, `{amount}`, `{currency_singular}`, `{currency_plural}` |
+| `currencies.<cur>.enabled` | Boolean | `true` | Whether the currency is active. Disabled currencies hide their commands. |
+| `currencies.<cur>.singular` | String | varies | Singular name |
+| `currencies.<cur>.plural` | String | varies | Plural name |
+| `currencies.<cur>.symbol` | String | `$` / `⛃` / `◆` | Display symbol |
+| `currencies.<cur>.decimal-places` | Integer | `2` / `0` / `0` | Decimal places shown. `0` = whole numbers only. |
+| `currencies.<cur>.starting-balance` | Double | `500.00` / `0` / `0` | Balance given to new players |
+| `currencies.<cur>.max-balance` | Double | `-1` | Maximum balance. `-1` = unlimited. |
+| `currencies.<cur>.min-transaction` | Double | `0.01` / `1` / `1` | Minimum amount for any transaction |
 
-#### MobCoin (Secondary Currency)
-
-| Path | Type | Default | Description |
-|------|------|---------|-------------|
-| `currencies.mobcoin.enabled` | Boolean | `true` | Whether MobCoins are active |
-| `currencies.mobcoin.singular` | String | `MobCoin` | Singular name |
-| `currencies.mobcoin.plural` | String | `MobCoins` | Plural name |
-| `currencies.mobcoin.symbol` | String | `⛃` | Display symbol |
-| `currencies.mobcoin.decimal-places` | Integer | `0` | Number of decimal places |
-| `currencies.mobcoin.starting-balance` | Double | `0` | Balance given to new players |
-| `currencies.mobcoin.max-balance` | Double | `-1` | Maximum balance. `-1` = unlimited. |
-| `currencies.mobcoin.min-transaction` | Double | `1` | Minimum amount for any transaction |
-| `currencies.mobcoin.display-format` | String | `{symbol}{amount}` | Format string |
-
-#### Gem (Premium Currency)
-
-| Path | Type | Default | Description |
-|------|------|---------|-------------|
-| `currencies.gem.enabled` | Boolean | `true` | Whether Gems are active |
-| `currencies.gem.singular` | String | `Gem` | Singular name |
-| `currencies.gem.plural` | String | `Gems` | Plural name |
-| `currencies.gem.symbol` | String | `◆` | Display symbol |
-| `currencies.gem.decimal-places` | Integer | `0` | Number of decimal places |
-| `currencies.gem.starting-balance` | Double | `0` | Balance given to new players |
-| `currencies.gem.max-balance` | Double | `-1` | Maximum balance. `-1` = unlimited. |
-| `currencies.gem.min-transaction` | Double | `1` | Minimum amount for any transaction |
-| `currencies.gem.display-format` | String | `{symbol}{amount}` | Format string |
+Where `<cur>` is `money`, `mobcoin`, or `gem`.
 
 ---
 
@@ -115,7 +80,9 @@ Each currency has identical configuration options.
 
 | Path | Type | Default | Description |
 |------|------|---------|-------------|
-| `transfer.max-transaction` | Double | `-1` | Maximum amount per single transaction. `-1` = no limit. |
+| `transfer.max-transaction` | Double | `-1` | Maximum amount per transaction. `-1` = no limit. |
+| `transfer.block-during-combat` | Boolean | `true` | Block transfers while combat-tagged |
+| `transfer.allow-self-transfer` | Boolean | `false` | Allow sending currency to yourself |
 
 #### Daily Limits
 
@@ -126,6 +93,8 @@ Each currency has identical configuration options.
 | `transfer.daily-limit.mobcoin` | Double | `-1` | Daily MobCoin transfer limit. `-1` = no limit. |
 | `transfer.daily-limit.gem` | Double | `-1` | Daily Gem transfer limit. `-1` = no limit. |
 
+Limits reset at midnight (server time). Cooldowns and daily sent amounts persist across restarts.
+
 #### Cooldowns
 
 | Path | Type | Default | Description |
@@ -135,20 +104,12 @@ Each currency has identical configuration options.
 | `transfer.cooldowns.mobcoin` | Integer | `5` | MobCoin transfer cooldown in seconds |
 | `transfer.cooldowns.gem` | Integer | `10` | Gem transfer cooldown in seconds |
 
-#### Combat Tag & Self-Transfer
-
-| Path | Type | Default | Description |
-|------|------|---------|-------------|
-| `transfer.block-during-combat` | Boolean | `true` | Block transfers while combat-tagged |
-| `transfer.allow-self-transfer` | Boolean | `false` | Allow sending currency to yourself |
-
 ---
 
 ### Conversion Rates
 
 | Path | Type | Default | Description |
 |------|------|---------|-------------|
-| `conversion.player-convert` | Boolean | `false` | Whether players can convert currencies. If `false`, only admins can. |
 | `conversion.fee-percent` | Double | `5.0` | Conversion fee percentage (0.0 – 100.0). `0` = no fee. |
 | `conversion.rates.money-to-mobcoin` | Double | `10.0` | 1 Money = 10 MobCoins |
 | `conversion.rates.money-to-gem` | Double | `100.0` | 1 Money = 100 Gems |
@@ -157,7 +118,7 @@ Each currency has identical configuration options.
 | `conversion.rates.gem-to-money` | Double | `0.01` | 1 Gem = 0.01 Money |
 | `conversion.rates.gem-to-mobcoin` | Double | `0.1` | 1 Gem = 0.1 MobCoins |
 
-> **Rate format**: `1 unit of source = rate units of target`
+**Rate format**: `1 unit of source = <rate> units of target`
 
 ---
 
@@ -166,15 +127,17 @@ Each currency has identical configuration options.
 | Path | Type | Default | Description |
 |------|------|---------|-------------|
 | `pvp.enabled` | Boolean | `true` | Whether PVP currency loss is enabled |
-| `pvp.loss-percent.money` | Double | `5.0` | Percentage of Money lost on PVP death |
-| `pvp.loss-percent.mobcoin` | Double | `2.0` | Percentage of MobCoins lost on PVP death |
-| `pvp.loss-percent.gem` | Double | `0.0` | Percentage of Gems lost on PVP death (0 = disabled) |
-| `pvp.minimum-balance.money` | Double | `100.0` | Minimum Money retained after PVP death |
-| `pvp.minimum-balance.mobcoin` | Double | `0` | Minimum MobCoins retained after PVP death |
-| `pvp.minimum-balance.gem` | Double | `0` | Minimum Gems retained after PVP death |
-| `pvp.broadcast.enabled` | Boolean | `true` | Broadcast PVP kills |
-| `pvp.broadcast.threshold` | Double | `1000.0` | Only broadcast if total value dropped exceeds this (in Money) |
+| `pvp.loss-percent.money` | Double | `5.0` | % of Money dropped on PVP death |
+| `pvp.loss-percent.mobcoin` | Double | `2.0` | % of MobCoins dropped on PVP death |
+| `pvp.loss-percent.gem` | Double | `0.0` | % of Gems dropped on PVP death (0 = disabled) |
+| `pvp.minimum-balance.money` | Double | `100.0` | Minimum Money kept after PVP death |
+| `pvp.minimum-balance.mobcoin` | Double | `0` | Minimum MobCoins kept after PVP death |
+| `pvp.minimum-balance.gem` | Double | `0` | Minimum Gems kept after PVP death |
+| `pvp.broadcast.enabled` | Boolean | `true` | Broadcast big PVP kills |
+| `pvp.broadcast.threshold` | Double | `1000.0` | Only broadcast when dropped value reaches this |
 | `pvp.world-blacklist` | List | `["spawn", "creative"]` | Worlds where PVP loss is disabled |
+
+The transfer tax applies to PVP loot the same way it applies to regular sends. The killer's gain message reports the net amount credited.
 
 ---
 
@@ -184,10 +147,8 @@ Each currency has identical configuration options.
 |------|------|---------|-------------|
 | `combat-tag.enabled` | Boolean | `true` | Whether combat tagging is enabled |
 | `combat-tag.duration` | Integer | `15` | Duration in seconds |
-| `combat-tag.blocked-actions` | List | `["send", "request", "accept"]` | Economy actions blocked while tagged |
-| `combat-tag.include-pve` | Boolean | `false` | Whether mob attacks also trigger combat tag |
-| `combat-tag.action-bar.enabled` | Boolean | `true` | Show combat tag on action bar |
-| `combat-tag.action-bar.format` | String | `&c&l⚔ &eCombat Tag &7- &c{time}s remaining` | Action bar format. Placeholder: `{time}` |
+
+Combat tag blocks economy actions while you are tagged. The tag expires when the fight ends or the timer runs out.
 
 ---
 
@@ -198,12 +159,12 @@ Each currency has identical configuration options.
 | `mob-rewards.enabled` | Boolean | `true` | Whether mob rewards are enabled globally |
 | `mob-rewards.world-whitelist` | List | `[]` | Only give rewards in these worlds. Empty = all worlds. |
 | `mob-rewards.world-blacklist` | List | `["spawn", "creative"]` | Never give rewards in these worlds |
-| `mob-rewards.allow-spawner-mobs` | Boolean | `false` | Whether spawner mobs can give rewards |
-| `mob-rewards.allow-spawn-egg-mobs` | Boolean | `false` | Whether spawn egg mobs can give rewards |
-| `mob-rewards.reward-message` | String | `&a+{amount} {currency} &7(from killing {mob})` | Reward message. Placeholders: `{amount}`, `{currency}`, `{mob}` |
-| `mob-rewards.default-multiplier` | Double | `1.0` | Default multiplier for all mob rewards. Permission: `dzeconomy.mobreward.multiplier` |
+| `mob-rewards.allow-spawner-mobs` | Boolean | `false` | Whether spawner mobs give rewards |
+| `mob-rewards.allow-spawn-egg-mobs` | Boolean | `false` | Whether spawn egg mobs give rewards |
+| `mob-rewards.reward-message` | String | `&a+{amount} {currency} &7(from killing {mob})` | Reward message |
+| `mob-rewards.default-multiplier` | Double | `1.0` | Default reward multiplier |
 
-> See `mob-rewards.yml` for per-mob reward configuration.
+Per-mob rewards live in `mob-rewards.yml`.
 
 ---
 
@@ -211,37 +172,8 @@ Each currency has identical configuration options.
 
 | Path | Type | Default | Description |
 |------|------|---------|-------------|
-| `request.enabled` | Boolean | `true` | Whether the request system is enabled |
-| `request.timeout` | Integer | `120` | Request expiry time in seconds |
+| `request.timeout` | Integer | `120` | Request expiry in seconds |
 | `request.max-pending` | Integer | `5` | Maximum pending requests per player |
-| `request.auto-accept-permission` | Boolean | `false` | Auto-accept from players with `dzeconomy.request.autoaccept` |
-| `request.notification.type` | String | `MESSAGE` | Notification type. Options: `MESSAGE`, `ACTION_BAR`, `TITLE`, `BOSS_BAR` |
-| `request.notification.sound` | String | `ENTITY_EXPERIENCE_ORB_PICKUP:1.0:1.0` | Sound format: `SOUND_NAME:VOLUME:PITCH` |
-
----
-
-### Baltop Settings
-
-| Path | Type | Default | Description |
-|------|------|---------|-------------|
-| `baltop.enabled` | Boolean | `true` | Whether baltop is enabled |
-| `baltop.entries-per-page` | Integer | `10` | Players shown per page |
-| `baltop.refresh-interval` | Integer | `300` | Cache refresh interval in seconds |
-| `baltop.include-offline` | Boolean | `true` | Include offline players in leaderboard |
-| `baltop.entry-format` | String | `&e#{rank} &7- &f{name} &8» &a{amount} {currency}` | Entry format |
-| `baltop.header` | String | *(multi-line)* | Header format |
-| `baltop.footer` | String | *(multi-line)* | Footer format |
-
----
-
-### Payall Settings
-
-| Path | Type | Default | Description |
-|------|------|---------|-------------|
-| `payall.enabled` | Boolean | `true` | Whether payall is enabled |
-| `payall.cooldown` | Integer | `60` | Minimum seconds between payall commands |
-| `payall.broadcast` | Boolean | `true` | Broadcast to all players when payall is used |
-| `payall.allow-console` | Boolean | `true` | Whether the console can execute payall |
 
 ---
 
@@ -251,55 +183,13 @@ Each currency has identical configuration options.
 |------|------|---------|-------------|
 | `updates.check-enabled` | Boolean | `true` | Whether to check for updates |
 | `updates.check-interval` | Integer | `21600` | Check interval in seconds (minimum: 3600) |
-| `updates.notify.on-join` | Boolean | `true` | Notify admins on join when update available |
-| `updates.notify.permission` | String | `dzeconomy.admin.update` | Permission to receive notifications |
-| `updates.notify.console-log` | Boolean | `true` | Log to console when update found |
 | `updates.modrinth-project-id` | String | `dzeconomy` | Modrinth project ID (change for forks) |
 
 ---
 
-### Rank Settings
+## mob-rewards.yml
 
-| Path | Type | Default | Description |
-|------|------|---------|-------------|
-| `ranks.enabled` | Boolean | `true` | Whether the rank system is enabled. Requires LuckPerms. |
-| `ranks.multiplier-stacking` | String | `MULTIPLY` | How multipliers stack. Options: `MULTIPLY`, `ADD`, `HIGHEST` |
-
-**Stacking Modes:**
-- `MULTIPLY` — All multipliers multiply together (1.5 × 1.2 = 1.8)
-- `ADD` — All multipliers add together (0.5 + 0.2 = 1.7)
-- `HIGHEST` — Only the highest multiplier is used
-
-> See `ranks.yml` for full rank configuration.
-
----
-
-### Miscellaneous Settings
-
-| Path | Type | Default | Description |
-|------|------|---------|-------------|
-| `misc.number-format` | String | `FULL` | Number display format. Options: `FULL`, `COMPACT`, `LOCALE` |
-| `misc.debug` | Boolean | `false` | Enable verbose console logging. **Only enable when troubleshooting!** |
-
-**Number Format Options:**
-- `FULL` — Always show full number (1,000,000.00)
-- `COMPACT` — Abbreviate large numbers (1.0M, 1.0K)
-- `LOCALE` — Use the server's locale formatting
-
-#### Transaction Logging
-
-| Path | Type | Default | Description |
-|------|------|---------|-------------|
-| `misc.transaction-log.enabled` | Boolean | `false` | Log all transactions for auditing |
-| `misc.transaction-log.file` | String | `transactions.log` | Log file name (inside plugin data folder) |
-| `misc.transaction-log.max-size` | Integer | `10` | Maximum log file size in MB before rotation |
-| `misc.transaction-log.max-files` | Integer | `5` | Number of rotated log files to keep |
-
----
-
-## 📄 mob-rewards.yml
-
-See the `mob-rewards.yml` file for per-mob configuration. Key sections:
+Per-mob reward configuration. Key sections:
 
 | Section | Description |
 |---------|-------------|
@@ -308,21 +198,19 @@ See the `mob-rewards.yml` file for per-mob configuration. Key sections:
 | `hard` | Hard hostile mob rewards (creepers, blazes, etc.) |
 | `boss` | Boss mob rewards (ender dragon, wither, etc.) |
 | `custom` | Custom mob entries (MythicMobs, etc.) |
-| `global-multipliers` | Global reward multipliers |
 | `kill-streaks` | Kill streak bonus configuration |
-| `events` | Time-based event multipliers |
 
 ---
 
-## 📄 ranks.yml
+## ranks.yml
 
-See [Ranks](Ranks.md) for full rank configuration details.
+See [Ranks](Ranks.md) for rank configuration details.
 
 ---
 
-## 📄 messages.yml
+## messages.yml
 
-Every message in DZEconomy can be customized. Key sections:
+Every message in DZEconomy is customizable. Key sections:
 
 | Section | Description |
 |---------|-------------|
@@ -337,15 +225,14 @@ Every message in DZEconomy can be customized. Key sections:
 | `pvp` | PVP loot messages |
 | `update` | Update notification messages |
 | `welcome` | First-join/returning messages |
-| `gui` | GUI-related messages |
 | `baltop` | Baltop formatting |
 | `help` | Help command messages |
 | `mob-rewards` | Mob reward messages |
 | `rank` | Rank messages |
 | `misc` | Miscellaneous messages |
 
-**Color Codes:** `&0-9`, `&a-f` for colors, `&k-o` for formatting, `&r` for reset.  
-**Hex Colors (1.16+):** `&#RRGGBB`  
+**Color Codes:** `&0-9`, `&a-f` for colors, `&k-o` for formatting, `&r` for reset.
+**Hex Colors (1.16+):** `&#RRGGBB`
 **MiniMessage Gradients:** `<gradient:#ff0000:#0000ff>text</>`
 
 ---
@@ -355,7 +242,7 @@ Every message in DZEconomy can be customized. Key sections:
 </p>
 
 ---
-### 📖 Quick Links
+### Quick Links
 [**DZEconomy GitHub**](https://github.com/DemonZ-Development/DZEconomy) • [**Discord Support**](https://discord.com/invite/GYsTt96ypf) • [**Wiki Home**](https://github.com/DemonZ-Development/DZEconomy/wiki/Home)
 
 *Developed by **[DemonZ Development](https://github.com/DemonZ-Development)***

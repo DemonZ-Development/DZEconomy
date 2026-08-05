@@ -1,20 +1,22 @@
-# 🔐 Permissions Reference
+![DZEconomy Banner](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/bannerv2-release.png)
 
-Complete permission node reference for DZEconomy v2.1.1.
+# Permissions Reference
+
+Complete permission node reference for DZEconomy v2.1.2.
 
 ---
 
-## 📖 Permission Defaults
+## Permission Defaults
 
 | Default | Meaning |
 |---------|---------|
-| `true` | All players have this permission |
-| `op` | Only operators (OPs) have this permission |
-| `false` | Nobody has this permission by default |
+| `true` | Everyone has this permission |
+| `op` | Only operators |
+| `false` | Nobody by default |
 
 ---
 
-## 💰 Money Permissions
+## Money Permissions
 
 | Node | Description | Default |
 |------|-------------|---------|
@@ -24,14 +26,14 @@ Complete permission node reference for DZEconomy v2.1.1.
 | `dzeconomy.money.request` | Request Money from other players | `true` |
 | `dzeconomy.money.accept` | Accept Money requests | `true` |
 | `dzeconomy.money.deny` | Deny Money requests | `true` |
-| `dzeconomy.money.top` | View Money leaderboard | `true` |
+| `dzeconomy.money.top` | View the Money leaderboard | `true` |
 | `dzeconomy.money.add` | Add Money to a player's balance | `op` |
 | `dzeconomy.money.remove` | Remove Money from a player's balance | `op` |
 | `dzeconomy.money.set` | Set a player's Money balance | `op` |
 
 ---
 
-## 🐷 MobCoin Permissions
+## MobCoin Permissions
 
 | Node | Description | Default |
 |------|-------------|---------|
@@ -41,14 +43,14 @@ Complete permission node reference for DZEconomy v2.1.1.
 | `dzeconomy.mobcoin.request` | Request MobCoins from other players | `true` |
 | `dzeconomy.mobcoin.accept` | Accept MobCoin requests | `true` |
 | `dzeconomy.mobcoin.deny` | Deny MobCoin requests | `true` |
-| `dzeconomy.mobcoin.top` | View MobCoin leaderboard | `true` |
+| `dzeconomy.mobcoin.top` | View the MobCoin leaderboard | `true` |
 | `dzeconomy.mobcoin.add` | Add MobCoins to a player's balance | `op` |
 | `dzeconomy.mobcoin.remove` | Remove MobCoins from a player's balance | `op` |
 | `dzeconomy.mobcoin.set` | Set a player's MobCoin balance | `op` |
 
 ---
 
-## 💎 Gem Permissions
+## Gem Permissions
 
 | Node | Description | Default |
 |------|-------------|---------|
@@ -58,31 +60,31 @@ Complete permission node reference for DZEconomy v2.1.1.
 | `dzeconomy.gem.request` | Request Gems from other players | `true` |
 | `dzeconomy.gem.accept` | Accept Gem requests | `true` |
 | `dzeconomy.gem.deny` | Deny Gem requests | `true` |
-| `dzeconomy.gem.top` | View Gem leaderboard | `true` |
+| `dzeconomy.gem.top` | View the Gem leaderboard | `true` |
 | `dzeconomy.gem.add` | Add Gems to a player's balance | `op` |
 | `dzeconomy.gem.remove` | Remove Gems from a player's balance | `op` |
 | `dzeconomy.gem.set` | Set a player's Gem balance | `op` |
 
 ---
 
-## 🏛️ Economy Admin Permissions
+## Economy Admin Permissions
 
 | Node | Description | Default |
 |------|-------------|---------|
 | `dzeconomy.economy.info` | View plugin info (`/economy info`) | `true` |
-| `dzeconomy.admin` | Access all admin commands (parent) | `op` |
+| `dzeconomy.admin` | Access all admin commands. Parent node | `op` |
 | `dzeconomy.admin.reload` | Reload plugin configuration | `op` |
 | `dzeconomy.admin.convert` | Convert currencies between players | `op` |
 | `dzeconomy.admin.migrate` | Migrate storage backends | `op` |
 | `dzeconomy.admin.status` | View plugin status | `op` |
-| `dzeconomy.admin.baltop` | View global balance leaderboard | `op` |
+| `dzeconomy.admin.baltop` | View the global balance leaderboard | `op` |
 | `dzeconomy.admin.payall` | Pay all online players | `op` |
 | `dzeconomy.admin.update` | Receive update notifications | `op` |
-| `dzeconomy.admin.backup` | Create data backup | `op` |
+| `dzeconomy.admin.backup` | Create a data backup | `op` |
 
 ---
 
-## 🏆 Rank & Mob Reward Permissions
+## Rank and Mob Reward Permissions
 
 | Node | Description | Default |
 |------|-------------|---------|
@@ -91,34 +93,32 @@ Complete permission node reference for DZEconomy v2.1.1.
 
 ---
 
-## 👥 Parent Permissions
+## The `dzeconomy.admin` Parent Node
 
-### `dzeconomy.admin`
-
-This parent permission grants access to all admin sub-permissions:
+Granting `dzeconomy.admin` unlocks every admin sub-permission:
 
 | Child | Granted |
 |-------|---------|
-| `dzeconomy.admin.reload` | `true` |
-| `dzeconomy.admin.convert` | `true` |
-| `dzeconomy.admin.migrate` | `true` |
-| `dzeconomy.admin.status` | `true` |
-| `dzeconomy.admin.baltop` | `true` |
-| `dzeconomy.admin.payall` | `true` |
-| `dzeconomy.admin.update` | `true` |
-| `dzeconomy.admin.backup` | `true` |
+| `dzeconomy.admin.reload` | Yes |
+| `dzeconomy.admin.convert` | Yes |
+| `dzeconomy.admin.migrate` | Yes |
+| `dzeconomy.admin.status` | Yes |
+| `dzeconomy.admin.baltop` | Yes |
+| `dzeconomy.admin.payall` | Yes |
+| `dzeconomy.admin.update` | Yes |
+| `dzeconomy.admin.backup` | Yes |
 
 ---
 
-## 📋 LuckPerms Setup Examples
+## LuckPerms Setup Examples
 
-### Give a player all admin permissions
+**Give a player all admin permissions**
 
 ```
 /lp user Steve permission set dzeconomy.admin true
 ```
 
-### Give a group access to check others' balances
+**Let a group check other players' balances**
 
 ```
 /lp group moderator permission set dzeconomy.money.balance.others true
@@ -126,7 +126,7 @@ This parent permission grants access to all admin sub-permissions:
 /lp group moderator permission set dzeconomy.gem.balance.others true
 ```
 
-### Give a group access to add/remove/set currency
+**Let a group add, remove, and set currency**
 
 ```
 /lp group admin permission set dzeconomy.money.add true
@@ -140,19 +140,17 @@ This parent permission grants access to all admin sub-permissions:
 /lp group admin permission set dzeconomy.gem.set true
 ```
 
-### Give a group mob reward multiplier
+**Let a group receive the mob reward multiplier**
 
 ```
 /lp group vip permission set dzeconomy.mobreward.multiplier true
 ```
 
-### Allow a group to bypass combat tag restrictions
-
-> This is handled via the `bypass-combat-tag` perk in `ranks.yml`, not a permission node.
+Bypassing combat tag restrictions is handled through the `bypass-combat-tag` perk in `ranks.yml`, not a permission node.
 
 ---
 
-## 📋 Full Permission Summary
+## Full Permission Summary
 
 | Node | Description | Default |
 |------|-------------|---------|
@@ -202,11 +200,11 @@ This parent permission grants access to all admin sub-permissions:
 ---
 
 <p align="center">
-  See <a href="Commands.md">Commands</a> for command usage and <a href="Ranks.md">Ranks</a> for rank-specific perks.
+  See <a href="Commands.md">Commands</a> for command usage and <a href="Ranks.md">Ranks</a> for rank perks.
 </p>
 
 ---
-### 📖 Quick Links
+### Quick Links
 [**DZEconomy GitHub**](https://github.com/DemonZ-Development/DZEconomy) • [**Discord Support**](https://discord.com/invite/GYsTt96ypf) • [**Wiki Home**](https://github.com/DemonZ-Development/DZEconomy/wiki/Home)
 
 *Developed by **[DemonZ Development](https://github.com/DemonZ-Development)***

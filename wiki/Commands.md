@@ -1,12 +1,12 @@
 ![DZEconomy Banner](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/bannerv2-release.png)
 
-# 📋 Commands Reference
+# Commands Reference
 
-Complete command reference for DZEconomy v2.1.1. All commands support tab completion.
+Command reference for DZEconomy v2.1.2. All commands support tab completion.
 
 ---
 
-## 💰 Currency Commands
+## Currency Commands
 
 Each currency (Money, MobCoin, Gem) has its own base command with identical subcommands.
 
@@ -16,7 +16,7 @@ Each currency (Money, MobCoin, Gem) has its own base command with identical subc
 | MobCoin | `/mobcoin` | `/mobcoins`, `/mc` |
 | Gem | `/gem` | `/gems` |
 
-> 💡 The subcommands below use `/money` as an example. Replace with `/mobcoin` or `/gem` for other currencies.
+> The subcommands below use `/money` as the example. Replace it with `/mobcoin` or `/gem` for the other currencies.
 
 ---
 
@@ -62,9 +62,11 @@ Send currency to another player.
 - Must have sufficient balance
 - Amount must exceed `min-transaction`
 - Amount must not exceed `max-transaction` (if set)
-- Must not exceed daily transfer limit
+- Must not exceed the daily transfer limit
 - Must not be on transfer cooldown
 - Must not be combat-tagged (if `block-during-combat: true`)
+
+Transfers apply a configurable tax from the sender's rank. The receiver gets the amount minus the tax.
 
 ---
 
@@ -86,8 +88,8 @@ Request currency from another player.
 ```
 
 **Behavior:**
-- Steve receives a notification with the request
-- Request expires after `request.timeout` seconds (default: 120s)
+- Steve gets a notification with the request
+- The request expires after `request.timeout` seconds (default: 120s)
 - Maximum pending requests per player: `request.max-pending` (default: 5)
 - Cannot request from yourself
 
@@ -105,12 +107,13 @@ Accept a payment request from another player.
 
 **Examples:**
 ```
-/money accept Steve    → Accept Steve's request for Money
+/money accept Steve    → Accept Steve's Money request
 ```
 
 **Behavior:**
-- Currency is transferred from your balance to the requester
+- Currency transfers from your balance to the requester
 - Must have sufficient balance
+- Applies the same limits as a normal send (max-transaction, cooldown, daily limit)
 - Cannot accept while combat-tagged
 
 ---
@@ -202,14 +205,14 @@ View the balance leaderboard for this currency.
 
 **Examples:**
 ```
-/money top          → View page 1 of the Money leaderboard
-/money top 2        → View page 2
-/money baltop 3     → View page 3
+/money top          → Page 1 of the Money leaderboard
+/money top 2        → Page 2
+/money baltop 3     → Page 3
 ```
 
 ---
 
-## 🏛️ Economy Admin Commands
+## Economy Admin Commands
 
 The `/economy` command (aliases: `/econ`, `/dzeconomy`, `/dze`) provides admin functionality.
 
@@ -228,7 +231,7 @@ View plugin information.
 **Example Output:**
 ```
 ─────────────────────────────────
-  DZEconomy v2.1.1
+  DZEconomy v2.1.2
   
   Currencies:
     ▸ money - Enabled ($)
@@ -257,7 +260,7 @@ View detailed version information.
 ─────────────────────────────────
   DZEconomy Version Info
 
-  ▸ Installed: v2.1.1
+  ▸ Installed: v2.1.2
   ▸ Server: Paper 1.21.4-...
   ▸ Bukkit API: 1.20.4-R0.1-SNAPSHOT
   ▸ Java: 21.0.2
@@ -278,8 +281,8 @@ Reload all configuration files without restarting.
 
 **Behavior:**
 - Reloads `config.yml`, `messages.yml`, `ranks.yml`, and `mob-rewards.yml`
-- Does **not** disconnect storage or lose cached data
-- Rank and combat tag configurations are refreshed
+- Does not disconnect storage or lose cached data
+- Refresh rank and combat tag configurations
 
 ```
 /economy reload    → Reloads all configuration
@@ -289,32 +292,13 @@ Reload all configuration files without restarting.
 
 ### `/economy status`
 
-View real-time plugin status and statistics.
+View live plugin status and statistics.
 
 | | |
 |---|---|
 | **Permission** | `dzeconomy.admin.status` |
 | **Default** | `op` |
 | **Console** | Yes |
-
-**Example Output:**
-```
-─────────────────────────────────
-  DZEconomy Status
-
-  ▸ Plugin: Running
-  ▸ Version: v2.1.1
-  ▸ Storage: sqlite
-  ▸ Cached Players: 24
-  ▸ Online Players: 18
-  ▸ Uptime: 2h 34m 12s
-  ▸ Pending Requests: 3
-  ▸ Combat Tags: 1
-  ▸ Total money: 1,245,678.90
-  ▸ Total mobcoin: 56,432.00
-  ▸ Total gem: 1,234.00
-─────────────────────────────────
-```
 
 ---
 
@@ -336,9 +320,35 @@ Convert currency from one type to another for a player.
 
 **Behavior:**
 - Uses conversion rates from `config.yml` → `conversion.rates`
-- Applies conversion fee: `conversion.fee-percent` (default: 5%)
-- Cannot convert same currency to itself
+- Applies the conversion fee: `conversion.fee-percent` (default: 5%)
+- Cannot convert a currency to itself
 - Both currencies must be enabled
+- The confirmation message shows the actual amount received after rates and fees
+
+---
+
+### `/economy give <player> <amount> [currency]`
+
+Add currency to a player's balance.
+
+| | |
+|---|---|
+| **Permission** | `dzeconomy.admin` |
+| **Default** | `op` |
+| **Console** | Yes |
+
+**Examples:**
+```
+/economy give Steve 1000             → Give $1,000 to Steve
+/economy give Steve 500 mobcoin      → Give 500 MobCoins to Steve
+/economy give Steve 200 gem          → Give 200 Gems to Steve
+```
+
+**Behavior:**
+- Defaults to money when no currency is given
+- Accepts `money`, `mobcoin(s)`, and `gem(s)` as currency names
+- Notifies the target player
+- Works from the console
 
 ---
 
@@ -361,7 +371,7 @@ Migrate all player data between storage backends.
 
 **Valid backends:** `sqlite`, `mysql`, `yaml` (flat file)
 
-> ⚠️ **Warning**: Migration runs asynchronously. Do not shut down the server during migration!
+> Migration runs asynchronously. Do not shut down the server during migration.
 
 ---
 
@@ -402,11 +412,6 @@ Distribute currency to all online players.
 /economy payall mobcoin 10     → Give 10 MobCoins to all online players
 ```
 
-**Behavior:**
-- Cooldown: `payall.cooldown` seconds (default: 60s)
-- Broadcasts to all players if `payall.broadcast: true`
-- Console can execute if `payall.allow-console: true`
-
 ---
 
 ### `/economy credits`
@@ -415,23 +420,9 @@ View plugin credits and links.
 
 | | |
 |---|---|
-| **Permission** | None (available to all) |
+| **Permission** | None |
 | **Default** | `true` |
 | **Console** | Yes |
-
-**Example Output:**
-```
-─────────────────────────────────
-  DZEconomy Credits
-
-  ▸ Author: DemonzDevelopment
-  ▸ Version: 2.1.1
-  ▸ Website: online.demonzdevelopment
-  ▸ Contributors: The community
-
-  Thank you for using DZEconomy!
-─────────────────────────────────
-```
 
 ---
 
@@ -445,19 +436,14 @@ Create a manual backup of all economy data.
 | **Default** | `op` |
 | **Console** | Yes |
 
-**Examples:**
-```
-/economy backup    → Creates a timestamped backup file
-```
-
 **Behavior:**
 - Saves all cached player data to storage
-- Creates a backup file in `plugins/DZEconomy/backups/`
-- Backup includes all player balances across all currencies
+- Creates a timestamped backup in `plugins/DZEconomy/backups/`
+- Includes all player balances across all currencies
 
 ---
 
-## 📋 Quick Reference Table
+## Quick Reference Table
 
 ### Currency Commands (applies to `/money`, `/mobcoin`, `/gem`)
 
@@ -485,6 +471,7 @@ Create a manual backup of all economy data.
 | `/economy version` | Version info | `dzeconomy.admin` | `op` |
 | `/economy status` | Plugin status | `dzeconomy.admin.status` | `op` |
 | `/economy convert <player> <from> <to> <amount>` | Convert currency | `dzeconomy.admin.convert` | `op` |
+| `/economy give <player> <amount> [currency]` | Add currency | `dzeconomy.admin` | `op` |
 | `/economy migrate <from> <to>` | Migrate storage | `dzeconomy.admin.migrate` | `op` |
 | `/economy baltop [currency] [page]` | Global leaderboard | `dzeconomy.admin.baltop` | `op` |
 | `/economy payall <currency> <amount>` | Pay all players | `dzeconomy.admin.payall` | `op` |
@@ -497,7 +484,7 @@ Create a manual backup of all economy data.
 </p>
 
 ---
-### 📖 Quick Links
+### Quick Links
 [**DZEconomy GitHub**](https://github.com/DemonZ-Development/DZEconomy) • [**Discord Support**](https://discord.com/invite/GYsTt96ypf) • [**Wiki Home**](https://github.com/DemonZ-Development/DZEconomy/wiki/Home)
 
 *Developed by **[DemonZ Development](https://github.com/DemonZ-Development)***

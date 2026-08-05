@@ -8,38 +8,37 @@
 
 ## Why Choose DZEconomy?
 
-DZEconomy is a modern, feature-rich economy plugin built for Paper and Folia servers. Unlike single-currency economy plugins, DZEconomy provides **three fully configurable currencies** out of the box — Money, MobCoins, and Gems — each with independent settings, commands, and leaderboards.
+DZEconomy is a modern economy plugin built for Paper and Folia servers. Instead of a single currency, you get three fully configurable ones out of the box: Money, MobCoins, and Gems. Each has its own settings, commands, and leaderboard.
 
 ### Key Highlights
 
-- **3 Currencies** — Money ($), MobCoins (⛃), Gems (◆) — each independently configurable
+- **3 Currencies** — Money ($), MobCoins (⛃), Gems (◆), each independently configurable
 - **Rank Multipliers** — LuckPerms integration with per-currency bonuses, cooldown reduction, and interest
-- **Folia Native** — Full region-based scheduling with automatic detection and transparent adaptation
-- **High Performance** — HikariCP MySQL pooling, async operations, cached leaderboards, 3-second placeholder cache
-- **Combat Tagging** — Block economy actions during PvP with action bar indicator
-- **PvP Loot** — Kill players to steal a configurable percentage of their balance
-- **Mob Rewards** — Per-mob drops, kill streak bonuses, and time-based event multipliers
+- **Folia Native** — Full region-based scheduling with automatic detection
+- **High Performance** — MySQL connection pooling, async database operations, 5-second placeholder cache
+- **Combat Tagging** — Blocks economy actions during PvP, with an action bar indicator
+- **PvP Loot** — Kill players to take a configurable percentage of their balance
+- **Mob Rewards** — Per-mob drops with kill streak bonuses
 - **Fully Customizable** — Every message, format, and behavior editable in messages.yml
 
 ---
 
 ## Folia Support
 
-DZEconomy has **first-class Folia support** with:
+DZEconomy works on Folia without any configuration:
 
-- Automatic Folia detection via `io.papermc.paper.threadedregions.RegionizedServer`
-- `FoliaAdapter` utility for transparent scheduler adaptation
-- Global, Region, and Entity scheduler support
-- Thread-safe balance operations with per-player locks
-- All features tested and working on Folia 1.19.4+
+- Drops into the `plugins/` folder like any other plugin
+- Detects Folia automatically at startup
+- Economy actions stay fast and reliable on Folia's multithreaded model
+- Works on Folia 1.19.4+
 
-No configuration changes needed — DZEconomy adapts automatically.
+No configuration changes needed. It just works.
 
 ---
 
 ## Quick Setup
 
-1. Place `DZEconomy-2.1.1.jar` in `plugins/`
+1. Place `DZEconomy-2.1.2.jar` in `plugins/`
 2. Restart the server
 3. Players can immediately use `/money`, `/mobcoin`, `/gem`
 4. Customize `config.yml`, `ranks.yml`, `mob-rewards.yml`
@@ -71,6 +70,7 @@ No configuration changes needed — DZEconomy adapts automatically.
 | `/economy reload` | Reload config | `dzeconomy.admin.reload` |
 | `/economy status` | Plugin status | `dzeconomy.admin.status` |
 | `/economy convert <player> <from> <to> <amount>` | Convert currency | `dzeconomy.admin.convert` |
+| `/economy give <player> <amount> [currency]` | Give currency | `dzeconomy.admin` |
 | `/economy migrate <from> <to>` | Migrate storage | `dzeconomy.admin.migrate` |
 | `/economy baltop [currency] [page]` | Global leaderboard | `dzeconomy.admin.baltop` |
 | `/economy payall <currency> <amount>` | Pay all players | `dzeconomy.admin.payall` |
@@ -80,15 +80,7 @@ No configuration changes needed — DZEconomy adapts automatically.
 
 ## Performance
 
-| Metric | SQLite (50 players) | MySQL (100 players) |
-|--------|---------------------|---------------------|
-| Balance lookup | <1ms (cached) | <1ms (cached) |
-| Transfer operation | <5ms | <5ms |
-| Baltop refresh (cached) | <10ms | <10ms |
-| Auto-save (300s interval) | <50ms | <30ms |
-| Placeholder resolution | <1ms (3s cache) | <1ms (3s cache) |
-
-All database operations run asynchronously and never block the main thread (or region threads on Folia).
+All database operations run asynchronously and never block the tick loop. On Folia, nothing runs on a central main thread, and balance changes for different players never slow each other down.
 
 ---
 
@@ -96,16 +88,11 @@ All database operations run asynchronously and never block the main thread (or r
 
 | Software | Versions | Java |
 |----------|----------|------|
-| Paper | 1.16.5 – 1.21.5 | 21+ |
-| Folia | 1.19.4 – 1.21.5 | 21+ |
-| Spigot | 1.16 – 1.21.5 | 21+ |
-| Purpur | 1.16.5 – 1.21.5 | 21+ |
-
----
-
-## bStats
-
-[![bStats](https://bstats.org/signatures/bukkit/DZEconomy.svg)](https://bstats.org/plugin/bukkit/DZEconomy/31625)
+| Paper | 1.9 – 1.26.x | 8+ |
+| Folia | 1.19.4 – 1.26.x | 8+ |
+| Spigot | 1.9 – 1.26.x | 8+ |
+| Purpur | 1.9 – 1.26.x | 8+ |
+| Bukkit | 1.9 – 1.26.x | 8+ |
 
 ---
 
@@ -118,4 +105,4 @@ All database operations run asynchronously and never block the main thread (or r
 
 ---
 
-*DZEconomy v2.1.1 — Made with ❤️ by DemonZ Development*
+*DZEconomy v2.1.2 — Made by DemonZ Development*

@@ -1,106 +1,74 @@
-# 🏆 Rank System
+![DZEconomy Banner](https://raw.githubusercontent.com/DemonZ-Development/DZEconomy/main/assets/bannerv2-release.png)
 
-Complete guide to the DZEconomy rank system, LuckPerms integration, and rank configuration.
+# Rank System
+
+The DZEconomy rank system, LuckPerms integration, and rank configuration.
 
 ---
 
-## 📖 Overview
+## Overview
 
-DZEconomy's rank system provides **multipliers and perks** based on a player's LuckPerms group. Ranks affect how much currency players earn from mob kills, PVP loot, payall, and admin additions.
+Ranks give players multipliers and perks based on their LuckPerms group. A rank affects how much currency a player earns from mob kills and how their transfers behave.
 
 ### Key Features
 
-- 📈 **Per-currency multipliers** — Each rank can have different multipliers for Money, MobCoins, and Gems
-- 🎁 **Rank perks** — Reduced cooldowns, increased daily limits, combat tag bypass, and interest
-- 🔄 **Multiplier stacking** — Choose how multiple multipliers combine (multiply, add, or highest)
-- 🏷️ **LuckPerms integration** — Automatic group detection with cached lookups
-- ⚡ **Priority system** — Highest-priority rank wins when a player has multiple groups
+- **Per-currency multipliers** — Each rank can set different multipliers for Money, MobCoins, and Gems
+- **Rank perks** — Reduced cooldowns, increased daily limits, combat tag bypass, and interest
+- **LuckPerms integration** — Primary group detection with a 30-second cached lookup
+- **Default rank fallback** — Everyone without a matching group uses the `default` rank
 
 ---
 
-## 🔗 LuckPerms Integration
-
-### Requirements
+## LuckPerms Integration
 
 | | |
 |---|---|
 | **Plugin** | [LuckPerms](https://luckperms.net/) |
-| **Required?** | No (optional, but recommended for ranks) |
-| **Soft-depend** | DZEconomy automatically detects LuckPerms |
+| **Required?** | No. Without it, everyone uses the `default` rank |
+| **Detection** | Automatic via the LuckPerms service provider |
 
 ### How It Works
 
-1. When a player performs an economy action, DZEconomy checks their **LuckPerms groups**
-2. If a group matches a rank defined in `ranks.yml`, the rank's **multipliers** are applied
-3. If a player has multiple groups, the rank with the **highest priority** is used
-4. The way multipliers stack is controlled by `config.yml` → `ranks.multiplier-stacking`
+1. When a player earns currency, DZEconomy asks LuckPerms for their primary group.
+2. If that group matches a rank in `ranks.yml`, the rank's multipliers apply.
+3. If there is no match, the player falls back to `default`.
+4. Group lookups are cached for 30 seconds, then refreshed.
 
-### Without LuckPerms
+### Setup
 
-If LuckPerms is not installed:
-- All players use the **`default`** rank from `ranks.yml`
-- Multipliers and perks from the default rank still apply
-- No group-based rank detection
-
-### Setup Steps
-
-1. **Install LuckPerms** on your server
-2. **Create groups** in LuckPerms that match your desired ranks
-3. **Configure `ranks.yml`** — the rank key must match the LuckPerms group name **exactly** (case-sensitive)
-4. **Reload** DZEconomy: `/economy reload`
+1. Install LuckPerms.
+2. Create groups that match your ranks.
+3. Edit `ranks.yml`. The rank key must match the LuckPerms group name exactly. Case matters.
+4. Run `/economy reload`.
 
 ---
 
-## 📊 Multipliers
+## Multipliers
 
-### How Multipliers Work
-
-Multipliers are applied to currency earnings from:
-- Mob rewards
-- PVP loot
-- Payall distributions
-- Admin additions (`/money add`)
-
-**Examples:**
+Multipliers apply to currency earnings from mob rewards.
 
 | Multiplier | Effect |
 |------------|--------|
-| `1.0` | Normal (100%) — no bonus |
-| `1.25` | 25% bonus (VIP) |
-| `1.5` | 50% bonus (Premium) |
-| `2.0` | Double (2x) rewards |
+| `1.0` | Normal. No bonus |
+| `1.25` | 25% bonus |
+| `1.5` | 50% bonus |
+| `2.0` | Double rewards |
 
-### Multiplier Stacking
-
-Controlled by `config.yml` → `ranks.multiplier-stacking`:
-
-| Mode | Formula | Example |
-|------|---------|---------|
-| `MULTIPLY` | All multipliers multiply together | 1.5 × 1.2 = **1.8x** |
-| `ADD` | All multipliers add together | 0.5 + 0.2 + 1.0 = **1.7x** |
-| `HIGHEST` | Only the highest multiplier is used | max(1.5, 1.2) = **1.5x** |
-
-### Stacking Order
-
-When a player earns currency, multipliers are applied in this order:
+Mob reward calculation:
 
 ```
-Base Reward × Rank Multiplier × Global Multiplier
+base reward × (1 + boss bonus) × mob-rewards.default-multiplier × rank multiplier
 ```
 
-For mob rewards specifically:
-```
-Base Reward × Rank Multiplier × Global Multiplier × Kill Streak Bonus × Event Bonus
-```
+The rank multiplier is looked up per currency, so a rank can boost Money without touching Gems.
 
 ---
 
-## ⚙️ Configuring ranks.yml
+## Configuring ranks.yml
 
 ### File Structure
 
 ```yaml
-# The rank key MUST match the LuckPerms group name EXACTLY (case-sensitive)
 rank_name:
   display-name: "&aDisplay Name"
   priority: 1
@@ -126,29 +94,29 @@ rank_name:
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `display-name` | String | Friendly name with color codes, shown in messages & GUI |
-| `priority` | Integer | Higher = more important. Used when a player has multiple groups. |
+| `display-name` | String | Friendly name with color codes |
+| `priority` | Integer | Higher = more important |
 | `multipliers` | Section | Per-currency reward multipliers |
 | `perks` | Section | Special perks for this rank |
-| `permissions` | List | Additional permissions granted while this rank is active |
+| `permissions` | List | Extra permissions granted while this rank is active |
 
 ### Perk Details
 
 | Perk | Type | Default | Description |
 |------|------|---------|-------------|
-| `reduced-cooldown` | Boolean | `false` | Whether this rank has reduced transfer cooldowns |
-| `cooldown-reduction` | Double | `1.0` | Cooldown multiplier (0.5 = half the normal cooldown) |
-| `increased-daily-limit` | Boolean | `false` | Whether this rank has increased daily limits |
-| `limit-multiplier` | Double | `1.0` | Daily limit multiplier (2.0 = double the normal limit) |
-| `bypass-combat-tag` | Boolean | `false` | Bypass combat tag economy restrictions |
+| `reduced-cooldown` | Boolean | `false` | Whether this rank gets shorter transfer cooldowns |
+| `cooldown-reduction` | Double | `1.0` | Cooldown multiplier. `0.5` = half the normal cooldown |
+| `increased-daily-limit` | Boolean | `false` | Whether this rank gets a higher daily transfer limit |
+| `limit-multiplier` | Double | `1.0` | Daily limit multiplier. `2.0` = double the normal limit |
+| `bypass-combat-tag` | Boolean | `false` | Bypass combat tag restrictions on economy actions |
 | `interest.enabled` | Boolean | `false` | Whether this rank earns interest on their balance |
-| `interest.rate` | Double | `0.0` | Interest rate per interval (percentage) |
-| `interest.interval` | Integer | `86400` | How often interest is paid (in seconds) |
-| `interest.max-balance` | Double | `-1` | Maximum balance that earns interest (-1 = unlimited) |
+| `interest.rate` | Double | `0.0` | Interest rate per interval, as a percentage |
+| `interest.interval` | Integer | `86400` | How often interest is paid, in seconds |
+| `interest.max-balance` | Double | `-1` | Highest balance that earns interest. `-1` = unlimited |
 
-### Default Rank (Built-In)
+### The Default Rank
 
-The `default` rank is **always present** and cannot be removed. It applies to all players who don't match any other rank.
+The `default` rank is always present and cannot be removed. It applies to every player who does not match another rank.
 
 ```yaml
 default:
@@ -184,9 +152,9 @@ vip:
     gem: 1.0
   perks:
     reduced-cooldown: true
-    cooldown-reduction: 0.75     # 25% shorter cooldowns
+    cooldown-reduction: 0.75
     increased-daily-limit: true
-    limit-multiplier: 1.5         # 50% higher daily limit
+    limit-multiplier: 1.5
     bypass-combat-tag: false
     interest:
       enabled: false
@@ -209,15 +177,15 @@ premium:
     gem: 1.5
   perks:
     reduced-cooldown: true
-    cooldown-reduction: 0.5      # 50% shorter cooldowns
+    cooldown-reduction: 0.5
     increased-daily-limit: true
-    limit-multiplier: 2.0         # Double daily limit
-    bypass-combat-tag: true       # Can trade while in combat
+    limit-multiplier: 2.0
+    bypass-combat-tag: true
     interest:
       enabled: true
-      rate: 0.1                   # 0.1% interest per day
-      interval: 86400             # Every 24 hours
-      max-balance: 100000         # Interest on first 100,000 only
+      rate: 0.1
+      interval: 86400
+      max-balance: 100000
   permissions:
     - "dzeconomy.premium.chat"
     - "dzeconomy.premium.join-message"
@@ -225,7 +193,7 @@ premium:
 
 ### Adding Custom Ranks
 
-To add a new rank, simply add a new section with the **LuckPerms group name** as the key:
+Add a new section with the LuckPerms group name as the key:
 
 ```yaml
 mythic:
@@ -237,14 +205,14 @@ mythic:
     gem: 2.0
   perks:
     reduced-cooldown: true
-    cooldown-reduction: 0.25     # 75% shorter cooldowns
+    cooldown-reduction: 0.25
     increased-daily-limit: true
-    limit-multiplier: 3.0         # Triple daily limit
+    limit-multiplier: 3.0
     bypass-combat-tag: true
     interest:
       enabled: true
-      rate: 0.25                  # 0.25% interest
-      interval: 43200             # Every 12 hours
+      rate: 0.25
+      interval: 43200
       max-balance: 500000
   permissions:
     - "dzeconomy.mythic.chat"
@@ -252,40 +220,33 @@ mythic:
     - "dzeconomy.mythic.particle"
 ```
 
-> ⚠️ **Important**: The rank key **MUST** match the LuckPerms group name **EXACTLY** (case-sensitive). For example, if your LuckPerms group is `MythicRank`, the key must be `MythicRank`, not `mythicrank` or `MYTHICRANK`.
+The rank key must match the LuckPerms group name exactly. If your LuckPerms group is `MythicRank`, the key is `MythicRank`, not `mythicrank`.
 
 ---
 
-## 🔄 Rank Resolution
+## Rank Resolution
 
-When a player has **multiple LuckPerms groups**, DZEconomy resolves their rank as follows:
+When a player earns currency, DZEconomy resolves their rank:
 
-1. Get all of the player's LuckPerms groups
-2. Find matching ranks in `ranks.yml`
-3. Select the rank with the **highest priority**
-4. Apply that rank's multipliers and perks
+1. Ask LuckPerms for the player's primary group.
+2. Find the matching rank in `ranks.yml`.
+3. Apply that rank's multipliers and perks.
+4. No match found? Use `default`.
 
-### Example
-
-If a player is in both `vip` (priority 1) and `premium` (priority 2):
-- The `premium` rank is used (priority 2 > priority 1)
-- Premium multipliers and perks apply
-- VIP multipliers are **not** applied (unless using `MULTIPLY` stacking with global multipliers)
+Group changes are picked up within the 30-second cache window. A LuckPerms data recalculate event clears the cache immediately.
 
 ---
 
-## 💰 Interest System
+## Interest System
 
-The interest system rewards players for holding balances. It's configured per-rank.
+Ranks can pay interest on held balances.
 
-### How Interest Works
+### How It Works
 
-1. Every `interest.interval` seconds, DZEconomy checks all online players
-2. For each player with an interest-enabled rank:
-   - Calculate interest: `balance × (rate / 100)`
-   - Cap at `max-balance` if set
-   - Add the interest to the player's balance
-   - Send a notification
+1. Every `interest.interval` seconds, DZEconomy checks online players.
+2. Each player with an interest-enabled rank earns `balance × (rate / 100)`.
+3. The interest is capped at `max-balance` when set.
+4. The player gets a notification.
 
 ### Example Calculation
 
@@ -293,32 +254,31 @@ The interest system rewards players for holding balances. It's configured per-ra
 |---------|------|----------|-----------------|
 | $10,000 | 0.1% | 24h | $10.00 |
 | $100,000 | 0.1% | 24h | $100.00 |
-| $200,000 | 0.1% (max: 100K) | 24h | $100.00 (capped) |
+| $200,000 | 0.1% (max 100K) | 24h | $100.00, capped |
 
-### Interest Tips
+### Tips
 
-- Use low rates (0.05% – 0.5%) to prevent inflation
-- Set `max-balance` to prevent wealthy players from earning excessive interest
-- Shorter intervals = more frequent but smaller payments
-- Interest is only earned while the player is **online**
+- Keep rates between 0.05% and 0.5% to avoid inflation.
+- Set `max-balance` so wealthy players cannot farm interest.
+- Interest only accrues while the player is online.
 
 ---
 
-## 🏷️ PlaceholderAPI Placeholders
+## PlaceholderAPI Placeholders
 
 | Placeholder | Description |
 |-------------|-------------|
-| `%dz_rank%` | Player's rank display name (e.g., "&aVIP") |
-| `%dz_rank_name%` | Player's rank internal name (e.g., "vip") |
+| `%dz_rank%` | Player's rank display name |
+| `%dz_rank_name%` | Player's rank internal name |
 
 ---
 
 <p align="center">
-  See <a href="Configuration.md">Configuration</a> for rank-related config options and <a href="Permissions.md">Permissions</a> for permission nodes.
+  See <a href="Configuration.md">Configuration</a> for config options and <a href="Permissions.md">Permissions</a> for permission nodes.
 </p>
 
 ---
-### 📖 Quick Links
+### Quick Links
 [**DZEconomy GitHub**](https://github.com/DemonZ-Development/DZEconomy) • [**Discord Support**](https://discord.com/invite/GYsTt96ypf) • [**Wiki Home**](https://github.com/DemonZ-Development/DZEconomy/wiki/Home)
 
 *Developed by **[DemonZ Development](https://github.com/DemonZ-Development)***
