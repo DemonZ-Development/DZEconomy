@@ -81,11 +81,13 @@ public class ConfigMigrator {
     private void backupConfig() {
         File configFile = new File(plugin.getDataFolder(), "config.yml");
         if (!configFile.exists()) return;
-        
+
+        int version = plugin.getConfigManager().getConfig().getInt("config-version", 1);
+
         File backupDir = new File(plugin.getDataFolder(), "backups");
         if (!backupDir.exists()) backupDir.mkdirs();
-        
-        File backup = new File(backupDir, "config_v1_backup_" + System.currentTimeMillis() + ".yml");
+
+        File backup = new File(backupDir, "config_v" + version + "_backup_" + System.currentTimeMillis() + ".yml");
         try {
             java.nio.file.Files.copy(configFile.toPath(), backup.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             plugin.getLogger().info("  Config backed up to: " + backup.getName());

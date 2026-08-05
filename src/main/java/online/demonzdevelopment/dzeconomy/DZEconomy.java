@@ -88,12 +88,12 @@ public class DZEconomy extends JavaPlugin {
         // Register integrations
         registerIntegrations();
         
-        // Initialize bStats (wrapped in try-catch to allow MockBukkit tests to pass without shadow relocation)
+        // Initialize bStats. Never let a metrics failure break plugin startup.
         try {
             int pluginId = 31625;
             Metrics metrics = new Metrics(this, pluginId);
-        } catch (IllegalStateException e) {
-            // Test environment, ignore
+        } catch (Exception | LinkageError e) {
+            getLogger().log(Level.WARNING, "bStats metrics failed to initialize, skipping", e);
         }
         
         // Schedule tasks
