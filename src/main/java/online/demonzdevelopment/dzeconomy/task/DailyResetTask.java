@@ -17,11 +17,6 @@ public class DailyResetTask implements Runnable {
 
     private final DZEconomy plugin;
 
-    // FIX: Use date-based comparison instead of a boolean flag.
-    // Store lastResetDate and compare against current date to determine
-    // whether a reset is needed. This prevents missed resets if the server
-    // was offline at the scheduled time, and avoids double-resets.
-    // Load and persist lastResetDate from data.yml to survive daily server restarts.
     private LocalDate lastResetDate;
 
     public DailyResetTask(DZEconomy plugin) {
@@ -48,7 +43,6 @@ public class DailyResetTask implements Runnable {
     public void run() {
         LocalDate today = LocalDate.now();
 
-        // Only reset if the date has changed since last reset
         if (!today.isAfter(lastResetDate)) {
             return;
         }
@@ -74,10 +68,8 @@ public class DailyResetTask implements Runnable {
             }
         }
 
-        // Update lastResetDate to today
         lastResetDate = today;
 
-        // Persist to data.yml
         try {
             File dataFile = new File(plugin.getDataFolder(), "data.yml");
             YamlConfiguration dataConfig = YamlConfiguration.loadConfiguration(dataFile);
@@ -90,9 +82,6 @@ public class DailyResetTask implements Runnable {
         plugin.getLogger().info("[DailyReset] Daily reset complete: " + resetCount + " players reset for " + today);
     }
 
-    /**
-     * Get the last reset date. Useful for debugging or status commands.
-     */
     public LocalDate getLastResetDate() {
         return lastResetDate;
     }

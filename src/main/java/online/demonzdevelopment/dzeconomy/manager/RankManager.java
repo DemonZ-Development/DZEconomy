@@ -10,11 +10,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Manages player ranks loaded from ranks.yml.
- * Resolves player rank via LuckPerms integration or config default.
- * Thread-safe via ConcurrentHashMap.
- */
 public class RankManager {
     
     private final DZEconomy plugin;
@@ -26,9 +21,6 @@ public class RankManager {
         this.plugin = plugin;
     }
     
-    /**
-     * Load all ranks from ranks.yml config.
-     */
     public void loadRanks() {
         ranks.clear();
         playerRanks.clear();
@@ -59,7 +51,6 @@ public class RankManager {
             }
         }
         
-        // Validate default rank exists
         if (!ranks.containsKey(defaultRankName.toLowerCase())) {
             plugin.getLogger().warning("Default rank '" + defaultRankName + "' not found in ranks.yml! Available: " + ranks.keySet());
         }
@@ -100,20 +91,14 @@ public class RankManager {
         return new Rank(name, displayName, priority, Collections.unmodifiableMap(currencySettings), Collections.unmodifiableMap(multipliers));
     }
     
-    /**
-     * Reload ranks from config.
-     */
     public void reloadRanks() {
         loadRanks();
-        // Re-resolve online player ranks
+        
         for (UUID uuid : playerRanks.keySet()) {
             loadPlayerRank(uuid);
         }
     }
     
-    /**
-     * Load and cache a player's rank based on LuckPerms group or default.
-     */
     public void loadPlayerRank(UUID uuid) {
         Rank resolved = resolveRankFromLuckPerms(uuid);
         if (resolved == null) {
@@ -124,9 +109,6 @@ public class RankManager {
         }
     }
     
-    /**
-     * Resolve player rank via LuckPerms or fall back to default.
-     */
     private Rank resolveRankFromLuckPerms(UUID uuid) {
         if (plugin.getLuckPermsIntegration() != null && plugin.getLuckPermsIntegration().isEnabled()) {
             String groupName = plugin.getLuckPermsIntegration().getPlayerGroup(uuid);
@@ -140,38 +122,29 @@ public class RankManager {
         return null;
     }
     
-    /**
-     * Get a player's rank. Resolves from cache or loads on demand.
-     */
     public Rank getPlayerRank(UUID uuid) {
         Rank cached = playerRanks.get(uuid);
         if (cached != null) {
             return cached;
         }
-        // Try to load
+        
         loadPlayerRank(uuid);
         Rank loaded = playerRanks.get(uuid);
         return loaded != null ? loaded : getDefaultRank();
     }
     
-    /**
-     * Get the default rank.
-     */
     public Rank getDefaultRank() {
         Rank def = ranks.get(defaultRankName.toLowerCase());
         if (def == null && !ranks.isEmpty()) {
-            // Fall back to first available rank
+            
             return ranks.values().iterator().next();
         }
         return def;
     }
     
-    /**
-     * Get the transfer tax rate for a player and currency.
-     */
     public double getTransferTaxRate(UUID uuid, String currencyType) {
         Rank rank = getPlayerRank(uuid);
-        if (rank == null) return 0.05; // default 5%
+        if (rank == null) return 0.05; 
         
         RankCurrencySettings settings = rank.getCurrencySettings(currencyType.toLowerCase());
         if (settings != null) {
@@ -180,55 +153,33 @@ public class RankManager {
         return 0.05;
     }
 
-    /**
-     * Get the transfer tax rate for a player and currency type (overload accepting CurrencyType enum).
-     */
     public double getTransferTaxRate(UUID uuid, CurrencyType currencyType) {
         return getTransferTaxRate(uuid, currencyType.name().toLowerCase());
     }
     
-    /**
-     * Get all loaded ranks.
-     */
     public List<Rank> getAllRanks() {
         return new ArrayList<>(ranks.values());
     }
     
-    /**
-     * Get a rank by name.
-     */
     public Rank getRank(String name) {
         if (name == null) return null;
         return ranks.get(name.toLowerCase());
     }
     
-    /**
-     * Remove a player's cached rank (on disconnect).
-     */
     public void removePlayerRank(UUID uuid) {
         playerRanks.remove(uuid);
     }
     
-    
-    /**
-     * Get reward multiplier for a player and currency.
-     */
     public double getMultiplier(UUID uuid, String currencyType) {
         Rank rank = getPlayerRank(uuid);
         if (rank == null) return 1.0;
         return rank.getMultiplier(currencyType);
     }
 
-    /**
-     * Get reward multiplier for a player and currency type.
-     */
     public double getMultiplier(UUID uuid, CurrencyType currencyType) {
         return getMultiplier(uuid, currencyType.name().toLowerCase());
     }
 
-    /**
-     * Get the default rank name.
-     */
     public String getDefaultRankName() {
         return defaultRankName;
     }

@@ -42,7 +42,6 @@ public class PlayerDeathListener implements Listener {
             return;
         }
 
-        // Skip PVP currency loss in blacklisted worlds
         if (config.getConfig().getStringList("pvp.world-blacklist").contains(victim.getWorld().getName())) {
             return;
         }
@@ -53,15 +52,12 @@ public class PlayerDeathListener implements Listener {
         for (CurrencyType type : CurrencyType.values()) {
             String currencyName = type.getId();
 
-            // Config stores the loss as a PERCENTAGE (e.g. 5.0 = 5%).
-            // A value of 0 or missing disables PVP loss for that currency.
             double lossPercent = config.getConfig().getDouble("pvp.loss-percent." + currencyName, 0.0);
             if (lossPercent <= 0) {
                 continue;
             }
             double lossFraction = Math.max(0.0, Math.min(1.0, lossPercent / 100.0));
 
-            // The victim retains at least this balance after PVP death
             double minimumBalance = config.getConfig().getDouble("pvp.minimum-balance." + currencyName, 0.0);
 
             double victimBalance = cm.getBalance(victimUuid, type);
@@ -69,34 +65,29 @@ public class PlayerDeathListener implements Listener {
                 continue;
             }
 
-            // Calculate amount to transfer based on configurable loss percentage
             double amount = victimBalance * lossFraction;
 
-            // Enforce minimum retained balance
             double maxTransferable = Math.max(0.0, victimBalance - minimumBalance);
             if (amount > maxTransferable) {
                 amount = maxTransferable;
             }
 
-            // Round to 2 decimal places
             amount = Math.round(amount * 100.0) / 100.0;
 
             if (amount <= 0) {
                 continue;
             }
 
-            // Atomic transfer via CurrencyManager
             double killerBalanceBefore = cm.getBalance(killerUuid, type);
             boolean success = cm.transfer(victimUuid, killerUuid, type, amount);
 
             if (success) {
                 double victimNewBalance = cm.getBalance(victimUuid, type);
                 double killerNewBalance = cm.getBalance(killerUuid, type);
-                // Transfer tax is deducted from the loot, so the killer nets less than the victim loses
+                
                 double netReceived = Math.max(0.0, killerNewBalance - killerBalanceBefore);
                 String symbol = config.getConfig().getString("currencies." + currencyName + ".symbol", currencyName);
 
-                // Notify victim
                 MessagesUtil.sendMessage(victim, "pvp-lost-" + currencyName,
                         "%killer%", killer.getName(),
                         "%amount%", String.format("%,.2f", amount),
@@ -105,7 +96,6 @@ public class PlayerDeathListener implements Listener {
                         "%currency%", currencyName,
                         "%symbol%", symbol);
 
-                // Notify killer with the net amount actually received
                 MessagesUtil.sendMessage(killer, "pvp-gained-" + currencyName,
                         "%victim%", victim.getName(),
                         "%amount%", String.format("%,.2f", netReceived),
@@ -114,7 +104,6 @@ public class PlayerDeathListener implements Listener {
                         "%currency%", currencyName,
                         "%symbol%", symbol);
 
-                // Broadcast when the dropped amount exceeds the configured threshold
                 if (config.getConfig().getBoolean("pvp.broadcast.enabled", true)) {
                     double broadcastThreshold = config.getConfig().getDouble("pvp.broadcast.threshold", 1000);
                     if (broadcastThreshold > 0 && amount >= broadcastThreshold) {

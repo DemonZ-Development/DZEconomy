@@ -4,10 +4,6 @@ import online.demonzdevelopment.dzeconomy.DZEconomy;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 
-/**
- * Thread-safe utility for reading messages from config with placeholder replacement.
- * Supports & color codes.
- */
 public class MessagesUtil {
     
     private final DZEconomy plugin;
@@ -123,8 +119,7 @@ public class MessagesUtil {
         org.bukkit.configuration.file.FileConfiguration messages = plugin.getConfigManager().getMessages();
         String message = messages.getString(resolvedPath);
         if (message == null) {
-            // No override in the on-disk messages.yml: fall back to the JAR default
-            // so new keys still work on existing installs
+            
             message = "&cMessage not found: " + resolvedPath;
         }
         return ColorUtil.translate(message);
@@ -173,8 +168,7 @@ public class MessagesUtil {
                     finalReplacements.put("{target}", value);
                     break;
                 case "%balance%":
-                    // NOTE: must NOT fill {amount} — messages that use both {amount} and
-                    // {balance} would get one placeholder clobbered by the other
+                    
                     finalReplacements.put("{balance}", value);
                     break;
                 case "%amount%":
@@ -288,35 +282,21 @@ public class MessagesUtil {
         return prefix + message;
     }
 
-    /**
-     * Get a message from config with placeholder replacements (static convenience method).
-     */
     public static String getStaticMessage(String path, String... placeholders) {
         MessagesUtil util = new MessagesUtil(DZEconomy.getInstance());
         return util.getMessage(path, placeholders);
     }
 
-    /**
-     * Send a message to a CommandSender using a message path from config.
-     * Static convenience method that uses the plugin singleton.
-     */
     public static void sendMessage(CommandSender sender, String path) {
         MessagesUtil util = new MessagesUtil(DZEconomy.getInstance());
         sender.sendMessage(util.getPrefixedMessage(path));
     }
 
-    /**
-     * Send a message to a CommandSender using a message path with placeholder replacements.
-     * Static convenience method that uses the plugin singleton.
-     */
     public static void sendMessage(CommandSender sender, String path, String... placeholders) {
         MessagesUtil util = new MessagesUtil(DZEconomy.getInstance());
         sender.sendMessage(util.getPrefixedMessage(path, placeholders));
     }
 
-    /**
-     * Translate color codes in a string. Static convenience method.
-     */
     public static String colorize(String text) {
         return ColorUtil.translate(text);
     }

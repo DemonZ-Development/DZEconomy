@@ -11,14 +11,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 
-/**
- * Manages all YAML configuration files for DZEconomy.
- * Handles: config.yml, ranks.yml, mob-rewards.yml, messages.yml
- * 
- * Properly loads defaults from JAR for ALL files,
- * uses try-with-resources for InputStream closing,
- * and null-checks all file operations.
- */
 public class ConfigManager {
     
     private final DZEconomy plugin;
@@ -37,12 +29,8 @@ public class ConfigManager {
         this.plugin = plugin;
     }
     
-    /**
-     * Load all configuration files.
-     * Creates files from JAR defaults if they don't exist.
-     */
     public void loadAll() {
-        // Ensure data folder exists
+        
         if (!plugin.getDataFolder().exists()) {
             plugin.getDataFolder().mkdirs();
         }
@@ -53,20 +41,15 @@ public class ConfigManager {
         messages = loadConfig("messages.yml");
     }
     
-    /**
-     * Load a single configuration file with defaults from JAR.
-     * Uses try-with-resources for proper InputStream closing.
-     */
     private FileConfiguration loadConfig(String fileName) {
         File file = new File(plugin.getDataFolder(), fileName);
         
-        // Create file from JAR default if it doesn't exist
         if (!file.exists()) {
             try {
                 plugin.saveResource(fileName, false);
                 plugin.getLogger().info("Created default " + fileName);
             } catch (IllegalArgumentException e) {
-                // Resource doesn't exist in JAR, create empty file
+                
                 try {
                     file.createNewFile();
                     plugin.getLogger().info("Created empty " + fileName);
@@ -83,7 +66,6 @@ public class ConfigManager {
             fileConfig = YamlConfiguration.loadConfiguration(file);
         }
         
-        // Load defaults from JAR with proper InputStream closing
         try (InputStream defaultStream = plugin.getResource(fileName)) {
             if (defaultStream != null) {
                 try (InputStreamReader reader = new InputStreamReader(defaultStream, StandardCharsets.UTF_8)) {
@@ -95,7 +77,6 @@ public class ConfigManager {
             plugin.getLogger().log(Level.WARNING, "Could not load defaults for " + fileName, e);
         }
         
-        // Store file references for saving
         switch (fileName) {
             case "config.yml":
                 configFile = file;
@@ -114,9 +95,6 @@ public class ConfigManager {
         return fileConfig;
     }
     
-    /**
-     * Save config.yml back to disk.
-     */
     public void saveConfig() {
         if (config != null && configFile != null) {
             try {
@@ -127,9 +105,6 @@ public class ConfigManager {
         }
     }
     
-    /**
-     * Save a specific config file.
-     */
     public void save(String fileName) {
         try {
             switch (fileName) {
@@ -161,25 +136,14 @@ public class ConfigManager {
         }
     }
     
-    /**
-     * Reload all configuration files from disk.
-     */
     public void reloadAll() {
         loadAll();
     }
 
-    /**
-     * Alias for reloadAll().
-     */
     public void reload() {
         reloadAll();
     }
     
-    // ===== Getters with null safety =====
-    
-    /**
-     * Get the main config.yml configuration.
-     */
     public FileConfiguration getConfig() {
         if (config == null) {
             loadAll();
@@ -187,9 +151,6 @@ public class ConfigManager {
         return config;
     }
     
-    /**
-     * Get the ranks.yml configuration.
-     */
     public FileConfiguration getRanks() {
         if (ranks == null) {
             loadAll();
@@ -197,9 +158,6 @@ public class ConfigManager {
         return ranks;
     }
     
-    /**
-     * Get the mob-rewards.yml configuration.
-     */
     public FileConfiguration getMobRewards() {
         if (mobRewards == null) {
             loadAll();
@@ -207,9 +165,6 @@ public class ConfigManager {
         return mobRewards;
     }
     
-    /**
-     * Get the messages.yml configuration.
-     */
     public FileConfiguration getMessages() {
         if (messages == null) {
             loadAll();
@@ -217,11 +172,6 @@ public class ConfigManager {
         return messages;
     }
     
-    // ===== Setters for runtime modifications =====
-    
-    /**
-     * Set a value in config.yml and optionally save.
-     */
     public void setConfigValue(String path, Object value, boolean save) {
         if (config != null) {
             config.set(path, value);

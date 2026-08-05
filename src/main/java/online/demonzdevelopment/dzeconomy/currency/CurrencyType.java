@@ -28,7 +28,7 @@ public enum CurrencyType {
     public static CurrencyType fromString(String name) {
         if (name == null) return null;
         String lower = name.toLowerCase().replace(" ", "").replace("-", "").replace("_", "");
-        // Support plurals and common aliases
+        
         switch (lower) {
             case "money": case "cash": case "dollars": case "balance":
                 return MONEY;

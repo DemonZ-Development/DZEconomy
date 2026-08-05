@@ -111,7 +111,7 @@ public class SQLiteStorageProvider implements StorageProvider {
                 "PRIMARY KEY (uuid, currency_type), " +
                 "FOREIGN KEY (uuid) REFERENCES dze_players(uuid) ON DELETE CASCADE)"
             );
-            // Schema upgrades for databases created by older versions
+            
             addColumnIfMissing(connection, "dze_daily_limits", "sent_amount", "REAL DEFAULT 0");
             addColumnIfMissing(connection, "dze_cooldowns", "send_time", "INTEGER DEFAULT 0");
         } catch (SQLException e) {
@@ -123,7 +123,7 @@ public class SQLiteStorageProvider implements StorageProvider {
         try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate("ALTER TABLE " + table + " ADD COLUMN " + column + " " + definition);
         } catch (SQLException e) {
-            // Column already exists (SQLite error 1: duplicate column name) — ignore
+            
         }
     }
     

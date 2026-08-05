@@ -28,7 +28,7 @@ public class PlayerJoinListener implements Listener {
         if (event.getLoginResult() != org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result.ALLOWED) {
             return;
         }
-        // Pre-load player data asynchronously on join to prevent main thread blocking
+        
         plugin.getCurrencyManager().loadPlayerData(event.getUniqueId());
     }
 
@@ -39,26 +39,20 @@ public class PlayerJoinListener implements Listener {
         CurrencyManager cm = plugin.getCurrencyManager();
         ConfigManager config = plugin.getConfigManager();
 
-        // Mark player as online in track
         cm.setPlayerOnline(uuid, true);
 
-        // Load player data
         PlayerData data = cm.loadPlayerData(uuid);
 
-        // Null check on loadPlayerData result
         if (data == null) {
             plugin.getLogger().warning("Failed to load player data for " + player.getName() + " (" + uuid + ")");
             return;
         }
 
-        // Check if this is a new player (no previous data)
         boolean isNewPlayer = data.isNewPlayer();
 
-        // Update username and lastSeen
         data.setUsername(player.getName());
         data.setLastSeen(System.currentTimeMillis());
 
-        // Send welcome message for new players
         if (isNewPlayer) {
             double startingBalance = config.getConfig().getDouble("currencies.money.starting-balance", 0);
             double startingMobcoins = config.getConfig().getDouble("currencies.mobcoin.starting-balance", 0);
@@ -82,10 +76,9 @@ public class PlayerJoinListener implements Listener {
                         "%gems%", String.format("%,.2f", startingGems));
             }
 
-            // The starting balance has now been granted — make sure it isn't granted again
             data.setNewPlayer(false);
         } else {
-            // Welcome back message
+            
             if (config.getConfig().getBoolean("welcome-back-message.enabled", false)) {
                 double balance = cm.getBalance(uuid, CurrencyType.MONEY);
                 MessagesUtil.sendMessage(player, "welcome-back",
@@ -94,7 +87,6 @@ public class PlayerJoinListener implements Listener {
             }
         }
 
-        // Check for updates (notify admin)
         if (player.hasPermission("dzeconomy.admin")) {
             if (plugin.isUpdateAvailable()) {
                 String latestVersion = plugin.getLatestVersion();
@@ -104,7 +96,6 @@ public class PlayerJoinListener implements Listener {
             }
         }
 
-        // Save updated data
         cm.savePlayerDataAsync(uuid);
     }
 }

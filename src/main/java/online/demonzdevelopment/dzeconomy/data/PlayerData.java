@@ -35,7 +35,6 @@ public class PlayerData {
         this.moneyReceived = new ConcurrentHashMap<>();
         this.dailySentAmount = new ConcurrentHashMap<>();
         
-        // Initialize default balances
         for (CurrencyType type : CurrencyType.values()) {
             balances.put(type, type.getDefaultBalance());
             dailySendCounts.put(type, 0L);
@@ -47,11 +46,9 @@ public class PlayerData {
             dailySentAmount.put(type, 0.0);
         }
         
-        // Use UUID as placeholder username until loaded from DB or player joins
         this.username = uuid.toString();
     }
     
-    // Getters
     public UUID getUuid() { return uuid; }
     public String getUsername() { return username; }
     public long getFirstJoin() { return firstJoin; }
@@ -65,7 +62,6 @@ public class PlayerData {
     public double getMoneySent(CurrencyType type) { return moneySent.getOrDefault(type, 0.0); }
     public double getMoneyReceived(CurrencyType type) { return moneyReceived.getOrDefault(type, 0.0); }
     
-    // Thread-safe atomic operations using compute/merge
     public void setBalance(CurrencyType type, double amount) {
         if (amount < 0) amount = 0.0;
         balances.put(type, amount);
@@ -109,7 +105,6 @@ public class PlayerData {
     public void addMoneySent(CurrencyType type, double amount) { moneySent.merge(type, amount, Double::sum); dirty = true; }
     public void addMoneyReceived(CurrencyType type, double amount) { moneyReceived.merge(type, amount, Double::sum); dirty = true; }
     
-    // Setters
     public void setUsername(String username) { this.username = username; }
     public void setFirstJoin(long firstJoin) { this.firstJoin = firstJoin; }
     public void setLastSeen(long lastSeen) { this.lastSeen = lastSeen; dirty = true; }
@@ -122,7 +117,6 @@ public class PlayerData {
         dirty = true;
     }
     
-    // Return unmodifiable views
     public Map<CurrencyType, Double> getBalances() { return Collections.unmodifiableMap(balances); }
     public Map<CurrencyType, Long> getDailySendCounts() { return Collections.unmodifiableMap(dailySendCounts); }
     public Map<CurrencyType, Long> getDailyRequestCounts() { return Collections.unmodifiableMap(dailyRequestCounts); }
@@ -131,13 +125,10 @@ public class PlayerData {
     public Map<CurrencyType, Double> getMoneySent() { return Collections.unmodifiableMap(moneySent); }
     public Map<CurrencyType, Double> getMoneyReceived() { return Collections.unmodifiableMap(moneyReceived); }
     
-    // Setters for loading from storage (do NOT set dirty — called during load)
     public void setDailySendCount(CurrencyType type, long count) { dailySendCounts.put(type, count); }
     public void setDailyRequestCount(CurrencyType type, long count) { dailyRequestCounts.put(type, count); }
     public void setMoneySent(CurrencyType type, double amount) { moneySent.put(type, amount); }
     public void setMoneyReceived(CurrencyType type, double amount) { moneyReceived.put(type, amount); }
-
-    // ━━ Additional methods used by commands and tasks ━━
 
     public void addDailySent(CurrencyType type, double amount) { dailySentAmount.merge(type, amount, Double::sum); dirty = true; }
     public double getDailySent(CurrencyType type) { return dailySentAmount.getOrDefault(type, 0.0); }
@@ -146,7 +137,6 @@ public class PlayerData {
     public long getLastSendTime(CurrencyType type) { return lastSendTimes.getOrDefault(type, 0L); }
     public void setLastSendTime(CurrencyType type, long timestamp) { lastSendTimes.put(type, timestamp); dirty = true; }
 
-    // Load-time setter (does NOT mark dirty — called during load)
     public void setDailySent(CurrencyType type, double amount) { dailySentAmount.put(type, amount); }
 
     public void resetDailyTransactions(CurrencyType type) {

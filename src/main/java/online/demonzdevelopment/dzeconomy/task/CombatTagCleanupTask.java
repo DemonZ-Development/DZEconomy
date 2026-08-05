@@ -12,7 +12,7 @@ public class CombatTagCleanupTask implements Runnable {
 
     @Override
     public void run() {
-        // Simple cleanup: remove all expired combat tags
+        
         combatTagManager.cleanupExpiredCombatTags();
     }
 }

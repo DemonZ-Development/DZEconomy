@@ -66,8 +66,6 @@ public class EconomyCommand implements TabExecutor {
         }
     }
 
-    // ─── Public info command (no admin permission required) ───────────────────
-
     private boolean handleInfo(CommandSender sender) {
         if (sender instanceof Player && !sender.hasPermission("dzeconomy.economy.info")) {
             MessagesUtil.sendMessage(sender, "no-permission");
@@ -93,8 +91,6 @@ public class EconomyCommand implements TabExecutor {
         return true;
     }
 
-    // ─── Credits (no permission required) ─────────────────────────────────────
-
     private boolean handleCredits(CommandSender sender) {
         String separator = MessagesUtil.colorize("&8&l&m─────────────────────────────────");
         sender.sendMessage(separator);
@@ -109,8 +105,6 @@ public class EconomyCommand implements TabExecutor {
         sender.sendMessage(separator);
         return true;
     }
-
-    // ─── Admin commands ───────────────────────────────────────────────────────
 
     private boolean handleReload(CommandSender sender) {
         if (!sender.hasPermission("dzeconomy.admin")) {
@@ -558,8 +552,6 @@ public class EconomyCommand implements TabExecutor {
         return true;
     }
 
-    // ─── Help ─────────────────────────────────────────────────────────────────
-
     private void sendHelp(CommandSender sender) {
         String separator = MessagesUtil.colorize("&8&l&m─────────────────────────────────");
         sender.sendMessage(separator);
@@ -584,8 +576,6 @@ public class EconomyCommand implements TabExecutor {
         sender.sendMessage(separator);
     }
 
-    // ─── Utility ──────────────────────────────────────────────────────────────
-
     private CurrencyType parseCurrencyType(String input) {
         if (input == null) return null;
         switch (input.toLowerCase()) {
@@ -604,8 +594,6 @@ public class EconomyCommand implements TabExecutor {
                 return null;
         }
     }
-
-    // ─── Tab Completion ───────────────────────────────────────────────────────
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {

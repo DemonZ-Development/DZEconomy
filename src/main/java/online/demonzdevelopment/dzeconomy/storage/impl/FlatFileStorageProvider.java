@@ -18,7 +18,6 @@ public class FlatFileStorageProvider implements StorageProvider {
     private final DZEconomy plugin;
     private File dataDir;
     
-    // In-memory cache for all player balances to prevent disk scans during getTopBalances
     private final Map<UUID, Map<String, Double>> allBalancesCache = new java.util.concurrent.ConcurrentHashMap<>();
     private volatile boolean initialLoaded = false;
     
@@ -97,7 +96,6 @@ public class FlatFileStorageProvider implements StorageProvider {
         data.setMoneySent(CurrencyType.GEM, yaml.getDouble("stats.gem-sent", 0.0));
         data.setMoneyReceived(CurrencyType.GEM, yaml.getDouble("stats.gem-received", 0.0));
         
-        // Load daily limits
         for (CurrencyType type : CurrencyType.values()) {
             String path = "daily-limits." + type.getId();
             data.setDailySendCount(type, yaml.getLong(path + ".send-count", 0L));
@@ -105,7 +103,6 @@ public class FlatFileStorageProvider implements StorageProvider {
             data.setDailySent(type, yaml.getDouble(path + ".sent-amount", 0.0));
         }
         
-        // Load cooldowns
         for (CurrencyType type : CurrencyType.values()) {
             String path = "cooldowns." + type.getId();
             data.setSendCooldown(type, yaml.getLong(path + ".send-cooldown", 0L));
@@ -115,7 +112,6 @@ public class FlatFileStorageProvider implements StorageProvider {
         
         data.setDirty(false);
         
-        // Cache balances in memory
         Map<String, Double> balances = allBalancesCache.computeIfAbsent(uuid, k -> new java.util.concurrent.ConcurrentHashMap<>());
         balances.put("money", data.getBalance(CurrencyType.MONEY));
         balances.put("mobcoin", data.getBalance(CurrencyType.MOBCOIN));
@@ -145,7 +141,6 @@ public class FlatFileStorageProvider implements StorageProvider {
         yaml.set("stats.gem-sent", data.getMoneySent(CurrencyType.GEM));
         yaml.set("stats.gem-received", data.getMoneyReceived(CurrencyType.GEM));
         
-        // Save daily limits
         for (CurrencyType type : CurrencyType.values()) {
             String path = "daily-limits." + type.getId();
             yaml.set(path + ".send-count", data.getDailySendCount(type));
@@ -153,7 +148,6 @@ public class FlatFileStorageProvider implements StorageProvider {
             yaml.set(path + ".sent-amount", data.getDailySent(type));
         }
         
-        // Save cooldowns
         for (CurrencyType type : CurrencyType.values()) {
             String path = "cooldowns." + type.getId();
             yaml.set(path + ".send-cooldown", data.getSendCooldown(type));
@@ -161,7 +155,6 @@ public class FlatFileStorageProvider implements StorageProvider {
             yaml.set(path + ".send-time", data.getLastSendTime(type));
         }
         
-        // Atomic write: write to .tmp file first, then atomically move into place
         try {
             yaml.save(tempFile);
         } catch (IOException e) {
@@ -174,7 +167,7 @@ public class FlatFileStorageProvider implements StorageProvider {
             Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
             data.setDirty(false);
         } catch (IOException e) {
-            // ATOMIC_MOVE may not be supported on all filesystems; try REPLACE_EXISTING alone
+            
             try {
                 Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 data.setDirty(false);
@@ -192,7 +185,6 @@ public class FlatFileStorageProvider implements StorageProvider {
             }
         }
         
-        // Cache balances in memory
         Map<String, Double> balances = allBalancesCache.computeIfAbsent(uuid, k -> new java.util.concurrent.ConcurrentHashMap<>());
         balances.put("money", data.getBalance(CurrencyType.MONEY));
         balances.put("mobcoin", data.getBalance(CurrencyType.MOBCOIN));
@@ -214,7 +206,7 @@ public class FlatFileStorageProvider implements StorageProvider {
                 plugin.getLogger().log(Level.SEVERE, "Failed to delete player data file for " + uuid);
             }
         }
-        // Also clean up any leftover temp file
+        
         File tempFile = getTempFile(uuid);
         if (tempFile.exists()) {
             if (!tempFile.delete()) {

@@ -11,10 +11,6 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
-/**
- * Client for the Modrinth API v2.
- * Documentation: https://docs.modrinth.com/api
- */
 public class ModrinthAPIClient {
     
     private static final String API_BASE = "https://api.modrinth.com/v2";
@@ -27,7 +23,7 @@ public class ModrinthAPIClient {
     }
     
     public ModrinthVersion fetchLatestVersion() throws Exception {
-        // Get project versions
+        
         String url = API_BASE + "/project/" + projectId + "/version?game_versions=%5B%22any%22%5D&loaders=%5B%22paper%22,%22spigot%22,%22bukkit%22%5D";
         
         HttpURLConnection conn = (HttpURLConnection) URI.create(url).toURL().openConnection();
@@ -59,7 +55,6 @@ public class ModrinthAPIClient {
             JsonArray versions = JsonParser.parseString(response.toString()).getAsJsonArray();
             if (versions.size() == 0) return null;
             
-            // Get the first (latest) version
             JsonObject latest = versions.get(0).getAsJsonObject();
             
             String versionNumber = latest.get("version_number").getAsString();

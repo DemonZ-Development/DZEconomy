@@ -85,8 +85,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         return true;
     }
 
-    // ─── Balance ───────────────────────────────────────────────────────────────
-
     private void handleBalance(CommandSender sender, String[] args) {
         String perm = "dzeconomy." + commandName + ".balance";
         if (!sender.hasPermission(perm)) {
@@ -141,8 +139,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         }
     }
 
-    // ─── Send ─────────────────────────────────────────────────────────────────
-
     private void handleSend(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             MessagesUtil.sendMessage(sender, "player-only");
@@ -183,7 +179,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
 
         ConfigManager config = plugin.getConfigManager();
 
-        // Self-transfer check (honors transfer.allow-self-transfer)
         if (!config.getConfig().getBoolean("transfer.allow-self-transfer", false)) {
             if (target.getUniqueId().equals(player.getUniqueId())) {
                 MessagesUtil.sendMessage(player, "cannot-send-self", "%currency%", commandName);
@@ -191,7 +186,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             }
         }
 
-        // Check max transaction limit (transfer.max-transaction, with legacy per-currency fallback)
         double maxTransaction = config.getConfig().getDouble("transfer.max-transaction",
                 config.getConfig().getDouble("currencies." + commandName + ".max-transaction", -1));
         if (maxTransaction > 0 && amount > maxTransaction) {
@@ -202,7 +196,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             return;
         }
 
-        // Check cooldown (transfer.cooldowns.enabled + transfer.cooldowns.<currency>)
         long cooldownSeconds = 0;
         if (config.getConfig().getBoolean("transfer.cooldowns.enabled", false)) {
             cooldownSeconds = config.getConfig().getLong("transfer.cooldowns." + commandName, 0);
@@ -223,7 +216,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             }
         }
 
-        // Check combat tag (honors transfer.block-during-combat)
         CurrencyManager cm = plugin.getCurrencyManager();
         if (config.getConfig().getBoolean("transfer.block-during-combat", true)
                 && cm.isCombatTagged(player.getUniqueId())) {
@@ -231,7 +223,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             return;
         }
 
-        // Atomic transfer with daily limit (transfer.daily-limit.enabled + transfer.daily-limit.<currency>)
         double dailyLimit = -1;
         if (config.getConfig().getBoolean("transfer.daily-limit.enabled", false)) {
             dailyLimit = config.getConfig().getDouble("transfer.daily-limit." + commandName,
@@ -239,7 +230,7 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         }
         boolean success = cm.transfer(player.getUniqueId(), target.getUniqueId(), currencyType, amount, dailyLimit);
         if (success) {
-            // Update cooldown outside the lock
+            
             cm.executeWithPlayerLock(player.getUniqueId(), () -> {
                 PlayerData senderData = cm.loadPlayerData(player.getUniqueId());
                 if (senderData != null) {
@@ -269,8 +260,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
                     "%currency%", commandName);
         }
     }
-
-    // ─── Request ──────────────────────────────────────────────────────────────
 
     private void handleRequest(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
@@ -317,7 +306,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
 
         CurrencyManager cm = plugin.getCurrencyManager();
 
-        // Check if already have pending request with this player
         if (cm.hasPendingRequestWith(player.getUniqueId(), target.getUniqueId())) {
             MessagesUtil.sendMessage(player, "request-already-pending",
                     "%player%", target.getName(),
@@ -325,7 +313,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             return;
         }
 
-        // Check max pending requests
         ConfigManager config = plugin.getConfigManager();
         int maxRequests = config.getConfig().getInt("request.max-pending", 5);
         if (cm.getPendingRequestCount(player.getUniqueId(), currencyType) >= maxRequests) {
@@ -357,8 +344,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
                 "%currency%", commandName,
                 "%command%", commandName);
     }
-
-    // ─── Accept ───────────────────────────────────────────────────────────────
 
     private void handleAccept(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
@@ -395,7 +380,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             return;
         }
 
-        // Check if request expired
         if (request.isExpired()) {
             cm.removeRequest(player.getUniqueId(), request);
             MessagesUtil.sendMessage(player, "request-expired",
@@ -404,13 +388,11 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             return;
         }
 
-        // Check combat tag
         if (cm.isCombatTagged(player.getUniqueId())) {
             MessagesUtil.sendMessage(player, "combat-tagged-request");
             return;
         }
 
-        // Apply the same transfer limits as /send (max transaction, cooldown, daily limit)
         double amount = request.getAmount();
         ConfigManager config = plugin.getConfigManager();
 
@@ -481,8 +463,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         }
     }
 
-    // ─── Deny ─────────────────────────────────────────────────────────────────
-
     private void handleDeny(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             MessagesUtil.sendMessage(sender, "player-only");
@@ -530,8 +510,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
                 "%amount%", String.format("%,.2f", request.getAmount()),
                 "%currency%", commandName);
     }
-
-    // ─── Admin: Add ───────────────────────────────────────────────────────────
 
     private void handleAdd(CommandSender sender, String[] args) {
         String perm = "dzeconomy." + commandName + ".add";
@@ -615,8 +593,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         });
     }
 
-    // ─── Admin: Remove ────────────────────────────────────────────────────────
-
     private void handleRemove(CommandSender sender, String[] args) {
         String perm = "dzeconomy." + commandName + ".remove";
         if (!sender.hasPermission(perm)) {
@@ -698,8 +674,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             });
         });
     }
-
-    // ─── Admin: Set ───────────────────────────────────────────────────────────
 
     private void handleSet(CommandSender sender, String[] args) {
         String perm = "dzeconomy." + commandName + ".set";
@@ -783,9 +757,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         });
     }
 
-    /**
-     * Non-blocking resolution of OfflinePlayer objects for online or offline players.
-     */
     protected void resolveOfflinePlayer(String name, java.util.function.Consumer<org.bukkit.OfflinePlayer> callback) {
         org.bukkit.entity.Player onlinePlayer = Bukkit.getPlayerExact(name);
         if (onlinePlayer != null) {
@@ -809,8 +780,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
             online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTask(plugin, () -> callback.accept(resolved));
         });
     }
-
-    // ─── Top ──────────────────────────────────────────────────────────────────
 
     private void handleTop(CommandSender sender, String[] args) {
         String perm = "dzeconomy." + commandName + ".top";
@@ -869,8 +838,6 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         });
     }
 
-    // ─── Help ─────────────────────────────────────────────────────────────────
-
     private void sendHelp(CommandSender sender) {
         String separator = MessagesUtil.colorize("&8&l&m─────────────────────────────────");
         String currencyDisplayName = commandName.substring(0, 1).toUpperCase() + commandName.substring(1);
@@ -910,16 +877,12 @@ public abstract class BaseCurrencyCommand implements TabExecutor {
         sender.sendMessage(separator);
     }
 
-    // ─── Utility ──────────────────────────────────────────────────────────────
-
     private String[] shiftArgs(String[] args) {
         if (args.length <= 1) return new String[0];
         String[] shifted = new String[args.length - 1];
         System.arraycopy(args, 1, shifted, 0, shifted.length);
         return shifted;
     }
-
-    // ─── Tab Completion ───────────────────────────────────────────────────────
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {

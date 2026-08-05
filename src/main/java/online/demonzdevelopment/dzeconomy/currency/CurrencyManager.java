@@ -41,7 +41,6 @@ public class CurrencyManager {
         return onlinePlayers.contains(uuid);
     }
     
-    // ━━ Per-Player Lock System ━━
     private ReentrantLock getLock(UUID uuid) {
         return playerLocks.computeIfAbsent(uuid, k -> new ReentrantLock());
     }
@@ -56,13 +55,10 @@ public class CurrencyManager {
         }
     }
     
-    // cleanupLock is removed to fix race conditions; locks are cleaned in unloadPlayerData
-
     public void executeWithPlayerLock(UUID uuid, Runnable action) {
         withLock(uuid, action);
     }
     
-    // ━━ Player Data Management ━━
     public PlayerData loadPlayerData(UUID uuid) {
         ReentrantLock lock = getLock(uuid);
         lock.lock();
@@ -115,8 +111,7 @@ public class CurrencyManager {
                 plugin.getRankManager().removePlayerRank(uuid);
             }
         } finally {
-            // Release the per-player lock map entry when safe to do so,
-            // preventing a memory leak on servers with many join/quit cycles.
+            
             if (!lock.hasQueuedThreads()) {
                 playerLocks.remove(uuid, lock);
             }
@@ -132,7 +127,6 @@ public class CurrencyManager {
         return playerDataCache.containsKey(uuid) || plugin.getStorageProvider().playerDataExists(uuid);
     }
     
-    // ━━ Balance Operations (All use per-player locks + MoneyUtil precision) ━━
     public boolean addBalance(UUID uuid, CurrencyType type, double amount) {
         if (Double.isNaN(amount) || Double.isInfinite(amount) || amount < 0) return false;
         withLock(uuid, () -> {
@@ -170,9 +164,6 @@ public class CurrencyManager {
         return data.getBalance(type);
     }
 
-    /**
-     * Get balance by currency name string.
-     */
     public double getBalance(UUID uuid, String currencyName) {
         CurrencyType type = CurrencyType.fromString(currencyName);
         if (type == null) return 0.0;
@@ -183,11 +174,9 @@ public class CurrencyManager {
         return getBalance(uuid, type) >= amount;
     }
     
-    // ━━ Transfer (Atomic with dual locks) ━━
     public boolean transfer(UUID from, UUID to, CurrencyType type, double amount) {
         if (Double.isNaN(amount) || Double.isInfinite(amount) || amount <= 0 || from.equals(to)) return false;
         
-        // Lock ordering to prevent deadlock: always lock lower UUID first
         UUID first = from.compareTo(to) < 0 ? from : to;
         UUID second = from.compareTo(to) < 0 ? to : from;
         
@@ -203,7 +192,6 @@ public class CurrencyManager {
                 
                 if (MoneyUtil.compare(fromData.getBalance(type), amount) < 0) return false;
                 
-                // Apply transfer tax from rank settings and clamp it between 0 and 1
                 double taxRate = plugin.getRankManager().getTransferTaxRate(from, type);
                 taxRate = Math.max(0.0, Math.min(1.0, taxRate));
                 double tax = MoneyUtil.multiply(amount, taxRate);
@@ -223,7 +211,6 @@ public class CurrencyManager {
         }
     }
     
-    // ━━ Transfer with daily limit (Atomic with dual locks) ━━
     public boolean transfer(UUID from, UUID to, CurrencyType type, double amount, double dailyLimit) {
         if (Double.isNaN(amount) || Double.isInfinite(amount) || amount <= 0 || from.equals(to)) return false;
         
@@ -270,7 +257,6 @@ public class CurrencyManager {
         }
     }
     
-    // ━━ Convert (Atomic) ━━
     public boolean convert(UUID uuid, CurrencyType from, CurrencyType to, double amount) {
         if (Double.isNaN(amount) || Double.isInfinite(amount) || amount <= 0 || from == to) return false;
         
@@ -297,7 +283,6 @@ public class CurrencyManager {
         return result[0];
     }
     
-    // ━━ Request Management (Thread-safe with CopyOnWriteArrayList) ━━
     public void addRequest(CurrencyRequest request) {
         pendingRequests.computeIfAbsent(request.getRequestedPlayerUUID(), k -> new CopyOnWriteArrayList<>())
             .add(request);
@@ -329,14 +314,14 @@ public class CurrencyManager {
     }
     
     public boolean hasPendingRequestWith(UUID player1, UUID player2) {
-        // Check if player1 has a pending request to player2
+        
         List<CurrencyRequest> requests1 = pendingRequests.get(player2);
         if (requests1 != null) {
             for (CurrencyRequest req : requests1) {
                 if (req.getRequesterUUID().equals(player1)) return true;
             }
         }
-        // Check if player2 has a pending request to player1
+        
         List<CurrencyRequest> requests2 = pendingRequests.get(player1);
         if (requests2 != null) {
             for (CurrencyRequest req : requests2) {
@@ -346,7 +331,6 @@ public class CurrencyManager {
         return false;
     }
     
-    // ━━ Save Operations ━━
     public void savePlayerData(UUID uuid) {
         withLock(uuid, () -> {
             PlayerData data = playerDataCache.get(uuid);
@@ -373,13 +357,10 @@ public class CurrencyManager {
         }
     }
     
-    // ━━ Leaderboard ━━
     public java.util.concurrent.CompletableFuture<List<Map.Entry<UUID, Double>>> getBalanceTopAsync(CurrencyType type, int limit) {
         return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
             List<Map.Entry<UUID, Double>> storageTop = plugin.getStorageProvider().getTopBalances(type.getId(), limit);
 
-            // The storage result lags behind the in-memory cache (writes happen on
-            // unload/autosave), so overlay cached balances so the leaderboard is fresh
             Map<UUID, Double> cacheSnapshot = new HashMap<>();
             for (PlayerData data : playerDataCache.values()) {
                 double balance = data.getBalance(type);
@@ -408,8 +389,6 @@ public class CurrencyManager {
         });
     }
     
-    // ━━ Stub methods used by EconomyCommand ━━
-
     public int getPendingRequestCount() {
         int count = 0;
         for (List<CurrencyRequest> requests : pendingRequests.values()) {
@@ -434,11 +413,9 @@ public class CurrencyManager {
     }
 
     public boolean migrate(String fromType, String toType) {
-        // Migration is handled by MigrationManager
+        
         return false;
     }
-
-    // ━━ Additional accessor methods ━━
 
     public int getCachedPlayerCount() { return playerDataCache.size(); }
     public java.util.Collection<UUID> getCachedPlayerUUIDs() { return playerDataCache.keySet(); }
@@ -464,10 +441,8 @@ public class CurrencyManager {
     }
 
     public void reloadConfig() {
-        // No-op: config is managed by ConfigManager
+        
     }
-
-    // ━━ Combat tag delegate methods (delegated to CombatTagManager) ━━
 
     public boolean isCombatTagged(UUID uuid) {
         if (plugin.getCombatTagManager() != null) {

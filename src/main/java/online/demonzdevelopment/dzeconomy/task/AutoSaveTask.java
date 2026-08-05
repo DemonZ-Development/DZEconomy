@@ -31,7 +31,7 @@ public class AutoSaveTask implements Runnable {
 
         for (UUID uuid : cachedPlayers) {
             try {
-                PlayerData data = cm.getPlayerData(uuid); // Use getPlayerData to avoid loading if not already loaded
+                PlayerData data = cm.getPlayerData(uuid); 
                 if (data != null) {
                     if (data.isDirty()) {
                         cm.savePlayerData(uuid);
@@ -43,7 +43,7 @@ public class AutoSaveTask implements Runnable {
                 }
             } catch (Exception e) {
                 failedCount++;
-                // Use plugin logger instead of e.printStackTrace()
+                
                 plugin.getLogger().warning("[AutoSave] Failed to save data for player " + uuid + ": " + e.getMessage());
             }
         }

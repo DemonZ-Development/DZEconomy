@@ -28,9 +28,8 @@ public class CurrencyRequest {
     public UUID getRequesterUUID() { return requesterUUID; }
     public UUID getRequestedPlayerUUID() { return requestedPlayerUUID; }
 
-    /** Alias for getRequesterUUID() */
     public UUID getRequester() { return requesterUUID; }
-    /** Alias for getRequestedPlayerUUID() */
+    
     public UUID getRequestedPlayer() { return requestedPlayerUUID; }
     public CurrencyType getCurrencyType() { return currencyType; }
     public double getAmount() { return amount; }

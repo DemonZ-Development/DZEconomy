@@ -6,11 +6,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Manages combat tagging for players.
- * Thread-safe via ConcurrentHashMap.
- * Compatible with CombatTagCleanupTask.
- */
 public class CombatTagManager {
     
     private final DZEconomy plugin;
@@ -22,9 +17,6 @@ public class CombatTagManager {
         loadSettings();
     }
     
-    /**
-     * Load settings from config.
-     */
     public void loadSettings() {
         FileConfiguration config = plugin.getConfigManager().getConfig();
         if (config == null) return;
@@ -32,24 +24,14 @@ public class CombatTagManager {
         combatTagDurationSeconds = config.getInt("combat-tag.duration", 15);
     }
     
-    /**
-     * Tag a player as being in combat.
-     */
     public void tagPlayer(UUID uuid) {
         combatTags.put(uuid, System.currentTimeMillis());
     }
     
-    /**
-     * Remove a player's combat tag.
-     */
     public void removeTag(UUID uuid) {
         combatTags.remove(uuid);
     }
     
-    /**
-     * Check if a player is currently in combat.
-     * Query-only, no side effects.
-     */
     public boolean isInCombat(UUID uuid) {
         Long tagTime = combatTags.get(uuid);
         if (tagTime == null) return false;
@@ -57,10 +39,6 @@ public class CombatTagManager {
         return elapsed < combatTagDurationSeconds;
     }
     
-    /**
-     * Get remaining combat time in seconds.
-     * Returns 0 if not in combat.
-     */
     public int getRemainingCombatTime(UUID uuid) {
         Long tagTime = combatTags.get(uuid);
         if (tagTime == null) return 0;
@@ -69,10 +47,6 @@ public class CombatTagManager {
         return Math.max(0, remaining);
     }
     
-    /**
-     * Clean expired combat tags.
-     * Called by CombatTagCleanupTask.
-     */
     public void cleanExpiredTags() {
         long now = System.currentTimeMillis();
         long durationMillis = combatTagDurationSeconds * 1000L;
@@ -86,28 +60,19 @@ public class CombatTagManager {
         }
     }
     
-    /**
-     * Reload settings from config.
-     */
     public void reload() {
         loadSettings();
     }
     
-    /**
-     * Get the number of currently tagged players (for debugging/admin).
-     */
     public int getTaggedCount() {
         return combatTags.size();
     }
 
-    // ━━ Alias methods for compatibility ━━
-
-    /** Alias for tagPlayer(UUID) */
     public void addCombatTag(UUID uuid, long durationMillis) { tagPlayer(uuid); }
-    /** Alias for removeTag(UUID) */
+    
     public void removeCombatTag(UUID uuid) { removeTag(uuid); }
-    /** Alias for isInCombat(UUID) */
+    
     public boolean isCombatTagged(UUID uuid) { return isInCombat(uuid); }
-    /** Alias for cleanExpiredTags() */
+    
     public void cleanupExpiredCombatTags() { cleanExpiredTags(); }
 }

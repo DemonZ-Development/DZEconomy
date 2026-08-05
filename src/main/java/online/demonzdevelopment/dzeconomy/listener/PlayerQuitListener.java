@@ -29,16 +29,13 @@ public class PlayerQuitListener implements Listener {
         UUID uuid = player.getUniqueId();
         CurrencyManager cm = plugin.getCurrencyManager();
 
-        // Mark player as offline in track
         cm.setPlayerOnline(uuid, false);
 
-        // Update lastSeen
         PlayerData data = cm.loadPlayerData(uuid);
         if (data != null) {
             data.setLastSeen(System.currentTimeMillis());
         }
 
-        // Clean up combat tags, rank, and LuckPerms integration cache
         cm.removeCombatTag(uuid);
         plugin.getRankManager().removePlayerRank(uuid);
         if (plugin.getLuckPermsIntegration() != null) {
@@ -48,7 +45,6 @@ public class PlayerQuitListener implements Listener {
             plugin.getPlaceholderExpansion().removePlayerCache(uuid);
         }
 
-        // Close request GUI if open
         if (player.getOpenInventory() != null && player.getOpenInventory().getTitle() != null) {
             String title = player.getOpenInventory().getTitle();
             if (title.contains("Request") || title.contains(MessagesUtil.colorize("&6Request"))) {
@@ -56,7 +52,6 @@ public class PlayerQuitListener implements Listener {
             }
         }
 
-        // Deny all pending requests involving this player and notify the other party
         java.util.List<CurrencyRequest> requestsFrom = cm.getRequestsFrom(uuid);
         for (CurrencyRequest request : requestsFrom) {
             cm.removeRequest(request.getRequestedPlayer(), request);
@@ -79,7 +74,6 @@ public class PlayerQuitListener implements Listener {
             }
         }
 
-        // Unload player data from cache asynchronously to prevent blocking the server/region thread
         online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTaskAsynchronously(plugin, () -> cm.unloadPlayerData(uuid));
     }
 }

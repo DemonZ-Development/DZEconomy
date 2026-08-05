@@ -95,7 +95,7 @@ public class MySQLStorageProvider implements StorageProvider {
                 "PRIMARY KEY (uuid, currency_type), " +
                 "FOREIGN KEY (uuid) REFERENCES dze_players(uuid) ON DELETE CASCADE)"
             );
-            // Schema upgrades for databases created by older versions
+            
             addColumnIfMissing(conn, "dze_daily_limits", "sent_amount", "DOUBLE DEFAULT 0");
             addColumnIfMissing(conn, "dze_cooldowns", "send_time", "BIGINT DEFAULT 0");
         } catch (SQLException e) {
@@ -107,7 +107,7 @@ public class MySQLStorageProvider implements StorageProvider {
         try (Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("ALTER TABLE " + table + " ADD COLUMN " + column + " " + definition);
         } catch (SQLException e) {
-            // Column already exists (MySQL error 1060: duplicate column name) — ignore
+            
         }
     }
     

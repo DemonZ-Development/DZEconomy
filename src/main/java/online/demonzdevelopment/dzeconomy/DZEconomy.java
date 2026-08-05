@@ -49,25 +49,20 @@ public class DZEconomy extends JavaPlugin {
         instance = this;
         startupTime = System.currentTimeMillis();
         
-        // Print beautiful startup banner
         printStartupBanner();
         
-        // Initialize configuration with migration
         configManager = new ConfigManager(this);
         configManager.loadAll();
         
-        // Run config migration if needed
         ConfigMigrator migrator = new ConfigMigrator(this);
         migrator.migrate();
         
-        // Initialize storage
         if (!initializeStorage()) {
             getLogger().severe("Failed to initialize storage! Disabling plugin...");
             setEnabled(false);
             return;
         }
         
-        // Initialize managers
         this.currencyManager = new CurrencyManager(this);
         this.rankManager = new RankManager(this);
         this.rankManager.loadRanks();
@@ -75,20 +70,15 @@ public class DZEconomy extends JavaPlugin {
         this.combatTagManager = new CombatTagManager(this);
         this.migrationManager = new MigrationManager(this);
         
-        // Initialize API
         this.api = new DZEconomyAPIImpl();
         Bukkit.getServicesManager().register(DZEconomyAPI.class, this.api, this, org.bukkit.plugin.ServicePriority.Normal);
         
-        // Register commands
         registerCommands();
         
-        // Register events
         registerEvents();
         
-        // Register integrations
         registerIntegrations();
         
-        // Initialize bStats. Never let a metrics failure break plugin startup.
         try {
             int pluginId = 31625;
             Metrics metrics = new Metrics(this, pluginId);
@@ -96,10 +86,8 @@ public class DZEconomy extends JavaPlugin {
             getLogger().log(Level.WARNING, "bStats metrics failed to initialize, skipping", e);
         }
         
-        // Schedule tasks
         scheduleTasks();
         
-        // Initialize update checker (Modrinth, checks every 6 hours)
         this.updateManager = new UpdateManager(this);
         updateManager.checkForUpdates();
         
@@ -108,10 +96,9 @@ public class DZEconomy extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Cancel all tasks first to prevent any new storage access
+        
         FoliaAdapter.cancelTasks(this);
         
-        // Save all player data before shutdown
         if (currencyManager != null) {
             try {
                 currencyManager.saveAllPlayersSync();
@@ -120,7 +107,6 @@ public class DZEconomy extends JavaPlugin {
             }
         }
         
-        // Close storage
         if (storageProvider != null) {
             try {
                 storageProvider.close();
@@ -219,46 +205,40 @@ public class DZEconomy extends JavaPlugin {
     }
     
     private void registerIntegrations() {
-        // PlaceholderAPI
+        
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             this.placeholderExpansion = new PlaceholderAPIExpansion(this);
             this.placeholderExpansion.register();
             getLogger().info("PlaceholderAPI integration enabled!");
         }
         
-        // LuckPerms
         luckPermsIntegration.setup();
     }
     
     private void scheduleTasks() {
-        // Auto-save (default 5 minutes)
+        
         long autoSaveInterval = configManager.getConfig().getLong("auto-save.interval", 300) * 20L;
         AutoSaveTask autoSaveTask = new AutoSaveTask(this);
         online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTaskTimerAsynchronously(this, autoSaveTask, autoSaveInterval, autoSaveInterval);
         
-        // Daily reset (check every minute)
         DailyResetTask dailyResetTask = new DailyResetTask(this);
         FoliaAdapter.runTaskTimer(this, dailyResetTask, 1200L, 1200L);
         
-        // Request timeout
         long requestTimeout = configManager.getConfig().getLong("request.timeout", 60) * 20L;
         RequestTimeoutTask requestTimeoutTask = new RequestTimeoutTask(this);
         FoliaAdapter.runTaskTimer(this, requestTimeoutTask, requestTimeout, requestTimeout);
         
-        // Combat tag cleanup
         if (configManager.getConfig().getBoolean("combat-tag.enabled", true)) {
             CombatTagCleanupTask combatTagCleanupTask = new CombatTagCleanupTask(combatTagManager);
             FoliaAdapter.runTaskTimer(this, combatTagCleanupTask, 100L, 100L);
         }
         
-        // Modrinth update check (every 6 hours = 4320000 ticks)
         if (configManager.getConfig().getBoolean("updates.check-enabled", true)) {
             long updateInterval = configManager.getConfig().getLong("updates.check-interval", 21600) * 20L;
             FoliaAdapter.runTaskTimer(this, () -> updateManager.checkForUpdates(), 1200L, updateInterval);
         }
     }
     
-    // Getters
     public static DZEconomy getInstance() { return instance; }
     public ConfigManager getConfigManager() { return configManager; }
     public StorageProvider getStorageProvider() { return storageProvider; }
@@ -280,10 +260,6 @@ public class DZEconomy extends JavaPlugin {
         return updateManager != null ? updateManager.getLatestVersionNumber() : null;
     }
 
-    /**
-     * Create a storage provider for the given type.
-     * Used by MigrationManager.
-     */
     public StorageProvider createStorageProvider(StorageType type) {
         switch (type) {
             case SQLITE:

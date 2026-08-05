@@ -28,7 +28,6 @@ public class EntityDeathListener implements Listener {
     private final DZEconomy plugin;
     private final Map<String, MobRewardData> mobRewardsCache = new ConcurrentHashMap<>();
     
-    // Cached config values to avoid reading config files on every single entity death event
     private boolean rewardsEnabled = true;
     private final List<String> worldWhitelist = new ArrayList<>();
     private final List<String> worldBlacklist = new ArrayList<>();
@@ -66,9 +65,6 @@ public class EntityDeathListener implements Listener {
         loadRewards();
     }
 
-    /**
-     * Parse and load all mob rewards from mob-rewards.yml.
-     */
     public void loadRewards() {
         mobRewardsCache.clear();
         ConfigManager config = plugin.getConfigManager();
@@ -235,23 +231,19 @@ public class EntityDeathListener implements Listener {
     public void onEntityDeath(EntityDeathEvent event) {
         LivingEntity entity = event.getEntity();
 
-        // Check if mob rewards are enabled globally
         if (!rewardsEnabled) {
             return;
         }
 
-        // World whitelist check
         String worldName = entity.getWorld().getName().toLowerCase();
         if (!worldWhitelist.isEmpty() && !worldWhitelist.contains(worldName)) {
             return;
         }
 
-        // World blacklist check
         if (!worldBlacklist.isEmpty() && worldBlacklist.contains(worldName)) {
             return;
         }
 
-        // Spawner mob check
         boolean isSpawner = false;
         boolean isSpawnEgg = false;
         if (HAS_PDC && pdcHelper != null) {
@@ -296,7 +288,6 @@ public class EntityDeathListener implements Listener {
 
         double bonus = getRankBonus(killer, entity);
         
-        // Player's rank multiplier
         double rankMultiplierMoney = plugin.getRankManager().getMultiplier(killer.getUniqueId(), CurrencyType.MONEY);
         double rankMultiplierMobcoin = plugin.getRankManager().getMultiplier(killer.getUniqueId(), CurrencyType.MOBCOIN);
         double rankMultiplierGem = plugin.getRankManager().getMultiplier(killer.getUniqueId(), CurrencyType.GEM);

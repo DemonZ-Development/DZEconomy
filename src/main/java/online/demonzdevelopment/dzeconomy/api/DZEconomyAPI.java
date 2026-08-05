@@ -8,10 +8,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Public API for DZEconomy v2.1.0.
- * All methods that modify balances are thread-safe and use per-player locks.
- */
 public interface DZEconomyAPI {
     
     double getBalance(@NotNull UUID uuid, @NotNull CurrencyType type);

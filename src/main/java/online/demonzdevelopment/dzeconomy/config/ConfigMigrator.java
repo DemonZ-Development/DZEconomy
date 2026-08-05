@@ -8,10 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 
-/**
- * Handles configuration migration between versions.
- * Tracks config-version in config.yml and applies migrations incrementally.
- */
 public class ConfigMigrator {
     
     private final DZEconomy plugin;
@@ -32,20 +28,17 @@ public class ConfigMigrator {
         
         plugin.getLogger().info("Migrating config from v" + version + " to v" + CURRENT_CONFIG_VERSION + "...");
         
-        // Backup current config
         backupConfig();
         
-        // Apply migrations incrementally
         for (int v = version; v < CURRENT_CONFIG_VERSION; v++) {
             switch (v) {
                 case 1:
                     migrateV1toV2();
                     break;
-                // Future migrations go here
+                
             }
         }
         
-        // Update config version
         config.set("config-version", CURRENT_CONFIG_VERSION);
         plugin.getConfigManager().saveConfig();
         
@@ -56,7 +49,6 @@ public class ConfigMigrator {
         FileConfiguration config = plugin.getConfigManager().getConfig();
         plugin.getLogger().info("  Migrating v1 -> v2: Adding Modrinth update settings, combat tag defaults, baltop settings...");
         
-        // Add new v2 config keys with defaults if missing
         if (!config.contains("updates.check-interval")) {
             config.set("updates.check-interval", 21600);
         }
@@ -72,10 +64,10 @@ public class ConfigMigrator {
         if (!config.contains("combat-tag.duration")) {
             config.set("combat-tag.duration", 15);
         }
-        // Remove deprecated auto-update settings
+        
         config.set("auto-update", null);
         config.set("runtime-auto-update", null);
-        config.set("update", null); // clean up any incorrectly added singular 'update' section
+        config.set("update", null); 
     }
     
     private void backupConfig() {

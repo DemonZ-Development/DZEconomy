@@ -7,11 +7,6 @@ import org.bukkit.entity.Player;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
-/**
- * Manages update checking via Modrinth API.
- * v2: No auto-download. Only notifies admins.
- * Checks every 6 hours (configurable).
- */
 public class UpdateManager {
     
     private final DZEconomy plugin;
@@ -41,7 +36,7 @@ public class UpdateManager {
                 return false;
             }
         }).thenApplyAsync(available -> {
-            // Notify admins on main thread
+            
             if (available) {
                 online.demonzdevelopment.dzeconomy.util.FoliaAdapter.runTask(plugin, () -> notifyAdmins());
             }
@@ -71,7 +66,6 @@ public class UpdateManager {
     public boolean isUpdateAvailable() { return updateAvailable; }
     public ModrinthVersion getLatestVersion() { return latestVersion; }
 
-    /** Get the version number string of the latest version, or null if not checked. */
     public String getLatestVersionNumber() {
         return latestVersion != null ? latestVersion.getVersionNumber() : null;
     }

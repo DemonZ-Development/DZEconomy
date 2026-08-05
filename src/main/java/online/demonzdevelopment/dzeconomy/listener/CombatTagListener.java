@@ -22,9 +22,6 @@ public class CombatTagListener implements Listener {
         this.plugin = plugin;
     }
 
-    /**
-     * Tag players when they engage in PVP combat.
-     */
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         ConfigManager config = plugin.getConfigManager();
@@ -33,7 +30,6 @@ public class CombatTagListener implements Listener {
             return;
         }
 
-        // Ensure both entities are players
         if (!(event.getEntity() instanceof Player)) {
             return;
         }
@@ -41,7 +37,6 @@ public class CombatTagListener implements Listener {
         Player victim = (Player) event.getEntity();
         Player attacker = null;
 
-        // Check if the damager is a player directly or a projectile shot by a player
         if (event.getDamager() instanceof Player) {
             attacker = (Player) event.getDamager();
         } else if (event.getDamager() instanceof org.bukkit.entity.Projectile) {
@@ -55,7 +50,6 @@ public class CombatTagListener implements Listener {
             return;
         }
 
-        // Don't tag if damage is 0 or very low (e.g., snowballs)
         if (event.getFinalDamage() <= 0) {
             return;
         }
@@ -67,14 +61,12 @@ public class CombatTagListener implements Listener {
         UUID victimUuid = victim.getUniqueId();
         UUID attackerUuid = attacker.getUniqueId();
 
-        // Tag both players
         boolean victimWasTagged = cm.isCombatTagged(victimUuid);
         boolean attackerWasTagged = cm.isCombatTagged(attackerUuid);
 
         cm.addCombatTag(victimUuid, expiryTime);
         cm.addCombatTag(attackerUuid, expiryTime);
 
-        // Send tag notification if not already tagged
         if (!victimWasTagged) {
             MessagesUtil.sendMessage(victim, "combat-tagged",
                     "%player%", attacker.getName(),
@@ -88,9 +80,6 @@ public class CombatTagListener implements Listener {
         }
     }
 
-    /**
-     * Remove combat tag when a player quits.
-     */
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();

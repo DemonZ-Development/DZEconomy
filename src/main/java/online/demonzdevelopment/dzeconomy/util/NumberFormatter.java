@@ -4,10 +4,6 @@ import java.text.DecimalFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Thread-safe number formatting utility.
- * Uses ThreadLocal for DecimalFormat to ensure thread safety.
- */
 public class NumberFormatter {
     
     private static final ThreadLocal<DecimalFormat> DECIMAL_FORMAT = 
@@ -56,7 +52,6 @@ public class NumberFormatter {
         
         input = input.trim().replace(",", "");
         
-        // Check for suffix
         for (Map.Entry<String, Double> entry : SUFFIXES.entrySet()) {
             String suffix = entry.getKey();
             if (input.toLowerCase().endsWith(suffix.toLowerCase())) {
