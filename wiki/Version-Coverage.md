@@ -2,7 +2,7 @@
 
 # Version Coverage
 
-Supported Minecraft versions and server software for DZEconomy v2.1.2.
+Supported Minecraft versions and server software for DZEconomy v2.1.3.
 
 ---
 

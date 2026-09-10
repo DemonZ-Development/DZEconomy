@@ -77,13 +77,13 @@ cd DZEconomy
 ./gradlew shadowJar -x test
 ```
 
-The JAR will be in `build/libs/DZEconomy-2.1.2.jar`.
+The JAR will be in `build/libs/DZEconomy-2.1.3.jar`.
 
 ### Project Structure
 
 ```
 DZEconomy/
-├── src/main/java/online/demonzdevelopment/dzeconomy/
+├── src/main/java/org/demonz/dev/dzeconomy/
 │   ├── DZEconomy.java          # Main plugin class
 │   ├── api/                    # Public API
 │   ├── command/                # Command handlers

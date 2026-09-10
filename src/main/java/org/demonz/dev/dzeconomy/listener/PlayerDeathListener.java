@@ -1,0 +1,133 @@
+package org.demonz.dev.dzeconomy.listener;
+
+import org.demonz.dev.dzeconomy.DZEconomy;
+import org.demonz.dev.dzeconomy.currency.CurrencyManager;
+import org.demonz.dev.dzeconomy.currency.CurrencyType;
+import org.demonz.dev.dzeconomy.config.ConfigManager;
+import org.demonz.dev.dzeconomy.util.MessagesUtil;
+
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
+
+import java.util.UUID;
+
+public class PlayerDeathListener implements Listener {
+
+    private final DZEconomy plugin;
+
+    public PlayerDeathListener(DZEconomy plugin) {
+        this.plugin = plugin;
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        if (event.getKeepInventory()) {
+            return;
+        }
+        Player victim = event.getEntity();
+        Player killer = victim.getKiller();
+
+        if (killer == null || killer.equals(victim)) {
+            return;
+        }
+
+        ConfigManager config = plugin.getConfigManager();
+        CurrencyManager cm = plugin.getCurrencyManager();
+
+        if (!config.getConfig().getBoolean("pvp.enabled", false)) {
+            return;
+        }
+
+        if (config.getConfig().getStringList("pvp.world-blacklist").contains(victim.getWorld().getName())) {
+            return;
+        }
+
+        UUID victimUuid = victim.getUniqueId();
+        UUID killerUuid = killer.getUniqueId();
+
+        for (CurrencyType type : CurrencyType.values()) {
+            String currencyName = type.getId();
+
+            if (!cm.isCurrencyEnabled(type)) {
+                continue;
+            }
+
+            double lossPercent = config.getConfig().getDouble("pvp.loss-percent." + currencyName, 0.0);
+            if (lossPercent <= 0) {
+                continue;
+            }
+            double lossFraction = Math.max(0.0, Math.min(1.0, lossPercent / 100.0));
+
+            double minimumBalance = config.getConfig().getDouble("pvp.minimum-balance." + currencyName, 0.0);
+
+            double victimBalance = cm.getBalance(victimUuid, type);
+            if (victimBalance <= 0) {
+                continue;
+            }
+
+            double amount = victimBalance * lossFraction;
+
+            double maxTransferable = Math.max(0.0, victimBalance - minimumBalance);
+            if (amount > maxTransferable) {
+                amount = maxTransferable;
+            }
+
+            amount = org.demonz.dev.dzeconomy.util.MoneyUtil.round(amount, cm.getDecimalPlaces(type));
+
+            if (amount <= 0) {
+                continue;
+            }
+
+            double killerBalanceBefore = cm.getBalance(killerUuid, type);
+            boolean success = cm.transferExact(victimUuid, killerUuid, type, amount);
+
+            if (success) {
+                double victimNewBalance = cm.getBalance(victimUuid, type);
+                double killerNewBalance = cm.getBalance(killerUuid, type);
+
+                double netReceived = Math.max(0.0, killerNewBalance - killerBalanceBefore);
+                String symbol = config.getConfig().getString("currencies." + currencyName + ".symbol", currencyName);
+
+                MessagesUtil.sendMessage(victim, "pvp-lost-" + currencyName,
+                        "%killer%", killer.getName(),
+                        "%amount%", cm.formatAmount(type, amount),
+                        "%percentage%", String.format("%.0f", lossPercent),
+                        "%balance%", cm.formatAmount(type, victimNewBalance),
+                        "%currency%", currencyName,
+                        "%symbol%", symbol);
+
+                org.demonz.dev.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, killer, () ->
+                        MessagesUtil.sendMessage(killer, "pvp-gained-" + currencyName,
+                                "%victim%", victim.getName(),
+                                "%amount%", cm.formatAmount(type, netReceived),
+                                "%percentage%", String.format("%.0f", lossPercent),
+                                "%balance%", cm.formatAmount(type, killerNewBalance),
+                                "%currency%", currencyName,
+                                "%symbol%", symbol));
+
+                if (config.getConfig().getBoolean("pvp.broadcast.enabled", true)) {
+                    double broadcastThreshold = config.getConfig().getDouble("pvp.broadcast.threshold", 1000);
+                    if (broadcastThreshold > 0 && amount >= broadcastThreshold) {
+                        String broadcastMessage = MessagesUtil.getStaticMessage("pvp-broadcast",
+                                "%killer%", killer.getName(),
+                                "%victim%", victim.getName(),
+                                "%amount%", cm.formatAmount(type, amount),
+                                "%currency%", currencyName,
+                                "%symbol%", symbol);
+                        broadcast(broadcastMessage);
+                    }
+                }
+            }
+        }
+    }
+
+    private void broadcast(String message) {
+        for (Player recipient : org.demonz.dev.dzeconomy.adapter.FeatureAdapter.get().getOnlinePlayers()) {
+            org.demonz.dev.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, recipient,
+                    () -> recipient.sendMessage(message));
+        }
+    }
+}

@@ -2,7 +2,7 @@
 
 # Configuration Reference
 
-Configuration reference for DZEconomy v2.1.2. All config files live in `plugins/DZEconomy/`.
+Configuration reference for DZEconomy v2.1.3. All config files live in `plugins/DZEconomy/`.
 
 ---
 

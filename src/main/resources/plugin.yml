@@ -1,7 +1,7 @@
 name: DZEconomy
-version: '2.1.2'
-main: online.demonzdevelopment.dzeconomy.DZEconomy
-api-version: '1.13'
+version: '${version}'
+main: org.demonz.dev.dzeconomy.DZEconomy
+api-version: '1.20'
 description: A powerful multi-currency economy plugin with ranks, combat tagging, and more.
 author: DemonZ Development
 website: https://github.com/DemonZ-Development/DZEconomy/wiki
@@ -11,6 +11,7 @@ depend: []
 softdepend:
   - PlaceholderAPI
   - LuckPerms
+  - Vault
 
 commands:
   money:
@@ -27,7 +28,7 @@ commands:
     aliases: [gems]
   economy:
     description: Admin economy commands
-    usage: /<command> [info|reload|version|convert|migrate|status|baltop|payall|credits]
+    usage: /<command> [info|reload|version|convert|migrate|status|baltop|payall|backup|credits]
     aliases: [econ, dzeconomy, dze]
 
 permissions:
@@ -129,18 +130,26 @@ permissions:
     default: op
     children:
       dzeconomy.admin.reload: true
+      dzeconomy.admin.version: true
       dzeconomy.admin.convert: true
       dzeconomy.admin.migrate: true
       dzeconomy.admin.status: true
       dzeconomy.admin.baltop: true
       dzeconomy.admin.payall: true
+      dzeconomy.admin.give: true
       dzeconomy.admin.update: true
       dzeconomy.admin.backup: true
   dzeconomy.admin.reload:
     description: Reload plugin configuration
     default: op
+  dzeconomy.admin.version:
+    description: View version information
+    default: op
   dzeconomy.admin.convert:
     description: Convert currencies between players
+    default: op
+  dzeconomy.admin.give:
+    description: Give any currency to a player
     default: op
   dzeconomy.admin.migrate:
     description: Migrate storage backends

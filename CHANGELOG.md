@@ -6,7 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
-## [2.1.2] — 2026-08-05
+## [Unreleased]
+
+### Changed
+
+- Maven group is now `org.demonz.dev` and all packages moved to `org.demonz.dev.dzeconomy` (shaded `libs` prefix and `plugin.yml` included). API users need to update imports. JitPack docs still use `com.github.DemonZ-Development` since JitPack serves GitHub builds under that group.
+- Rank perks now do something: `bypass-combat-tag`, `reduced-cooldown`, `increased-daily-limit` and Money `interest` (new `InterestTask`) are enforced on send/accept. Transfer-tax overrides are documented. Permission auto-grant and multi-group priority are still planned.
+
+### Fixed
+
+- New players no longer get starting balances after a storage error. The new-player flag is only set when no record exists.
+- Placeholders are served from cache with async warm-up instead of blocking reads.
+- Vault lookups no longer create junk accounts for unknown names. `createPlayerAccount` creates explicitly. Bad amounts rejected. Money scale used for digits/format.
+- Disabled currencies are skipped everywhere, not just hidden in `/economy info`.
+- `min-transaction`, `max-balance`, daily limits and the `below-minimum`/`daily-limit-reached` messages are wired into send/request/accept.
+- PvP loot rounding uses the currency scale. Amount displays use it too.
+- `/economy payall` checks `dzeconomy.admin.payall` like the docs say.
+- `/economy status` shows the active backend and reload warns when `storage.type` was changed without migrating.
+- Mob rewards: name captured on event thread, `ThreadLocalRandom` rolls, immutable config snapshots, inverted ranges fixed.
+- Folia schedule failures no longer fall through to the Bukkit scheduler.
+- FlatFile sweeps orphaned `*.yml.tmp` files on startup.
+- `migrate yaml` works end to end. Rank reload re-resolves properly. Lock map evicted on unload. Baltop pages capped at 100.
+
+## [2.1.3] — 2026-08-05
 
 DZEconomy now runs on almost any server. The jar targets Java 8 bytecode and ships with a feature adapter layer, so it loads on Minecraft 1.9 through 1.26.x. This update also quiets the console and fixes a pile of broken messages and config wiring.
 
@@ -111,7 +133,7 @@ DZEconomy v2.0.0 is a ground-up rewrite of the plugin with a modern architecture
 
 ---
 
-[2.1.2]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v2.1.2
+[2.1.3]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v2.1.3
 [2.1.0]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v2.1.0
 [2.0.0]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v2.0.0
 [1.0.0]: https://github.com/DemonZ-Development/DZEconomy/releases/tag/v1.0.0

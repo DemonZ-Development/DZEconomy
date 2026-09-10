@@ -10,7 +10,7 @@
 
 ### Multi-Currency Economy Plugin for Minecraft
 
-[![Version](https://img.shields.io/badge/version-2.1.2-gold?style=for-the-badge)](https://github.com/DemonZ-Development/DZEconomy/releases)
+[![Version](https://img.shields.io/badge/version-2.1.3-gold?style=for-the-badge)](https://github.com/DemonZ-Development/DZEconomy/releases)
 [![License](https://img.shields.io/badge/license-GPL%20v3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 [![Java](https://img.shields.io/badge/java-8+-orange?style=for-the-badge)](https://adoptium.net/)
 [![Paper](https://img.shields.io/badge/paper-1.9+-green?style=for-the-badge)](https://papermc.io/)
@@ -95,13 +95,17 @@ currencies:
     player-pay: true
 
 storage:
-  backend: sqlite
-  save-interval: 60
-  cache-size: 1000
+  type: SQLITE
+  sqlite:
+    file: data.db
+
+auto-save:
+  interval: 300
 
 combat-tag:
   enabled: true
   duration: 15
+  kill-on-logout: true
   blocked-actions:
     - send
     - request
@@ -115,7 +119,7 @@ See the [Configuration Wiki](https://github.com/DemonZ-Development/DZEconomy/wik
 ## Quick setup
 
 1. Download the latest release from [Modrinth](https://modrinth.com/plugin/dzeconomy) or [GitHub Releases](https://github.com/DemonZ-Development/DZEconomy/releases)
-2. Place `DZEconomy-2.1.2.jar` in `plugins/`
+2. Place `DZEconomy-2.1.3.jar` in `plugins/`
 3. Restart once
 4. Edit `plugins/DZEconomy/config.yml`
 5. Run `/economy reload`
@@ -136,7 +140,7 @@ Hook into DZEconomy from your own plugins with a clean API.
 <dependency>
     <groupId>com.github.DemonZ-Development</groupId>
     <artifactId>DZEconomy</artifactId>
-    <version>2.1.2</version>
+    <version>2.1.3</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -148,9 +152,11 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'com.github.DemonZ-Development:DZEconomy:2.1.2'
+    compileOnly 'com.github.DemonZ-Development:DZEconomy:2.1.3'
 }
 ```
+
+> Note: the project's canonical Maven `groupId` is `org.demonz.dev` (used for direct and Maven Central publication). JitPack serves GitHub builds under `com.github.DemonZ-Development`, which is what the snippets above use.
 
 ### Usage
 ```java
@@ -193,7 +199,7 @@ Run tests with `./gradlew test`.
 
 ---
 
-DZEconomy v2.1.2 — Made by [DemonZ Development](https://github.com/DemonZ-Development)
+DZEconomy v2.1.3 — Made by [DemonZ Development](https://github.com/DemonZ-Development)
 
 [⬆ Back to Top](#dzeconomy)
 

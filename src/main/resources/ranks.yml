@@ -1,5 +1,5 @@
 # ╔══════════════════════════════════════════════════════════════╗
-# ║                       DZEconomy v2.1.2                       ║
+# ║                       DZEconomy v2.1.3                       ║
 # ║                      Rank Configuration                      ║
 # ║                                                              ║
 # ║   Wiki: https://github.com/DemonZ-Development/DZEconomy/wiki/║
@@ -14,24 +14,29 @@
 # │  How it works:                                               │
 # │  1. When a player performs an economy action (earning,      │
 # │     receiving mob rewards, etc.), the plugin checks their   │
-# │     LuckPerms group.                                        │
+# │     LuckPerms primary group.                                │
 # │  2. If the group matches a rank defined below, the rank's   │
-# │     multipliers are applied.                                │
-# │  3. The way multipliers stack is controlled by              │
-# │     config.yml → ranks.multiplier-stacking                  │
+# │     multipliers, transfer-tax overrides and perks apply.    │
+# │  3. Multi-group stacking is planned; today only the        │
+# │     primary group resolves (there is no                    │
+# │     ranks.multiplier-stacking key yet).                     │
 # │                                                              │
 # │  Rank Properties:                                            │
 # │    display-name   – Friendly name shown in messages & GUI.  │
-# │    priority       – Higher number = higher priority.        │
-# │                     Used when a player has multiple groups. │
-# │                     The highest-priority rank is used when  │
-# │                     stacking mode is HIGHEST.               │
+# │    priority       – Stored for future multi-group support.  │
+# │                     Resolution currently uses the player's  │
+# │                     LuckPerms primary group only.           │
 # │    multipliers    – Per-currency reward multipliers.        │
 # │                     1.0 = no bonus, 1.5 = 50% bonus, etc.  │
+# │    currencies     – Optional per-currency overrides:       │
+# │                     transfer-tax (e.g. 0.05 = 5% fee kept   │
+# │                     from player-to-player transfers).       │
 # │    perks          – Special perks for this rank.            │
-# │                     See perk descriptions below.            │
-# │    permissions    – Additional permissions granted while    │
-# │                     this rank is active (optional).         │
+# │                     Enforced: bypass-combat-tag,            │
+# │                     reduced-cooldown, increased-daily-limit, │
+# │                     interest.                               │
+# │    permissions    – Documented only; DZEconomy does not    │
+# │                     attach these automatically (planned).   │
 # │                                                              │
 # │  NOTE: This requires LuckPerms to be installed!             │
 # │        If LuckPerms is not present, all players use the     │
@@ -159,6 +164,11 @@ premium:
 #     money: 2.0
 #     mobcoin: 2.5
 #     gem: 2.0
+#   # Optional per-currency overrides (transfer-tax is a fraction:
+#   # 0.03 = 3% fee kept from player-to-player transfers).
+#   currencies:
+#     money:
+#       transfer-tax: 0.03
 #   perks:
 #     reduced-cooldown: true
 #     cooldown-reduction: 0.25

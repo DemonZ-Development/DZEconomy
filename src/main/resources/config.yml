@@ -1,5 +1,5 @@
 # ╔══════════════════════════════════════════════════════════════╗
-# ║                       DZEconomy v2.1.2                       ║
+# ║                       DZEconomy v2.1.3                       ║
 # ║                Multi-Currency Economy Plugin                 ║
 # ║                                                              ║
 # ║   Wiki: https://github.com/DemonZ-Development/DZEconomy/wiki/║
@@ -243,6 +243,10 @@ combat-tag:
   # Duration (in seconds) a player remains combat-tagged after
   # the last hit.
   duration: 15
+
+  # Whether a player who logs out while combat-tagged is killed
+  # (combat-log punishment). Set to false to only clear the tag.
+  kill-on-logout: true
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                    MOB REWARDS                              ║

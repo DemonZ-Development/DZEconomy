@@ -1,8 +1,8 @@
-package online.demonzdevelopment.dzeconomy.apiexample;
+package org.demonz.dev.dzeconomy.apiexample;
 
-import online.demonzdevelopment.dzeconomy.DZEconomy;
-import online.demonzdevelopment.dzeconomy.api.DZEconomyAPI;
-import online.demonzdevelopment.dzeconomy.currency.CurrencyType;
+import org.demonz.dev.dzeconomy.DZEconomy;
+import org.demonz.dev.dzeconomy.api.DZEconomyAPI;
+import org.demonz.dev.dzeconomy.currency.CurrencyType;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -68,7 +68,7 @@ public class API_EXAMPLE extends JavaPlugin {
         getLogger().info("Formatted: " + formatted + " | Short: " + shortForm);
         
         // Get player rank
-        online.demonzdevelopment.dzeconomy.rank.Rank rank = economyAPI.getPlayerRank(playerUUID);
+        org.demonz.dev.dzeconomy.rank.Rank rank = economyAPI.getPlayerRank(playerUUID);
         if (rank != null) {
             getLogger().info("Player rank: " + rank.getName());
         } else {

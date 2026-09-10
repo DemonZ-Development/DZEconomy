@@ -1,5 +1,5 @@
 # ╔══════════════════════════════════════════════════════════════╗
-# ║                       DZEconomy v2.1.2                       ║
+# ║                       DZEconomy v2.1.3                       ║
 # ║              Messages & Language Configuration               ║
 # ║                                                              ║
 # ║   Wiki: https://github.com/DemonZ-Development/DZEconomy/wiki/║
@@ -214,6 +214,19 @@ economy:
     target: "&aYou received &e{symbol}{amount} {currency} &afrom an admin. &8(New balance: {symbol}{balance})"
     failed: "&cFailed to give {currency} to &f{name}&c!"
     usage: "&cUsage: &e/economy give <player> <amount> [currency]"
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                RANK INTEREST MESSAGES                       ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Placeholders:
+#   {amount}    – Interest paid
+#   {currency}  – Currency display name
+#   {symbol}    – Currency symbol
+#   {balance}   – New balance
+
+interest:
+  # Shown when rank interest is paid out.
+  paid: "&aYou earned &e{symbol}{amount} {currency} &ain interest! &8(New balance: {symbol}{balance})"
 
 # ╔══════════════════════════════════════════════════════════════╗
 # ║                 COMBAT TAG MESSAGES                         ║

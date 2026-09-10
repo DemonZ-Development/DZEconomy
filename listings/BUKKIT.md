@@ -2,7 +2,7 @@
 
 # DZEconomy
 
-**Multi-currency economy plugin** — v2.1.2 by DemonZ Development
+**Multi-currency economy plugin** — v2.1.3 by DemonZ Development
 
 ---
 
@@ -32,7 +32,7 @@ DZEconomy gives you three currencies out of the box: Money, MobCoins, and Gems. 
 
 ## Installation
 
-1. Download `DZEconomy-2.1.2.jar`
+1. Download `DZEconomy-2.1.3.jar`
 2. Place it in `plugins/`
 3. Restart the server
 4. Run `/economy reload` after configuring
@@ -72,4 +72,4 @@ DZEconomy gives you three currencies out of the box: Money, MobCoins, and Gems. 
 
 ---
 
-*DZEconomy v2.1.2 — Licensed under GNU GPLv3 — Made by DemonZ Development*
+*DZEconomy v2.1.3 — Licensed under GNU GPLv3 — Made by DemonZ Development*

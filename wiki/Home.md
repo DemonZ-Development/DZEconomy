@@ -42,7 +42,7 @@ DZEconomy gives you three currencies, a rank multiplier system, combat tagging, 
 
 ### 1. Install
 
-1. Download the latest **DZEconomy v2.1.2** jar from [Modrinth](https://modrinth.com/plugin/dzeconomy)
+1. Download the latest **DZEconomy v2.1.3** jar from [Modrinth](https://modrinth.com/plugin/dzeconomy)
 2. Drop it in your server's `plugins/` folder
 3. Restart the server
 
@@ -51,7 +51,7 @@ DZEconomy gives you three currencies, a rank multiplier system, combat tagging, 
 You should see this in the console:
 
 ```
-[INFO] DZEconomy v2.1.2 has been successfully enabled!
+[INFO] DZEconomy v2.1.3 has been successfully enabled!
 [INFO] Running on Paper 1.21.4-...
 ```
 
@@ -106,7 +106,7 @@ DZEconomy is licensed under the GNU General Public License v3.0. See [LICENSE](h
 ---
 
 <p align="center">
-  DZEconomy v2.1.2 — by <a href="https://demonzdevelopment.online">DemonZ Development</a>
+  DZEconomy v2.1.3 — by <a href="https://demonzdevelopment.online">DemonZ Development</a>
 </p>
 
 ---

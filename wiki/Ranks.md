@@ -13,7 +13,8 @@ Ranks give players multipliers and perks based on their LuckPerms group. A rank 
 ### Key Features
 
 - **Per-currency multipliers** — Each rank can set different multipliers for Money, MobCoins, and Gems
-- **Rank perks** — Reduced cooldowns, increased daily limits, combat tag bypass, and interest
+- **Per-currency transfer tax** — Optional `currencies.<id>.transfer-tax` overrides per rank (fraction, e.g. `0.03` = 3%)
+- **Rank perks** — Reduced cooldowns, increased daily limits, combat tag bypass, and Money interest (all enforced)
 - **LuckPerms integration** — Primary group detection with a 30-second cached lookup
 - **Default rank fallback** — Everyone without a matching group uses the `default` rank
 
@@ -76,6 +77,9 @@ rank_name:
     money: 1.0
     mobcoin: 1.0
     gem: 1.0
+  currencies:
+    money:
+      transfer-tax: 0.05
   perks:
     reduced-cooldown: false
     cooldown-reduction: 1.0
@@ -95,10 +99,11 @@ rank_name:
 | Property | Type | Description |
 |----------|------|-------------|
 | `display-name` | String | Friendly name with color codes |
-| `priority` | Integer | Higher = more important |
+| `priority` | Integer | Stored for future multi-group support; resolution uses the primary group only |
 | `multipliers` | Section | Per-currency reward multipliers |
-| `perks` | Section | Special perks for this rank |
-| `permissions` | List | Extra permissions granted while this rank is active |
+| `currencies.<id>.transfer-tax` | Double | Per-currency transfer fee as a fraction (`0.05` = 5%). Optional |
+| `perks` | Section | Special perks for this rank (all enforced except where noted) |
+| `permissions` | List | Documented only; not attached automatically (planned) |
 
 ### Perk Details
 
@@ -239,12 +244,12 @@ Group changes are picked up within the 30-second cache window. A LuckPerms data 
 
 ## Interest System
 
-Ranks can pay interest on held balances.
+Ranks can pay interest on held Money balances. An `InterestTask` runs every minute and pays online players whose rank enables it.
 
 ### How It Works
 
 1. Every `interest.interval` seconds, DZEconomy checks online players.
-2. Each player with an interest-enabled rank earns `balance × (rate / 100)`.
+2. Each player with an interest-enabled rank earns `balance × (rate / 100)` on Money.
 3. The interest is capped at `max-balance` when set.
 4. The player gets a notification.
 

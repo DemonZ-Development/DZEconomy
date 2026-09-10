@@ -1,0 +1,535 @@
+package org.demonz.dev.dzeconomy.listener;
+
+import org.demonz.dev.dzeconomy.DZEconomy;
+import org.demonz.dev.dzeconomy.currency.CurrencyManager;
+import org.demonz.dev.dzeconomy.currency.CurrencyType;
+import org.demonz.dev.dzeconomy.config.ConfigManager;
+import org.demonz.dev.dzeconomy.util.MessagesUtil;
+import org.demonz.dev.dzeconomy.util.ColorUtil;
+
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.metadata.FixedMetadataValue;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class EntityDeathListener implements Listener {
+
+    private final DZEconomy plugin;
+    private final Map<String, MobRewardData> mobRewardsCache = new ConcurrentHashMap<>();
+    
+    private volatile boolean rewardsEnabled = true;
+    // Immutable snapshots: reloaded on the command thread while events read
+    // on region threads, so mutation in place would race on Folia.
+    private volatile List<String> worldWhitelist = List.of();
+    private volatile List<String> worldBlacklist = List.of();
+    private volatile boolean allowSpawnerMobs = false;
+    private volatile boolean allowSpawnEggMobs = false;
+    private volatile boolean requirePlayerKill = true;
+    private volatile double defaultMultiplier = 1.0;
+    private volatile double bossBonus = 1.0;
+    private volatile double notifyThreshold = 1.0;
+    private volatile Set<String> bossTypes = Set.of("ENDER_DRAGON", "WITHER", "ELDER_GUARDIAN");
+
+    private static final boolean HAS_PDC;
+    static {
+        boolean hasPdc = false;
+        try {
+            Class.forName("org.bukkit.persistence.PersistentDataContainer");
+            hasPdc = true;
+        } catch (ClassNotFoundException ignored) {}
+        HAS_PDC = hasPdc;
+    }
+
+    private final Object pdcHelper;
+    private final Map<UUID, SplitInfo> activeSplits = new ConcurrentHashMap<>();
+
+    public EntityDeathListener(DZEconomy plugin) {
+        this.plugin = plugin;
+        if (HAS_PDC) {
+            this.pdcHelper = new PDCHelper(plugin);
+        } else {
+            this.pdcHelper = null;
+        }
+        loadRewards();
+    }
+
+    public void reload() {
+        loadRewards();
+    }
+
+    public void loadRewards() {
+        mobRewardsCache.clear();
+        ConfigManager config = plugin.getConfigManager();
+        FileConfiguration mobRewardsConfig = config.getMobRewards();
+        
+        FileConfiguration mainConfig = config.getConfig();
+        rewardsEnabled = mainConfig.getBoolean("mob-rewards.enabled", true);
+        
+        List<String> whitelist = new ArrayList<>();
+        List<String> configuredWhitelist = mainConfig.getStringList("mob-rewards.world-whitelist");
+        if (configuredWhitelist != null) {
+            for (String w : configuredWhitelist) {
+                whitelist.add(w.toLowerCase());
+            }
+        }
+        worldWhitelist = List.copyOf(whitelist);
+
+        List<String> blacklist = new ArrayList<>();
+        List<String> configuredBlacklist = mainConfig.getStringList("mob-rewards.world-blacklist");
+        if (configuredBlacklist != null) {
+            for (String w : configuredBlacklist) {
+                blacklist.add(w.toLowerCase());
+            }
+        }
+        worldBlacklist = List.copyOf(blacklist);
+        
+        allowSpawnerMobs = mainConfig.getBoolean("mob-rewards.allow-spawner-mobs", false);
+        allowSpawnEggMobs = mainConfig.getBoolean("mob-rewards.allow-spawn-egg-mobs", false);
+        requirePlayerKill = mainConfig.getBoolean("mob-rewards.require-player-kill", true);
+        defaultMultiplier = mainConfig.getDouble("mob-rewards.default-multiplier", 1.0);
+        bossBonus = mainConfig.getDouble("mob-rewards.boss-bonus", 1.0);
+        notifyThreshold = mainConfig.getDouble("mob-rewards.notify-threshold", 1.0);
+
+        List<String> configuredBosses = mainConfig.getStringList("mob-rewards.boss-types");
+        if (configuredBosses != null && !configuredBosses.isEmpty()) {
+            Set<String> bosses = new HashSet<>();
+            for (String type : configuredBosses) {
+                bosses.add(type.toUpperCase());
+            }
+            bossTypes = Set.copyOf(bosses);
+        } else {
+            bossTypes = Set.of("ENDER_DRAGON", "WITHER", "ELDER_GUARDIAN");
+        }
+
+        if (mobRewardsConfig == null) {
+            return;
+        }
+
+        for (String category : new String[]{"neutral", "easy", "hard", "boss", "custom"}) {
+            ConfigurationSection categorySection = mobRewardsConfig.getConfigurationSection(category);
+            if (categorySection == null) {
+                continue;
+            }
+            for (String mobName : categorySection.getKeys(false)) {
+                String cacheKey = mobName.toUpperCase();
+                if (categorySection.isConfigurationSection(mobName)) {
+                    ConfigurationSection mobSection = categorySection.getConfigurationSection(mobName);
+                    mobRewardsCache.put(cacheKey, parseMobReward(cacheKey, mobSection));
+                } else {
+                    Object obj = categorySection.get(mobName);
+                    mobRewardsCache.put(cacheKey, parseMobRewardLegacy(cacheKey, obj));
+                }
+            }
+        }
+    }
+
+    private MobRewardData parseMobReward(String mobName, ConfigurationSection section) {
+        RewardValue mobcoin = parseRewardValue(section, "mobcoin");
+        RewardValue money = parseRewardValue(section, "money");
+        RewardValue gem = parseRewardValue(section, "gem");
+        double chance = section.getDouble("chance", 1.0);
+        String message = section.getString("message", "");
+        return new MobRewardData(mobName, mobcoin, money, gem, chance, message);
+    }
+
+    private MobRewardData parseMobRewardLegacy(String mobName, Object obj) {
+        RewardValue mobcoin;
+        if (obj instanceof Number) {
+            mobcoin = new RewardValue(((Number) obj).doubleValue());
+        } else if (obj instanceof String) {
+            try {
+                mobcoin = new RewardValue(Double.parseDouble((String) obj));
+            } catch (NumberFormatException e) {
+                mobcoin = new RewardValue(0.0);
+            }
+        } else if (obj instanceof Map) {
+            Map<?, ?> map = (Map<?, ?>) obj;
+            Object minObj = map.get("min");
+            Object maxObj = map.get("max");
+            if (minObj instanceof Number && maxObj instanceof Number) {
+                mobcoin = new RewardValue(((Number) minObj).doubleValue(), ((Number) maxObj).doubleValue());
+            } else if (map.get("amount") instanceof Number) {
+                mobcoin = new RewardValue(((Number) map.get("amount")).doubleValue());
+            } else {
+                mobcoin = new RewardValue(0.0);
+            }
+        } else {
+            mobcoin = new RewardValue(0.0);
+        }
+        return new MobRewardData(mobName, mobcoin, new RewardValue(0.0), new RewardValue(0.0), 1.0, "");
+    }
+
+    private RewardValue parseRewardValue(ConfigurationSection parent, String path) {
+        if (!parent.contains(path)) {
+            return new RewardValue(0.0);
+        }
+        if (parent.isConfigurationSection(path)) {
+            ConfigurationSection sec = parent.getConfigurationSection(path);
+            double min = sec.getDouble("min-amount", 0.0);
+            if (min == 0.0) {
+                min = sec.getDouble("min", 0.0);
+            }
+            double max = sec.getDouble("max-amount", 0.0);
+            if (max == 0.0) {
+                max = sec.getDouble("max", 0.0);
+            }
+            // Guard against inverted ranges (e.g. min set, max left at 0):
+            // swap instead of producing negative rolls.
+            if (max < min) {
+                double tmp = min;
+                min = max;
+                max = tmp;
+            }
+            return new RewardValue(min, max);
+        }
+        double val = parent.getDouble(path, 0.0);
+        return new RewardValue(val);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onCreatureSpawn(CreatureSpawnEvent event) {
+        CreatureSpawnEvent.SpawnReason reason = event.getSpawnReason();
+        if (reason == CreatureSpawnEvent.SpawnReason.SPAWNER) {
+            if (HAS_PDC && pdcHelper != null) {
+                ((PDCHelper) pdcHelper).setSpawner(event.getEntity());
+            }
+            event.getEntity().setMetadata("dzeconomy-spawner", new FixedMetadataValue(plugin, true));
+        } else if (reason == CreatureSpawnEvent.SpawnReason.SPAWNER_EGG) {
+            if (HAS_PDC && pdcHelper != null) {
+                ((PDCHelper) pdcHelper).setSpawnEgg(event.getEntity());
+            }
+            event.getEntity().setMetadata("dzeconomy-spawn-egg", new FixedMetadataValue(plugin, true));
+        } else if (reason == CreatureSpawnEvent.SpawnReason.SLIME_SPLIT) {
+            org.bukkit.Location loc = event.getLocation();
+            for (SplitInfo info : activeSplits.values()) {
+                if (info.location.getWorld().equals(loc.getWorld()) && info.location.distanceSquared(loc) < 4.0) {
+                    if (info.isSpawner) {
+                        if (HAS_PDC && pdcHelper != null) {
+                            ((PDCHelper) pdcHelper).setSpawner(event.getEntity());
+                        }
+                        event.getEntity().setMetadata("dzeconomy-spawner", new FixedMetadataValue(plugin, true));
+                    }
+                    if (info.isSpawnEgg) {
+                        if (HAS_PDC && pdcHelper != null) {
+                            ((PDCHelper) pdcHelper).setSpawnEgg(event.getEntity());
+                        }
+                        event.getEntity().setMetadata("dzeconomy-spawn-egg", new FixedMetadataValue(plugin, true));
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onSlimeSplit(org.bukkit.event.entity.SlimeSplitEvent event) {
+        LivingEntity parent = event.getEntity();
+        boolean isSpawner = false;
+        boolean isSpawnEgg = false;
+        if (HAS_PDC && pdcHelper != null) {
+            isSpawner = ((PDCHelper) pdcHelper).isSpawner(parent);
+            isSpawnEgg = ((PDCHelper) pdcHelper).isSpawnEgg(parent);
+        }
+        isSpawner = isSpawner || parent.hasMetadata("dzeconomy-spawner");
+        isSpawnEgg = isSpawnEgg || parent.hasMetadata("dzeconomy-spawn-egg");
+        if (isSpawner || isSpawnEgg) {
+            UUID parentUuid = parent.getUniqueId();
+            activeSplits.put(parentUuid, new SplitInfo(parent.getLocation(), isSpawner, isSpawnEgg));
+            org.demonz.dev.dzeconomy.util.FoliaAdapter.runTask(plugin, () -> activeSplits.remove(parentUuid));
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onEntityDeath(EntityDeathEvent event) {
+        LivingEntity entity = event.getEntity();
+
+        if (!rewardsEnabled) {
+            return;
+        }
+
+        String worldName = entity.getWorld().getName().toLowerCase();
+        if (!worldWhitelist.isEmpty() && !worldWhitelist.contains(worldName)) {
+            return;
+        }
+
+        if (!worldBlacklist.isEmpty() && worldBlacklist.contains(worldName)) {
+            return;
+        }
+
+        boolean isSpawner = false;
+        boolean isSpawnEgg = false;
+        if (HAS_PDC && pdcHelper != null) {
+            isSpawner = ((PDCHelper) pdcHelper).isSpawner(entity);
+            isSpawnEgg = ((PDCHelper) pdcHelper).isSpawnEgg(entity);
+        }
+        isSpawner = isSpawner || entity.hasMetadata("dzeconomy-spawner");
+        isSpawnEgg = isSpawnEgg || entity.hasMetadata("dzeconomy-spawn-egg");
+        
+        if (!allowSpawnerMobs && isSpawner) {
+            return;
+        }
+        if (!allowSpawnEggMobs && isSpawnEgg) {
+            return;
+        }
+
+        Player killer = entity.getKiller();
+        if (killer == null) {
+            if (requirePlayerKill) {
+                return;
+            }
+            killer = resolveTamingOwner(entity);
+            if (killer == null) {
+                return;
+            }
+        }
+
+        String mobType = entity.getType().name();
+        MobRewardData rewardData = mobRewardsCache.get(mobType);
+        if (rewardData == null) {
+            rewardData = mobRewardsCache.get("DEFAULT");
+        }
+        if (rewardData == null) {
+            return;
+        }
+
+        if (java.util.concurrent.ThreadLocalRandom.current().nextDouble() > rewardData.getChance()) {
+            return;
+        }
+
+        double mobcoinAmt = rewardData.getMobcoin().getAmount();
+        double moneyAmt = rewardData.getMoney().getAmount();
+        double gemAmt = rewardData.getGem().getAmount();
+
+        if (mobcoinAmt <= 0 && moneyAmt <= 0 && gemAmt <= 0) {
+            return;
+        }
+
+        double bonus = getRankBonus(killer, entity);
+
+        // Capture everything owned by the event thread now: Bukkit entities
+        // must not be touched from the async worker below.
+        final String customMessage = rewardData.getMessage();
+        final String mobDisplayName = formatMobName(entity.getType().name());
+        final double mobcoinBase = mobcoinAmt * (1.0 + bonus) * defaultMultiplier;
+        final double moneyBase = moneyAmt * (1.0 + bonus) * defaultMultiplier;
+        final double gemBase = gemAmt * (1.0 + bonus) * defaultMultiplier;
+
+        final Player rewardPlayer = killer;
+        org.demonz.dev.dzeconomy.util.FoliaAdapter.runTaskAsynchronously(plugin, () -> {
+            CurrencyManager cm = plugin.getCurrencyManager();
+            UUID killerUuid = rewardPlayer.getUniqueId();
+
+            double rankMultiplierMobcoin = plugin.getRankManager().getMultiplier(killerUuid, CurrencyType.MOBCOIN);
+            double rankMultiplierMoney = plugin.getRankManager().getMultiplier(killerUuid, CurrencyType.MONEY);
+            double rankMultiplierGem = plugin.getRankManager().getMultiplier(killerUuid, CurrencyType.GEM);
+
+            final double finalMobcoin = roundToCurrency(CurrencyType.MOBCOIN, mobcoinBase * rankMultiplierMobcoin);
+            final double finalMoney = roundToCurrency(CurrencyType.MONEY, moneyBase * rankMultiplierMoney);
+            final double finalGem = roundToCurrency(CurrencyType.GEM, gemBase * rankMultiplierGem);
+
+            if (finalMobcoin > 0 && cm.isCurrencyEnabled(CurrencyType.MOBCOIN)) {
+                if (cm.addBalance(killerUuid, CurrencyType.MOBCOIN, finalMobcoin)) {
+                    notifyReward(rewardPlayer, finalMobcoin, CurrencyType.MOBCOIN, mobDisplayName, customMessage);
+                }
+            }
+
+            if (finalMoney > 0 && cm.isCurrencyEnabled(CurrencyType.MONEY)) {
+                if (cm.addBalance(killerUuid, CurrencyType.MONEY, finalMoney)) {
+                    notifyReward(rewardPlayer, finalMoney, CurrencyType.MONEY, mobDisplayName, customMessage);
+                }
+            }
+
+            if (finalGem > 0 && cm.isCurrencyEnabled(CurrencyType.GEM)) {
+                if (cm.addBalance(killerUuid, CurrencyType.GEM, finalGem)) {
+                    notifyReward(rewardPlayer, finalGem, CurrencyType.GEM, mobDisplayName, customMessage);
+                }
+            }
+        });
+    }
+
+    private void notifyReward(Player player, double amount, CurrencyType type, String mobDisplayName, String customMessage) {
+        if (customMessage != null && !customMessage.isEmpty()) {
+            String symbol = plugin.getConfigManager().getConfig().getString("currencies." + type.getId() + ".symbol", type.getDefaultSymbol());
+            String msg = ColorUtil.translate(customMessage
+                .replace("{amount}", plugin.getCurrencyManager().formatAmount(type, amount))
+                .replace("{currency}", type.getDisplayName())
+                .replace("{symbol}", symbol)
+                .replace("{mob}", mobDisplayName));
+            org.demonz.dev.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, player, () -> player.sendMessage(msg));
+        } else {
+            String messageKey = type.getId() + "-earned";
+            if (amount >= notifyThreshold) {
+                Double cachedBalance = plugin.getCurrencyManager().getCachedBalance(player.getUniqueId(), type);
+                double newBalance = cachedBalance != null ? cachedBalance : 0.0;
+                org.demonz.dev.dzeconomy.util.FoliaAdapter.runAtEntity(plugin, player, () -> {
+                    MessagesUtil.sendMessage(player, messageKey,
+                            "%amount%", plugin.getCurrencyManager().formatAmount(type, amount),
+                            "%mob%", mobDisplayName,
+                            "%balance%", plugin.getCurrencyManager().formatAmount(type, newBalance));
+                });
+            }
+        }
+    }
+
+    private Player resolveTamingOwner(LivingEntity entity) {
+        if (!(entity.getLastDamageCause() instanceof org.bukkit.event.entity.EntityDamageByEntityEvent)) {
+            return null;
+        }
+        org.bukkit.event.entity.EntityDamageByEntityEvent damageEvent =
+                (org.bukkit.event.entity.EntityDamageByEntityEvent) entity.getLastDamageCause();
+        if (!(damageEvent.getDamager() instanceof org.bukkit.entity.Tameable)) {
+            return null;
+        }
+        org.bukkit.entity.Tameable tameable = (org.bukkit.entity.Tameable) damageEvent.getDamager();
+        if (!tameable.isTamed()) {
+            return null;
+        }
+        org.bukkit.entity.AnimalTamer tamer = tameable.getOwner();
+        return tamer instanceof Player ? (Player) tamer : null;
+    }
+
+    private double roundToCurrency(CurrencyType type, double value) {
+        int scale = plugin.getCurrencyManager().getDecimalPlaces(type);
+        return org.demonz.dev.dzeconomy.util.MoneyUtil.round(value, scale);
+    }
+
+    private double getRankBonus(Player killer, LivingEntity entity) {
+        boolean isBoss = bossTypes.contains(entity.getType().name());
+
+        if (!isBoss) {
+            return 0.0;
+        }
+
+        ConfigurationSection ranksSection = plugin.getConfigManager().getRanks().getConfigurationSection("ranks");
+        if (ranksSection == null) {
+            ranksSection = plugin.getConfigManager().getRanks();
+        }
+        if (ranksSection != null) {
+            for (String rank : ranksSection.getKeys(false)) {
+                if (rank.equals("default-rank") || rank.equals("config-version")) continue;
+                if (killer.hasPermission("dzeconomy.rank." + rank)) {
+                    double rankBonus = plugin.getConfigManager().getConfig().getDouble(
+                            "mob-rewards.rank-bonuses." + rank + ".boss-multiplier", bossBonus);
+                    return rankBonus;
+                }
+            }
+        }
+
+        return bossBonus;
+    }
+
+    private String formatMobName(String name) {
+        String[] parts = name.split("_");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < parts.length; i++) {
+            if (i > 0) sb.append(" ");
+            sb.append(parts[i].substring(0, 1).toUpperCase())
+              .append(parts[i].substring(1).toLowerCase());
+        }
+        return sb.toString();
+    }
+
+    public static class RewardValue {
+        private final double flatAmount;
+        private final double minAmount;
+        private final double maxAmount;
+        private final boolean isRange;
+
+        public RewardValue(double flatAmount) {
+            this.flatAmount = flatAmount;
+            this.minAmount = 0;
+            this.maxAmount = 0;
+            this.isRange = false;
+        }
+
+        public RewardValue(double minAmount, double maxAmount) {
+            this.flatAmount = 0;
+            this.minAmount = minAmount;
+            this.maxAmount = maxAmount;
+            this.isRange = true;
+        }
+
+        public double getAmount() {
+            if (isRange) {
+                return minAmount + (java.util.concurrent.ThreadLocalRandom.current().nextDouble() * (maxAmount - minAmount));
+            }
+            return flatAmount;
+        }
+
+        public boolean hasReward() {
+            return isRange ? (maxAmount > 0) : (flatAmount > 0);
+        }
+    }
+
+    public static class MobRewardData {
+        private final String mobType;
+        private final RewardValue mobcoin;
+        private final RewardValue money;
+        private final RewardValue gem;
+        private final double chance;
+        private final String message;
+
+        public MobRewardData(String mobType, RewardValue mobcoin, RewardValue money, RewardValue gem, double chance, String message) {
+            this.mobType = mobType;
+            this.mobcoin = mobcoin;
+            this.money = money;
+            this.gem = gem;
+            this.chance = chance;
+            this.message = message;
+        }
+
+        public String getMobType() { return mobType; }
+        public RewardValue getMobcoin() { return mobcoin; }
+        public RewardValue getMoney() { return money; }
+        public RewardValue getGem() { return gem; }
+        public double getChance() { return chance; }
+        public String getMessage() { return message; }
+    }
+
+    private static class SplitInfo {
+        private final org.bukkit.Location location;
+        private final boolean isSpawner;
+        private final boolean isSpawnEgg;
+
+        public SplitInfo(org.bukkit.Location location, boolean isSpawner, boolean isSpawnEgg) {
+            this.location = location;
+            this.isSpawner = isSpawner;
+            this.isSpawnEgg = isSpawnEgg;
+        }
+    }
+
+    private static class PDCHelper {
+        private final org.bukkit.NamespacedKey spawnerKey;
+        private final org.bukkit.NamespacedKey spawnEggKey;
+
+        public PDCHelper(org.bukkit.plugin.Plugin plugin) {
+            this.spawnerKey = new org.bukkit.NamespacedKey(plugin, "spawner");
+            this.spawnEggKey = new org.bukkit.NamespacedKey(plugin, "spawn-egg");
+        }
+
+        public void setSpawner(org.bukkit.entity.LivingEntity entity) {
+            entity.getPersistentDataContainer().set(spawnerKey, org.bukkit.persistence.PersistentDataType.BYTE, (byte) 1);
+        }
+
+        public void setSpawnEgg(org.bukkit.entity.LivingEntity entity) {
+            entity.getPersistentDataContainer().set(spawnEggKey, org.bukkit.persistence.PersistentDataType.BYTE, (byte) 1);
+        }
+
+        public boolean isSpawner(org.bukkit.entity.LivingEntity entity) {
+            return entity.getPersistentDataContainer().has(spawnerKey, org.bukkit.persistence.PersistentDataType.BYTE);
+        }
+
+        public boolean isSpawnEgg(org.bukkit.entity.LivingEntity entity) {
+            return entity.getPersistentDataContainer().has(spawnEggKey, org.bukkit.persistence.PersistentDataType.BYTE);
+        }
+    }
+}

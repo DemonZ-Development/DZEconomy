@@ -1,0 +1,69 @@
+package org.demonz.dev.dzeconomy.update;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+
+public class ModrinthAPIClient {
+    
+    private static final String API_BASE = "https://api.modrinth.com/v2";
+    
+    private final String projectId;
+    private final String userAgent;
+    
+    public ModrinthAPIClient(String projectId, String pluginVersion) {
+        this.projectId = projectId;
+        this.userAgent = "DZEconomy/" + pluginVersion + " (https://github.com/DemonZ-Development/DZEconomy)";
+    }
+    
+    public ModrinthVersion fetchLatestVersion() throws Exception {
+        
+        String url = API_BASE + "/project/" + projectId + "/version?game_versions=%5B%22any%22%5D&loaders=%5B%22paper%22,%22spigot%22,%22bukkit%22%5D";
+        
+        HttpURLConnection conn = (HttpURLConnection) URI.create(url).toURL().openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("User-Agent", userAgent);
+        conn.setConnectTimeout(10000);
+        conn.setReadTimeout(10000);
+        
+        try {
+            int responseCode = conn.getResponseCode();
+            if (responseCode != 200) {
+                try (java.io.InputStream err = conn.getErrorStream()) {
+                    if (err != null) {
+                        byte[] buffer = new byte[1024];
+                        while (err.read(buffer) != -1) {}
+                    }
+                }
+                throw new RuntimeException("Modrinth API returned status " + responseCode);
+            }
+            
+            StringBuilder response = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+            }
+            
+            JsonArray versions = JsonParser.parseString(response.toString()).getAsJsonArray();
+            if (versions.size() == 0) return null;
+            
+            JsonObject latest = versions.get(0).getAsJsonObject();
+            
+            String versionNumber = latest.get("version_number").getAsString();
+            String versionId = latest.get("id").getAsString();
+            
+            return new ModrinthVersion(versionId, versionNumber);
+        } finally {
+            conn.disconnect();
+        }
+    }
+}
