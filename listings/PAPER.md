@@ -38,7 +38,7 @@ No configuration changes needed. It just works.
 
 ## Quick Setup
 
-1. Place `DZEconomy-2.1.2.jar` in `plugins/`
+1. Place `DZEconomy-2.1.3.jar` in `plugins/`
 2. Restart the server
 3. Players can immediately use `/money`, `/mobcoin`, `/gem`
 4. Customize `config.yml`, `ranks.yml`, `mob-rewards.yml`
@@ -105,4 +105,4 @@ All database operations run asynchronously and never block the tick loop. On Fol
 
 ---
 
-*DZEconomy v2.1.2 — Made by DemonZ Development*
+*DZEconomy v2.1.3 — Made by DemonZ Development*

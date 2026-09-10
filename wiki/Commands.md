@@ -2,7 +2,7 @@
 
 # Commands Reference
 
-Command reference for DZEconomy v2.1.2. All commands support tab completion.
+Command reference for DZEconomy v2.1.3. All commands support tab completion.
 
 ---
 
@@ -231,7 +231,7 @@ View plugin information.
 **Example Output:**
 ```
 ─────────────────────────────────
-  DZEconomy v2.1.2
+  DZEconomy v2.1.3
   
   Currencies:
     ▸ money - Enabled ($)
@@ -260,7 +260,7 @@ View detailed version information.
 ─────────────────────────────────
   DZEconomy Version Info
 
-  ▸ Installed: v2.1.2
+  ▸ Installed: v2.1.3
   ▸ Server: Paper 1.21.4-...
   ▸ Bukkit API: 1.20.4-R0.1-SNAPSHOT
   ▸ Java: 21.0.2

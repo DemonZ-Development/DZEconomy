@@ -2,7 +2,7 @@
 
 # Developer API
 
-Integrate other plugins with the DZEconomy API v2.1.2.
+Integrate other plugins with the DZEconomy API v2.1.3.
 
 ---
 
@@ -37,11 +37,13 @@ Every method that modifies a balance is thread-safe and uses per-player locks.
     <dependency>
         <groupId>com.github.DemonZ-Development</groupId>
         <artifactId>DZEconomy</artifactId>
-        <version>2.1.2</version>
+        <version>2.1.3</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>
 ```
+
+> Note: the project's canonical Maven `groupId` is `org.demonz.dev` (used for direct and Maven Central publication). JitPack serves GitHub builds under `com.github.DemonZ-Development`, which is what the snippet above uses.
 
 #### Gradle (JitPack)
 
@@ -51,7 +53,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'com.github.DemonZ-Development:DZEconomy:2.1.2'
+    compileOnly 'com.github.DemonZ-Development:DZEconomy:2.1.3'
 }
 ```
 
@@ -68,8 +70,8 @@ softdepend: [DZEconomy]
 ### 3. Get the API Instance
 
 ```java
-import online.demonzdevelopment.dzeconomy.DZEconomy;
-import online.demonzdevelopment.dzeconomy.api.DZEconomyAPI;
+import org.demonz.dev.dzeconomy.DZEconomy;
+import org.demonz.dev.dzeconomy.api.DZEconomyAPI;
 import org.bukkit.Bukkit;
 
 public class MyPlugin extends JavaPlugin {
@@ -144,7 +146,7 @@ int getAPIVersion();
 ## CurrencyType Enum
 
 ```java
-package online.demonzdevelopment.dzeconomy.currency;
+package org.demonz.dev.dzeconomy.currency;
 
 public enum CurrencyType {
     MONEY("money", "Money", "$", 0.0),
@@ -173,7 +175,7 @@ It returns `null` for unknown input.
 ## Rank Class
 
 ```java
-package online.demonzdevelopment.dzeconomy.rank;
+package org.demonz.dev.dzeconomy.rank;
 
 public class Rank {
     String getName();

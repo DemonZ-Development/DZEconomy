@@ -1,0 +1,94 @@
+package org.demonz.dev.dzeconomy.listener;
+
+import org.demonz.dev.dzeconomy.DZEconomy;
+import org.demonz.dev.dzeconomy.currency.CurrencyManager;
+import org.demonz.dev.dzeconomy.config.ConfigManager;
+import org.demonz.dev.dzeconomy.util.MessagesUtil;
+
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+
+import java.util.UUID;
+
+public class CombatTagListener implements Listener {
+
+    private final DZEconomy plugin;
+
+    public CombatTagListener(DZEconomy plugin) {
+        this.plugin = plugin;
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        ConfigManager config = plugin.getConfigManager();
+
+        if (!config.getConfig().getBoolean("combat-tag.enabled", true)) {
+            return;
+        }
+
+        if (!(event.getEntity() instanceof Player)) {
+            return;
+        }
+
+        Player victim = (Player) event.getEntity();
+        Player attacker = null;
+
+        if (event.getDamager() instanceof Player) {
+            attacker = (Player) event.getDamager();
+        } else if (event.getDamager() instanceof org.bukkit.entity.Projectile) {
+            org.bukkit.entity.Projectile projectile = (org.bukkit.entity.Projectile) event.getDamager();
+            if (projectile.getShooter() instanceof Player) {
+                attacker = (Player) projectile.getShooter();
+            }
+        }
+
+        if (attacker == null) {
+            return;
+        }
+
+        if (event.getFinalDamage() <= 0) {
+            return;
+        }
+
+        CurrencyManager cm = plugin.getCurrencyManager();
+        long tagDuration = config.getConfig().getLong("combat-tag.duration", 30) * 1000;
+        long expiryTime = System.currentTimeMillis() + tagDuration;
+
+        UUID victimUuid = victim.getUniqueId();
+        UUID attackerUuid = attacker.getUniqueId();
+
+        boolean victimWasTagged = cm.isCombatTagged(victimUuid);
+        boolean attackerWasTagged = cm.isCombatTagged(attackerUuid);
+
+        cm.addCombatTag(victimUuid, expiryTime);
+        cm.addCombatTag(attackerUuid, expiryTime);
+
+        if (!victimWasTagged) {
+            MessagesUtil.sendMessage(victim, "combat-tagged",
+                    "%player%", attacker.getName(),
+                    "%duration%", String.valueOf(tagDuration / 1000));
+        }
+
+        if (!attackerWasTagged) {
+            MessagesUtil.sendMessage(attacker, "combat-tagged",
+                    "%player%", victim.getName(),
+                    "%duration%", String.valueOf(tagDuration / 1000));
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        CurrencyManager cm = plugin.getCurrencyManager();
+        if (cm.isCombatTagged(player.getUniqueId())) {
+            if (plugin.getConfigManager().getConfig().getBoolean("combat-tag.kill-on-logout", true)) {
+                player.setHealth(0.0);
+            }
+        }
+        cm.removeCombatTag(player.getUniqueId());
+    }
+}

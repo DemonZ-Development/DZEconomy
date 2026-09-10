@@ -2,7 +2,7 @@
 
 # Installation Guide
 
-Setup instructions for DZEconomy v2.1.2 on all supported server platforms.
+Setup instructions for DZEconomy v2.1.3 on all supported server platforms.
 
 ---
 
@@ -22,7 +22,7 @@ The jar compiles to Java 8 bytecode, so it loads on any server running Java 8 an
 
 ### 1. Download
 
-Download the latest `DZEconomy-2.1.2.jar` from [Modrinth](https://modrinth.com/plugin/dzeconomy).
+Download the latest `DZEconomy-2.1.3.jar` from [Modrinth](https://modrinth.com/plugin/dzeconomy).
 
 ### 2. Place the Jar
 
@@ -31,7 +31,7 @@ Put it in your server's `plugins/` directory:
 ```
 server/
 ├── plugins/
-│   └── DZEconomy-2.1.2.jar   ← Place here
+│   └── DZEconomy-2.1.3.jar   ← Place here
 ├── server.jar
 └── ...
 ```
@@ -45,7 +45,7 @@ Start (or restart) the server. DZEconomy generates its default config files on f
 Look for this in the console:
 
 ```
-[INFO] DZEconomy v2.1.2 has been successfully enabled!
+[INFO] DZEconomy v2.1.3 has been successfully enabled!
 [INFO] Running on Paper 1.21.4-...
 ```
 
@@ -234,7 +234,7 @@ plugins/DZEconomy/
 **Symptom**: Tasks not executing, "not on the main thread" errors
 
 **Solutions**:
-1. Run DZEconomy v2.1.2+ (Folia support exists since v2)
+1. Run DZEconomy v2.1.3+ (Folia support exists since v2)
 2. DZEconomy uses `FoliaAdapter` for all scheduling — no manual changes needed
 3. Look for "Folia detected! Using region-based scheduling." in the console
 4. See [Folia Support](Folia-Support.md) for known limitations

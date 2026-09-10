@@ -2,7 +2,7 @@
 
 # Permissions Reference
 
-Complete permission node reference for DZEconomy v2.1.2.
+Complete permission node reference for DZEconomy v2.1.3.
 
 ---
 
